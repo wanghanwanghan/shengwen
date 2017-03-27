@@ -1,0 +1,1143 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Model\ConfirmTypeModel;
+use App\Http\Model\CustConfirmModel;
+use App\Http\Model\CustModel;
+use App\Http\Model\LevelModel;
+use App\Http\Model\ProjectModel;
+use App\Http\Model\SendMailModel;
+use App\Http\Model\SiTypeModel;
+use App\Http\Model\StaffModel;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Session;
+
+class DataController extends Controller
+{
+    public function ajax()
+    {
+        switch (Input::get('type'))
+        {
+            case 'get_si_type':
+
+                $model=SiTypeModel::get(['si_id','si_name'])->toArray();
+
+                $model=$this->change_arr_key($model,['si_id'=>'id','si_name'=>'name']);
+
+                array_unshift($model,['id'=>'0','name'=>'设置为最顶级地区']);
+
+                return ['error'=>'0','msg'=>'成功','data'=>$model];
+
+                break;
+
+            case 'get_project':
+
+                $model=ProjectModel::get(['project_id','project_name','project_parent'])->toArray();
+
+                $model=$this->infinite($model,'project');
+
+                $model=$this->change_arr_key($model,['project_id'=>'id','project_name'=>'name']);
+
+                array_unshift($model,['id'=>'0','name'=>'设置为最顶级地区']);
+
+                return ['error'=>'0','msg'=>'成功','data'=>$model];
+
+                break;
+
+            case 'get_level':
+
+                $model=LevelModel::get(['level_id','level_name','level_parent'])->toArray();
+
+                $model=$this->infinite($model,'level');
+
+                $model=$this->change_arr_key($model,['level_id'=>'id','level_name'=>'name']);
+
+                array_unshift($model,['id'=>'0','name'=>'设置为最顶级权限']);
+
+                return ['error'=>'0','msg'=>'成功','data'=>$model];
+
+                break;
+
+            case 'add_project':
+
+                $data=Input::get('key');
+
+                foreach ($data as $row)
+                {
+                    if ($row['name']=='project_name')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'地区名称不能为空'];
+                        }else
+                        {
+                            if (!$this->check_chinese_word($row['value']))
+                            {
+                                return ['error'=>'1','msg'=>'地区名称必须为中文'];
+                            }else
+                            {
+                                $proj=$row['value'];
+                            }
+                        }
+                    }elseif ($row['name']=='project_parent')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'必须选择一个属地'];
+                        }else
+                        {
+                            ProjectModel::create(['project_name'=>$proj,'project_parent'=>$row['value']]);
+
+                            $this->system_log('添加属地',$proj);
+
+                            return ['error'=>'0','msg'=>'添加成功'];
+                        }
+                    }
+                }
+
+                return ['error'=>'1','msg'=>'未知错误'];
+
+                break;
+
+            case 'add_level':
+
+                $data=Input::get('key');
+
+                foreach ($data as $row)
+                {
+                    if ($row['name']=='level_name')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'权限名称不能为空'];
+                        }else
+                        {
+                            if (!$this->check_chinese_word($row['value']))
+                            {
+                                return ['error'=>'1','msg'=>'权限名称必须为中文'];
+                            }else
+                            {
+                                $level=$row['value'];
+                            }
+                        }
+                    }elseif ($row['name']=='level_parent')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'必须选择一个权限'];
+                        }else
+                        {
+                            LevelModel::create(['level_name'=>$level,'level_parent'=>$row['value']]);
+
+                            $this->system_log('添加权限',$level);
+
+                            return ['error'=>'0','msg'=>'添加成功'];
+                        }
+                    }
+                }
+
+                return ['error'=>'1','msg'=>'未知错误'];
+
+                break;
+
+            case 'add_si_type':
+
+                $data=Input::get('key');
+
+                foreach ($data as $row)
+                {
+                    if ($row['value']=='')
+                    {
+                        return ['error'=>'1','msg'=>'参保类型不能为空'];
+                    }elseif (!$this->check_chinese_word($row['value']))
+                    {
+                        return ['error'=>'1','msg'=>'参保类型必须为中文'];
+                    }else
+                    {
+                        if (count(SiTypeModel::where(['si_name'=>$row['value']])->get())!='0')
+                        {
+                            return ['error'=>'1','msg'=>'参保类型已经存在'];
+                        }else
+                        {
+                            SiTypeModel::create(['si_name'=>$row['value']]);
+
+                            $this->system_log('添加参保类型',$row['value']);
+
+                            return ['error'=>'0','msg'=>'添加成功'];
+                        }
+                    }
+                }
+
+                return ['error'=>'1','msg'=>'未知错误'];
+
+                break;
+
+            case 'add_confirm_type':
+
+                $data=Input::get('key');
+
+                foreach ($data as $row)
+                {
+                    if ($row['value']=='')
+                    {
+                        return ['error'=>'1','msg'=>'认证类型不能为空'];
+                    }elseif (!$this->check_chinese_word($row['value']))
+                    {
+                        return ['error'=>'1','msg'=>'认证类型必须为中文'];
+                    }else
+                    {
+                        if (count(ConfirmTypeModel::where(['confirm_name'=>$row['value']])->get())!='0')
+                        {
+                            return ['error'=>'1','msg'=>'认证类型已经存在'];
+                        }else
+                        {
+                            ConfirmTypeModel::create(['confirm_name'=>$row['value']]);
+
+                            $this->system_log('添加认证类型',$row['value']);
+
+                            return ['error'=>'0','msg'=>'添加成功'];
+                        }
+                    }
+                }
+
+                return ['error'=>'1','msg'=>'未知错误'];
+
+                break;
+
+            case 'add_staff':
+
+                $data=Input::get('key');
+
+                foreach ($data as $row)
+                {
+                    if ($row['name']=='staff_account')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'账号不能为空'];
+                        }
+
+                        $res=count(StaffModel::where(['staff_account'=>$row['value']])->get()->toArray());
+
+                        if (!empty($res))
+                        {
+                            return ['error'=>'1','msg'=>'账号已经存在了'];
+                        }
+
+                        $staff_info['staff_account']=$row['value'];
+                    }
+
+                    if ($row['name']=='staff_password')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'密码不能为空'];
+                        }else
+                        {
+                            $staff_password=$row['value'];
+                        }
+                    }
+
+                    if ($row['name']=='staff_confirm_password')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'确认密码不能为空'];
+                        }else
+                        {
+                            $staff_confirm_password=$row['value'];
+                        }
+                    }
+
+                    if ($row['name']=='staff_id')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'身份证号不能为空'];
+                        }else
+                        {
+                            if (!$this->validation_filter_id_card($row['value']))
+                            {
+                                return ['error'=>'1','msg'=>'请输入正确的身份证号码'];
+                            }else
+                            {
+                                $staff_info['staff_id']=$row['value'];
+                            }
+                        }
+                    }
+
+                    if ($row['name']=='staff_name')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'员工姓名不能为空'];
+                        }else
+                        {
+                            if (!$this->check_chinese_word($row['value']))
+                            {
+                                return ['error'=>'1','msg'=>'员工姓名必须是中文'];
+                            }else
+                            {
+                                $staff_info['staff_name']=$row['value'];
+                            }
+                        }
+                    }
+
+                    if ($row['name']=='staff_project')
+                    {
+                        $row['value']=json_decode($row['value'],true);
+
+                        if (empty($row['value']))
+                        {
+                            return ['error'=>'1','msg'=>'请设置所属地区'];
+                        }else
+                        {
+                            $staff_info['staff_project']=$this->arr2str($row['value']);
+                        }
+                    }
+
+                    if ($row['name']=='staff_si_type')
+                    {
+                        $row['value']=json_decode($row['value'],true);
+
+                        if (empty($row['value']))
+                        {
+                            return ['error'=>'1','msg'=>'请设置参保类型'];
+                        }else
+                        {
+                            $staff_info['staff_si_type']=$this->arr2str($row['value']);
+                        }
+                    }
+
+                    if ($row['name']=='staff_level')
+                    {
+                        $row['value']=json_decode($row['value'],true);
+
+                        if (empty($row['value']))
+                        {
+                            return ['error'=>'1','msg'=>'请设置权限信息'];
+                        }else
+                        {
+                            $staff_info['staff_level']=$this->arr2str($row['value']);
+                        }
+                    }
+                }
+
+                if ($staff_confirm_password!=$staff_password)
+                {
+                    return ['error'=>'1','msg'=>'两次输入的密码不一样'];
+                }else
+                {
+                    $staff_info['staff_password']=substr(md5($staff_password),0,24);
+                }
+
+                StaffModel::create($staff_info);
+
+                $this->system_log('添加新员工',$staff_info['staff_account']);
+
+                return ['error'=>'0','msg'=>'添加成功'];
+
+                break;
+
+            case 'staff_login':
+
+                $data=Input::get('key');
+
+                $res=array_map(function($row){
+
+                    if ($row['name']=='staff_account')
+                    {
+                        return $row['value'];
+                    }else
+                    {
+                        return substr(md5($row['value']),0,24);
+                    }
+
+                },$data);
+
+                $user_info=StaffModel::where(['staff_account'=>$res[0],'staff_password'=>$res[1]])->get()->toArray();
+
+                if (count($user_info))
+                {
+                    Session::put('user',$user_info);
+                    return ['error'=>'0','msg'=>'成功'];
+                }else
+                {
+                    return ['error'=>'1','msg'=>'请输入正确的用户名和密码'];
+                }
+
+                break;
+
+            case 'add_cust':
+
+                $cust_info=null;
+
+                foreach (Input::get('key') as $row)
+                {
+                    //用户姓名
+                    if ($row['name']=='cust_name')
+                    {
+                        if (!$this->check_chinese_word($row['value']))
+                        {
+                            return ['error'=>'1','msg'=>'姓名必须是中文'];
+                        }
+
+                        $cust_info['cust_name']=$row['value'];
+                    }
+
+                    //身份证号
+                    if ($row['name']=='cust_id')
+                    {
+                        if (!$this->is_idcard($row['value']))
+                        {
+                            return ['error'=>'1','msg'=>'身份证输入不正确'];
+                        }
+
+                        //验证一下数据库中是否有相同的项
+                        if (count(CustModel::where(['cust_id'=>$row['value']])->get()->toArray())!='0')
+                        {
+                            return ['error'=>'1','msg'=>'此身份证号已经存在，不能添加了'];
+                        }
+
+                        $cust_info['cust_id']=$row['value'];
+                    }
+
+                    //社保编号
+                    if ($row['name']=='cust_si_id')
+                    {
+                        //不验证了
+
+                        $cust_info['cust_si_id']=trim($row['value']);
+                    }
+
+                    //手机号码（年审号）
+                    if ($row['name']=='cust_review_num')
+                    {
+                        if (!$this->check_something($row['value'],'phonenumber',null))
+                        {
+                            return ['error'=>'1','msg'=>'手机号码输入不正确'];
+                        }
+
+                        //验证一下数据库中是否有相同的项
+                        if (count(CustModel::where(['cust_review_num'=>$row['value']])->get()->toArray())>='2')
+                        {
+                            return ['error'=>'1','msg'=>'此手机号（年审号）已经存在，不能添加了'];
+                        }
+
+                        $cust_info['cust_review_num']=$row['value'];
+                    }
+
+                    //备用手机号
+                    if ($row['name']=='cust_phone_num')
+                    {
+                        //不验证了
+
+                        $cust_info['cust_phone_num']=trim($row['value']);
+                    }
+
+                    //地址
+                    if ($row['name']=='cust_address')
+                    {
+                        //不验证了
+
+                        $cust_info['cust_address']=trim($row['value']);
+                    }
+
+                    //所属区域
+                    if ($row['name']=='cust_project')
+                    {
+                        $res=ProjectModel::where(['project_name'=>$row['value']])->pluck('project_id')->toArray();
+
+                        $cust_info['cust_project']=$res[0];
+                    }
+
+                    //确认方式
+                    if ($row['name']=='cust_confirm_type')
+                    {
+                        $res=ConfirmTypeModel::where(['confirm_name'=>$row['value']])->pluck('confirm_id')->toArray();
+
+                        $cust_info['cust_confirm_type']=$res[0];
+                    }
+
+                    //参保类型
+                    if ($row['name']=='cust_si_type')
+                    {
+                        $res=SiTypeModel::where(['si_name'=>$row['value']])->pluck('si_id')->toArray();
+
+                        $cust_info['cust_si_type']=$res[0];
+                    }
+                }
+
+                //默认为A类用户
+                $cust_info['cust_type']=Input::get('cust_type');
+
+                //从这里添加的默认为第一年审人
+                $cust_info['cust_review_flag']=Input::get('cust_review_flag');
+
+                //从这里添加的默认为未注册
+                $cust_info['cust_register_flag']=Input::get('cust_register_flag');
+
+                if (Input::get('cust_relation_flag')=='0')
+                {
+                    //从这里添加的默认为还没有添加第二年审人
+                    $cust_info['cust_relation_flag']=Input::get('cust_relation_flag');
+                    $need_update='0';
+                }else
+                {
+                    //如果进来的数据是第二年审人的话，cust_relation_flag是第一年审人的id
+                    //所以执行完了create后，还要update一下
+                    $cust_info['cust_relation_flag']='0';
+                    $need_update='1';
+                }
+
+                if ($need_update)
+                {
+                    $model=CustModel::create($cust_info);
+
+                    //把第一年审人和第二年审人关联起来
+                    $first=CustModel::find(Input::get('cust_relation_flag'));
+                    $first->update(['cust_relation_flag'=>$model->cust_num]);
+
+                }else
+                {
+                    CustModel::create($cust_info);
+                }
+
+
+                $this->system_log('添加新用户','姓名:'.$cust_info['cust_name'].'年审号:'.$cust_info['cust_review_num']);
+
+                return ['error'=>'0','msg'=>'登记成功'];
+
+                break;
+
+            case 'refresh_A':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=5;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                //查询当天的数据
+                $time=date('Y-m-d');
+
+                //查询的字段
+                $get=
+                    [
+                    'cust_num',
+                    'cust_project',
+                    'cust_si_type',
+                    'cust_name',
+                    'cust_review_num',
+                    'cust_register_flag',
+                    'cust_relation_flag'
+                    ];
+
+                //得到这个用户可以看见的地区和参保类型
+                foreach (Session::get('user') as $row)
+                {
+                    $proj=explode(',',$row['staff_project']);
+                    $type=explode(',',$row['staff_si_type']);
+                }
+
+                //总页数
+                $cnt_page=intval(ceil(CustModel::where('created_at','like',$time.'%')
+                        ->where(['cust_review_flag'=>'1','cust_type'=>'A'])
+                        ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)->count()/$limit));
+
+                //第二个where条件只要第一年审人的数据
+                $model=CustModel::where('created_at','like',$time.'%')
+                    ->where(['cust_review_flag'=>'1','cust_type'=>'A'])
+                    ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)
+                    ->orderBy('cust_num','desc')->offset($offset)->limit($limit)->get($get)->toArray();
+
+                //把查询到的数据中，数字转换成中文
+                foreach ($model as &$row)
+                {
+                    $row['cust_project']=ProjectModel::where(['project_id'=>$row['cust_project']])->first()->project_name;
+                    $row['cust_si_type']=SiTypeModel::where(['si_id'=>$row['cust_si_type']])->first()->si_name;
+
+                    //添加上第二年审人信息，如果有的话
+                    if ($row['cust_relation_flag']!='0')
+                    {
+                        $row['cust_relation_flag']=CustModel::where(['cust_num'=>$row['cust_relation_flag']])
+                            ->get(['cust_num','cust_name','cust_register_flag'])
+                            ->toArray();
+                    }
+                }
+
+                return ['error'=>'0','msg'=>'数据读取成功','pages'=>$cnt_page,'data'=>$model];
+
+                break;
+
+            case 'refresh_B':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=5;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                //查询当天的数据
+                $time=date('Y-m-d');
+
+                //查询的字段
+                $get=
+                    [
+                        'cust_num',
+                        'cust_project',
+                        'cust_si_type',
+                        'cust_name',
+                        'cust_review_num',
+                        'cust_register_flag',
+                        'cust_relation_flag'
+                    ];
+
+                //得到这个用户可以看见的地区和参保类型
+                foreach (Session::get('user') as $row)
+                {
+                    $proj=explode(',',$row['staff_project']);
+                    $type=explode(',',$row['staff_si_type']);
+                }
+
+                //总页数
+                $cnt_page=intval(ceil(CustModel::where('created_at','like',$time.'%')
+                        ->where(['cust_review_flag'=>'1','cust_type'=>'B'])
+                        ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)->count()/$limit));
+
+                //第二个where条件只要第一年审人的数据
+                $model=CustModel::where('created_at','like',$time.'%')
+                    ->where(['cust_review_flag'=>'1','cust_type'=>'B'])
+                    ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)
+                    ->orderBy('cust_num','desc')->offset($offset)->limit($limit)->get($get)->toArray();
+
+                //把查询到的数据中，数字转换成中文
+                foreach ($model as &$row)
+                {
+                    $row['cust_project']=ProjectModel::where(['project_id'=>$row['cust_project']])->first()->project_name;
+                    $row['cust_si_type']=SiTypeModel::where(['si_id'=>$row['cust_si_type']])->first()->si_name;
+
+                    //添加上第二年审人信息，如果有的话
+                    if ($row['cust_relation_flag']!='0')
+                    {
+                        $row['cust_relation_flag']=CustModel::where(['cust_num'=>$row['cust_relation_flag']])
+                            ->get(['cust_num','cust_name','cust_register_flag'])
+                            ->toArray();
+                    }
+                }
+
+                return ['error'=>'0','msg'=>'数据读取成功','pages'=>$cnt_page,'data'=>$model];
+
+                break;
+
+            case 'select_data_A':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=5;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                $select_info=[];
+
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='cust_review_num')
+                    {
+                        if (trim($row['value'])!='')
+                        {
+                            $select_info['cust_review_num']=trim($row['value']);
+                            $select_info['cust_type']='A';
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'必须输入年审号码'];
+                        }
+                    }
+                }
+
+                //查询出的字段
+                $get=
+                    [
+                        'cust_num',
+                        'cust_project',
+                        'cust_si_type',
+                        'cust_name',
+                        'cust_review_num',
+                        'cust_register_flag',
+                        'cust_relation_flag'
+                    ];
+
+                //判断数组中是否存在指定键，因为用户不可以查询范围外的数据
+                foreach (Session::get('user') as $row)
+                {
+                    $proj=explode(',',$row['staff_project']);
+                    $type=explode(',',$row['staff_si_type']);
+                }
+                $model=CustModel::where($select_info)->whereIn('cust_project',$proj)
+                    ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')->offset($offset)->limit($limit)
+                    ->get($get)->toArray();
+
+                //总页数
+                $cnt_page=intval(ceil(CustModel::where($select_info)->whereIn('cust_project',$proj)
+                        ->whereIn('cust_si_type',$type)->count()/$limit));
+
+                //把查询到的数据中，数字转换成中文
+                foreach ($model as &$row)
+                {
+                    $row['cust_project']=ProjectModel::where(['project_id'=>$row['cust_project']])->first()->project_name;
+                    $row['cust_si_type']=SiTypeModel::where(['si_id'=>$row['cust_si_type']])->first()->si_name;
+                }
+
+                return ['error'=>'0','msg'=>'查询成功','data'=>$model,'pages'=>$cnt_page];
+
+                break;
+
+            case 'select_data_B':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=5;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                $select_info=[];
+
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='cust_review_num')
+                    {
+                        if (trim($row['value'])!='')
+                        {
+                            $select_info['cust_review_num']=trim($row['value']);
+                            $select_info['cust_type']='B';
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'必须输入年审号码'];
+                        }
+                    }
+                }
+
+                //查询出的字段
+                $get=
+                    [
+                        'cust_num',
+                        'cust_project',
+                        'cust_si_type',
+                        'cust_name',
+                        'cust_review_num',
+                        'cust_register_flag',
+                        'cust_relation_flag'
+                    ];
+
+                //判断数组中是否存在指定键，因为用户不可以查询范围外的数据
+                foreach (Session::get('user') as $row)
+                {
+                    $proj=explode(',',$row['staff_project']);
+                    $type=explode(',',$row['staff_si_type']);
+                }
+                $model=CustModel::where($select_info)->whereIn('cust_project',$proj)
+                    ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')->offset($offset)->limit($limit)
+                    ->get($get)->toArray();
+
+                //总页数
+                $cnt_page=intval(ceil(CustModel::where($select_info)->whereIn('cust_project',$proj)
+                        ->whereIn('cust_si_type',$type)->count()/$limit));
+
+                //把查询到的数据中，数字转换成中文
+                foreach ($model as &$row)
+                {
+                    $row['cust_project']=ProjectModel::where(['project_id'=>$row['cust_project']])->first()->project_name;
+                    $row['cust_si_type']=SiTypeModel::where(['si_id'=>$row['cust_si_type']])->first()->si_name;
+                }
+
+                return ['error'=>'0','msg'=>'查询成功','data'=>$model,'pages'=>$cnt_page];
+
+                break;
+
+            case 'statistics_change':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=12;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                foreach (Input::get('key') as $row)
+                {
+                    //判断开始时间是不是空
+                    if ($row['name']=='star_date')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'开始时间不能为空'];
+                        }else
+                        {
+                            $start=$row['value'].' 00:00:00';
+                        }
+                    }
+
+                    //判断结束时间是不是空
+                    if ($row['name']=='stop_date')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'结束时间不能为空'];
+                        }else
+                        {
+                            $stop=$row['value'].' 23:59:59';
+                        }
+                    }
+
+                    //判断客户类型
+                    if ($row['name']=='cust_type')
+                    {
+                        if ($row['value']=='0')
+                        {
+                            //说明是要查询A类和B类用户
+                        }elseif ($row['value']=='A')
+                        {
+                            $select_info['cust_type']='A';
+                        }else
+                        {
+                            $select_info['cust_type']='B';
+                        }
+                    }
+
+                    //取得所属地区
+                    if ($row['name']=='cust_project')
+                    {
+                        $select_info['cust_project']=$row['value'];
+                    }
+
+                    //取得参保类型
+                    if ($row['name']=='cust_si_type')
+                    {
+                        $select_info['cust_si_type']=$row['value'];
+                    }
+
+                    //取得注册信息
+                    if ($row['name']=='cust_register_flag')
+                    {
+                        $select_info['cust_register_flag']=$row['value'];
+                    }
+                }
+
+                $get=[
+                    'cust_project',
+                    'cust_si_type',
+                    'cust_name',
+                    'cust_id',
+                    'cust_si_id',
+                    'cust_review_num',
+                    'cust_phone_num'
+                ];
+
+                $data=CustModel::where($select_info)->wherebetween('created_at',[$start,$stop])
+                    ->offset($offset)->limit($limit)->get($get)->toArray();
+
+                //总页数
+                $cnt=CustModel::where($select_info)->wherebetween('created_at',[$start,$stop])->count();
+                $cnt_page=intval(ceil($cnt/$limit));
+
+                //查出来的数据改成中文
+                foreach ($data as &$row)
+                {
+                    $row['cust_project']=ProjectModel::find($row['cust_project'])->project_name;
+                    $row['cust_si_type']=SiTypeModel::find($row['cust_si_type'])->si_name;
+                }
+
+                return ['error'=>'0','msg'=>'查询成功','data'=>$data,'pages'=>$cnt_page,'count_data'=>$cnt];
+
+                break;
+
+            case 'analysis_change':
+
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='project_name')
+                    {
+                        $proj=$row['value'];
+                    }
+
+                    //判断一下是否已经选择了日期
+                    if ($row['name']=='year_and_month')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'必须要选择一个日期'];
+                        }else
+                        {
+                            //得到年-月
+                            $yearAndmonth=substr($row['value'],0,strlen($row['value'])-3);
+
+                            //得到当前年的当前月有多少天
+                            $unixTime=strtotime($row['value']);
+                            $day=date('t',$unixTime);
+
+                            //从数据库中查询符合条件的数据
+                            $data=CustModel::where(['cust_project'=>$proj])->where('created_at','like',$yearAndmonth.'%')
+                                ->get(['created_at'])->toArray();
+                            $data=array_flatten($data);
+
+                            if (empty($data))
+                            {
+                                return ['error'=>'1','msg'=>'没有匹配到数据'];
+                            }else
+                            {
+                                //上面已经得到当前月的所有数据了
+                                foreach ($data as $row)
+                                {
+                                    //只保留年月日
+                                    $time[]=substr($row,0,10);
+                                }
+
+                                //制造返回给前端页面的数组
+                                foreach (array_count_values($time) as $k=>$v)
+                                {
+                                    $morris_data[]=['y'=>$k,'mytarget'=>$v];
+                                }
+
+                                //得到当前日期的前缀
+                                $prefix=date('Y-m-',$unixTime);
+
+                                //补齐丢失的日期
+                                for ($i=1;$i<=$day;$i++)
+                                {
+                                    if (strlen($i)=='1')
+                                    {
+                                        if (!array_key_exists($prefix.'0'.$i,array_count_values($time)))
+                                        {
+                                            $morris_data[]=['y'=>$prefix.'0'.$i,'mytarget'=>'0'];
+                                        }
+                                    }else
+                                    {
+                                        if (!array_key_exists($prefix.$i,array_count_values($time)))
+                                        {
+                                            $morris_data[]=['y'=>$prefix.$i,'mytarget'=>'0'];
+                                        }
+                                    }
+                                }
+
+                                return ['error'=>'0','msg'=>'成功','data'=>$morris_data,'data_total'=>array_sum(array_count_values($time))];
+                            }
+                        }
+                    }
+                }
+
+                break;
+
+            case 'send_mail_get_proj':
+
+                $data=ProjectModel::pluck('project_name','project_id')->toArray();
+
+                return ['error'=>'0','msg'=>'加载完毕','data'=>$data];
+
+                break;
+
+            case 'send_mail_get_si_type':
+
+                $data=SiTypeModel::pluck('si_name','si_id')->toArray();
+
+                return ['error'=>'0','msg'=>'加载完毕','data'=>$data];
+
+                break;
+
+            case 'send_mail':
+
+                foreach ($data=Input::get('key') as $row)
+                {
+                    if ($row['name']=='optionsRadios')
+                    {
+                        //给全体员工发信息
+                        $mail_info['mail_type']=$row['value'];
+                    }
+
+                    if ($row['name']=='proj' || $row['name']=='si_type' || $row['name']=='staff')
+                    {
+                        if (trim($row['value']==''))
+                        {
+                            return ['error'=>'1','msg'=>'请输入员工账号'];
+                        }
+                        //信息的目标
+                        $mail_info['mail_target']=$row['value'];
+                    }
+
+                    if ($row['name']=='allstaff')
+                    {
+                        //信息的目标
+                        $mail_info['mail_target']='allstaff';
+                    }
+
+                    if ($row['name']=='mail_content')
+                    {
+                        if (trim($row['value'])=='')
+                        {
+                            return ['error'=>'1','msg'=>'邮件内容不能是空'];
+                        }
+                        //信息的内容
+                        $mail_info['mail_content']=trim($row['value']);
+                    }
+                }
+
+                //发送邮件
+                SendMailModel::create($mail_info);
+
+                $this->system_log('发送邮件','超级管理员发送了一封站内邮件');
+
+                return ['error'=>'0','msg'=>'发送完毕'];
+
+                break;
+
+            case 'get_mail':
+
+                $get=[
+                    'mail_id',
+                    'mail_type',
+                    'mail_target',
+                    'mail_content',
+                    'created_at'
+                ];
+
+                $user=Session::get('user');
+
+                //取得全体员工的邮件
+                $AllMail=SendMailModel::where(['mail_type'=>'1'])->get($get)->toArray();
+
+                //取得属地员工的邮件
+                $ProjMail=SendMailModel::where(['mail_type'=>'2'])
+                    ->whereIn('mail_target',explode(",",$user[0]['staff_project']))
+                    ->get($get)->toArray();
+
+                //取得参保类型员工的邮件
+                $SiTypeMail=SendMailModel::where(['mail_type'=>'3'])
+                    ->whereIn('mail_target',explode(",",$user[0]['staff_si_type']))
+                    ->get($get)->toArray();
+
+                //取得指定员工账号的邮件
+                $StaffMail=SendMailModel::where(['mail_type'=>'4','mail_target'=>$user[0]['staff_account']])
+                    ->get($get)->toArray();
+
+                return ['error'=>'0','msg'=>'刷新邮件完毕',
+                    'AllMail'=>$AllMail,'ProjMail'=>$ProjMail,'SiTypeMail'=>$SiTypeMail,'StaffMail'=>$StaffMail];
+
+                break;
+
+            case 'service_care_change':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=12;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                //查询条件
+                $condition=null;
+                //是否使用身份证或者手机号码查询
+                $cond=null;
+
+                //遍历出所有的查询条件
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='cust_project')
+                    {
+                        $condition['cust_project']=$row['value'];
+                    }
+
+                    if ($row['name']=='cust_si_type')
+                    {
+                        $condition['cust_si_type']=$row['value'];
+                    }
+
+                    if ($row['name']=='confirm_res')
+                    {
+                        $YorN=$row['value'];
+                    }
+
+                    if ($row['name']=='cust_type')
+                    {
+                        $condition['cust_type']=$row['value'];
+                    }
+
+                    if ($row['name']=='cond')
+                    {
+                        $cond=trim($row['value']);
+                    }
+                }
+
+                //确定cond的状态
+                if ($cond=='')
+                {
+                    //不用身份证或者手机号作为查询条件
+                    $data=CustModel::where($select_info)->wherebetween('created_at',[$start,$stop])
+                    ->offset($offset)->limit($limit)->get($get)->toArray();
+
+                    //总页数
+                    $cnt=CustModel::where($select_info)->wherebetween('created_at',[$start,$stop])->count();
+                    $cnt_page=intval(ceil($cnt/$limit));
+
+                    //查出来的数据改成中文
+                    foreach ($data as &$row)
+                    {
+                        $row['cust_project']=ProjectModel::find($row['cust_project'])->project_name;
+                        $row['cust_si_type']=SiTypeModel::find($row['cust_si_type'])->si_name;
+                    }
+
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$data,'pages'=>$cnt_page,'count_data'=>$cnt];
+
+                }elseif (strlen($cond)=='18')
+                {
+                    if (!$this->is_idcard($cond))
+                    {
+                        return ['error'=>'1','msg'=>'身份证号码有误'];
+                    }else
+                    {
+                        //用身份证查询数据
+
+                    }
+                }elseif (strlen($cond)=='11')
+                {
+                    //用手机号查询数据
+
+                }else
+                {
+                    return ['error'=>'1','msg'=>'您输入的既不是[有效身份证]也不是[手机号]'];
+                }
+
+
+
+
+
+
+                break;
+
+
+
+
+
+
+
+
+
+        }
+    }
+}
