@@ -8,7 +8,16 @@
             <div class="col-sm-12">
                 <div class="row">
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                    <form id="service_care_form">
+
+                    <div class="nav-tabs-custom">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#service_care_1" data-toggle="tab" aria-expanded="true">通过条件查询</a></li>
+                            <li class=""><a href="#service_care_2" data-toggle="tab" aria-expanded="false">通过身份证或手机号查询</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="service_care_1" style="height: 40px;">
+                                <span id="service_care_1_span">
+                                    <form id="service_care_form">
 
                         <div class="col-sm-2">
                             <select class="form-control" name="cust_project" style="padding-left: 8px;">
@@ -24,10 +33,6 @@
                                     <option value={{$k}}>{{$v}}</option>
                                 @endforeach
                             </select>
-                        </div>
-
-                        <div class="col-sm-2">
-                            <input type="text" class="form-control" name="cond" placeholder="身份证或手机号">
                         </div>
 
                         <div class="col-sm-2">
@@ -47,6 +52,20 @@
                         </div>
 
                     </form>
+                                </span>
+                            </div>
+                            <div class="tab-pane" id="service_care_2" style="height: 40px;">
+                                <span id="service_care_2_span">
+                                    <form id="service_care_form_1">
+                                        <div class="col-sm-2">
+                                            <input type="text" class="form-control" name="cond" placeholder="身份证或手机号">
+                                        </div>
+                                    </form>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -105,7 +124,7 @@
         });
 
         $("input[name=cond]").change(function () {
-            service_care_change();
+            service_care_change_1();
         });
 
         $("select[name=confirm_res]").change(function () {

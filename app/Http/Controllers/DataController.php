@@ -1052,8 +1052,6 @@ class DataController extends Controller
 
                 //查询条件
                 $condition=null;
-                //是否使用身份证或者手机号码查询
-                $cond=null;
 
                 //遍历出所有的查询条件
                 foreach (Input::get('key') as $row)
@@ -1070,24 +1068,63 @@ class DataController extends Controller
 
                     if ($row['name']=='confirm_res')
                     {
-                        $YorN=$row['value'];
+                        if ($row['value']=='0')
+                        {
+                            $YorN=['Y','N'];
+                        }else
+                        {
+                            $YorN=[$row['value']];
+                        }
                     }
 
                     if ($row['name']=='cust_type')
                     {
-                        $condition['cust_type']=$row['value'];
-                    }
-
-                    if ($row['name']=='cond')
-                    {
-                        $cond=trim($row['value']);
+                        if ($row['value']=='0')
+                        {
+                            $AorB=['A','B'];
+                        }else
+                        {
+                            $AorB=[$row['value']];
+                        }
                     }
                 }
+
+                $res=\DB::table('customer_info')
+                    ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                    ->where($condition)
+                    ->whereIn('customer_confirm.confirm_res',$YorN)
+                    ->whereIn('customer_info.cust_type',$AorB)
+                    ->orderBy('customer_confirm.confirm_pid','desc')
+                    ->orderBy('customer_confirm.created_at','desc')
+                    ->where('customer_confirm.created_at','like',date('Y',time()).'%')
+                    ->offset($offset)->limit($limit)
+                    ->get();
+
+                dd($res);
+
+
+
 
                 //确定cond的状态
                 if ($cond=='')
                 {
                     //不用身份证或者手机号作为查询条件
+                    $sql='select a.cust_num,a.cust_name,a.cust_review_num,b.confirm_res,b.created_at 
+                    from zbxl_customer_info as a 
+                    left join zbxl_customer_confirm as b 
+                    on a.cust_num=b.confirm_pid 
+                    where b.confirm_res="Y" or b.confirm_res="N" 
+                    limit '.$limit.' offset '.$offset.'';
+
+                    dd($this->mypdo($sql));
+
+                    $custinfo=CustModel::where($condition)->whereIn('cust_type',$AorB)->get()->toArray();
+
+                    dd($custinfo);
+
+
+
+
                     $data=CustModel::where($select_info)->wherebetween('created_at',[$start,$stop])
                     ->offset($offset)->limit($limit)->get($get)->toArray();
 

@@ -265,6 +265,25 @@ class Controller extends BaseController
         return $res;
     }
 
+    //laravel的链接查询没研究会，先用原生的吧...
+    public function mypdo($sql)
+    {
+        $dbh=new \PDO('mysql:host=localhost;dbname=shengwen','root','root');
+
+        $res=$dbh->query($sql);
+
+        $res->setFetchMode(\PDO::FETCH_ASSOC);
+
+        $final=null;
+
+        while ($row=$res->fetch())
+        {
+            $final[]=$row;
+        }
+
+        return $final;
+    }
+
 
 
 

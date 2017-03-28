@@ -11,4 +11,11 @@ class CustConfirmModel extends Model
     protected $primaryKey='confirm_num';
     //黑名单
     protected $guarded=[];
+
+    //建立和CustModel表的一对多关联
+    public function cust()
+    {
+        return $this->belongsTo('App\Http\Model\CustModel','confirm_pid','cust_num');
+        //return $this->hasMany('App\Http\Model\CustModel','cust_num','confirm_pid');
+    }
 }
