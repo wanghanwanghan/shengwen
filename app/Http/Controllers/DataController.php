@@ -1053,117 +1053,219 @@ class DataController extends Controller
                 //查询条件
                 $condition=null;
 
-                //遍历出所有的查询条件
+                if (Input::get('tip')=='0')
+                {
+                    //遍历出所有的查询条件
+                    foreach (Input::get('key') as $row)
+                    {
+                        if ($row['name']=='cust_project')
+                        {
+                            $condition['cust_project']=$row['value'];
+                        }
+
+                        if ($row['name']=='cust_si_type')
+                        {
+                            $condition['cust_si_type']=$row['value'];
+                        }
+
+                        if ($row['name']=='confirm_res')
+                        {
+                            if ($row['value']=='0')
+                            {
+                                $YorN=['Y','N'];
+                            }else
+                            {
+                                $YorN=[$row['value']];
+                            }
+                        }
+
+                        if ($row['name']=='cust_type')
+                        {
+                            if ($row['value']=='0')
+                            {
+                                $AorB=['A','B'];
+                            }else
+                            {
+                                $AorB=[$row['value']];
+                            }
+                        }
+                    }
+
+                    //查询想要的数据
+                    $get=[
+                        'customer_info.cust_name',
+                        'customer_info.cust_id',
+                        'customer_info.cust_review_num',
+                        'customer_info.cust_phone_num',
+                        'customer_info.cust_type',
+                        'customer_confirm.created_at',
+                        'customer_confirm.confirm_res',
+                        'customer_confirm.confirm_num',
+                        'customer_confirm.confirm_btw'
+                    ];
+
+                    //查询数据
+                    $res=\DB::table('customer_info')
+                        ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                        ->where($condition)
+                        ->whereIn('customer_confirm.confirm_res',$YorN)
+                        ->whereIn('customer_info.cust_type',$AorB)
+                        ->orderBy('customer_confirm.confirm_pid','desc')
+                        ->orderBy('customer_confirm.created_at','desc')
+                        ->where('customer_confirm.created_at','like',date('Y',time()).'%')
+                        ->offset($offset)->limit($limit)
+                        ->get($get);
+
+                    //查询总页数
+                    $cnt=\DB::table('customer_info')
+                        ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                        ->where($condition)
+                        ->whereIn('customer_confirm.confirm_res',$YorN)
+                        ->whereIn('customer_info.cust_type',$AorB)
+                        ->where('customer_confirm.created_at','like',date('Y',time()).'%')
+                        ->count();
+                    $cnt_page=intval(ceil($cnt/$limit));
+
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
+                }else
+                {
+                    $cond=null;
+
+                    foreach (Input::get('key') as $row)
+                    {
+                        if ($row['name']=='cond')
+                        {
+                            $cond=trim($row['value']);
+                        }
+                    }
+
+                    //查询想要的数据
+                    $get=[
+                        'customer_info.cust_name',
+                        'customer_info.cust_id',
+                        'customer_info.cust_review_num',
+                        'customer_info.cust_phone_num',
+                        'customer_info.cust_type',
+                        'customer_confirm.created_at',
+                        'customer_confirm.confirm_res',
+                        'customer_confirm.confirm_num',
+                        'customer_confirm.confirm_btw'
+                    ];
+
+                    //判断用户输入的是手机号还是身份证号
+                    if ($this->is_idcard($cond))
+                    {
+                        //输入的是身份证
+                        //查询数据
+                        $res=\DB::table('customer_info')
+                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                            ->where(['cust_id'=>$cond])
+                            ->where('customer_confirm.created_at','like',date('Y',time()).'%')
+                            ->orderBy('customer_confirm.created_at','desc')
+                            ->offset($offset)->limit($limit)
+                            ->get($get);
+
+                        if (count($res)=='0')
+                        {
+                            return ['error'=>'1','msg'=>'此身份证不存在'];
+                        }
+
+                        //查询总页数
+                        $cnt=\DB::table('customer_info')
+                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                            ->where(['cust_id'=>$cond])
+                            ->where('customer_confirm.created_at','like',date('Y',time()).'%')
+                            ->count();
+                        $cnt_page=intval(ceil($cnt/$limit));
+
+                        return ['error'=>'0','msg'=>'查询成功','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
+
+                    }elseif ($this->check_something($cond,'phonenumber',null))
+                    {
+                        //输入的是手机号
+                        //查询数据
+                        $res=\DB::table('customer_info')
+                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                            ->where(['cust_review_num'=>$cond])
+                            ->where('customer_confirm.created_at','like',date('Y',time()).'%')
+                            ->orderBy('customer_confirm.created_at','desc')
+                            ->offset($offset)->limit($limit)
+                            ->get($get);
+
+                        if (count($res)=='0')
+                        {
+                            return ['error'=>'1','msg'=>'此手机号不存在'];
+                        }
+
+                        //查询总页数
+                        $cnt=\DB::table('customer_info')
+                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                            ->where(['cust_review_num'=>$cond])
+                            ->where('customer_confirm.created_at','like',date('Y',time()).'%')
+                            ->count();
+                        $cnt_page=intval(ceil($cnt/$limit));
+
+                        return ['error'=>'0','msg'=>'查询成功','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
+                    }else
+                    {
+                        //既不是身份证也不是手机号
+                        return ['error'=>'1','msg'=>'既不是身份证也不是手机号'];
+                    }
+
+                }
+
+                break;
+
+            case 'modify_btw':
+
+                $pid=null;
+                $cond=null;
+                $YorN=null;
+
                 foreach (Input::get('key') as $row)
                 {
-                    if ($row['name']=='cust_project')
+                    if ($row['name']=='btw')
                     {
-                        $condition['cust_project']=$row['value'];
+                        $cond=trim($row['value']);
                     }
 
-                    if ($row['name']=='cust_si_type')
+                    if ($row['name']=='btw_id')
                     {
-                        $condition['cust_si_type']=$row['value'];
+                        $pid=$row['value'];
                     }
 
-                    if ($row['name']=='confirm_res')
+                    if ($row['name']=='mycheck')
                     {
-                        if ($row['value']=='0')
-                        {
-                            $YorN=['Y','N'];
-                        }else
-                        {
-                            $YorN=[$row['value']];
-                        }
-                    }
-
-                    if ($row['name']=='cust_type')
-                    {
-                        if ($row['value']=='0')
-                        {
-                            $AorB=['A','B'];
-                        }else
-                        {
-                            $AorB=[$row['value']];
-                        }
+                        $YorN='Y';
                     }
                 }
 
-                $res=\DB::table('customer_info')
-                    ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
-                    ->where($condition)
-                    ->whereIn('customer_confirm.confirm_res',$YorN)
-                    ->whereIn('customer_info.cust_type',$AorB)
-                    ->orderBy('customer_confirm.confirm_pid','desc')
-                    ->orderBy('customer_confirm.created_at','desc')
-                    ->where('customer_confirm.created_at','like',date('Y',time()).'%')
-                    ->offset($offset)->limit($limit)
-                    ->get();
-
-                dd($res);
-
-
-
-
-                //确定cond的状态
-                if ($cond=='')
+                if (!$pid==null)
                 {
-                    //不用身份证或者手机号作为查询条件
-                    $sql='select a.cust_num,a.cust_name,a.cust_review_num,b.confirm_res,b.created_at 
-                    from zbxl_customer_info as a 
-                    left join zbxl_customer_confirm as b 
-                    on a.cust_num=b.confirm_pid 
-                    where b.confirm_res="Y" or b.confirm_res="N" 
-                    limit '.$limit.' offset '.$offset.'';
+                    $data=CustConfirmModel::find($pid);
 
-                    dd($this->mypdo($sql));
+                    $data->confirm_btw=$cond;
 
-                    $custinfo=CustModel::where($condition)->whereIn('cust_type',$AorB)->get()->toArray();
-
-                    dd($custinfo);
-
-
-
-
-                    $data=CustModel::where($select_info)->wherebetween('created_at',[$start,$stop])
-                    ->offset($offset)->limit($limit)->get($get)->toArray();
-
-                    //总页数
-                    $cnt=CustModel::where($select_info)->wherebetween('created_at',[$start,$stop])->count();
-                    $cnt_page=intval(ceil($cnt/$limit));
-
-                    //查出来的数据改成中文
-                    foreach ($data as &$row)
+                    //判断是否需要改成通过认证
+                    if ($YorN=='Y')
                     {
-                        $row['cust_project']=ProjectModel::find($row['cust_project'])->project_name;
-                        $row['cust_si_type']=SiTypeModel::find($row['cust_si_type'])->si_name;
-                    }
+                        $data->confirm_res='Y';
+                        $data->save();
 
-                    return ['error'=>'0','msg'=>'查询成功','data'=>$data,'pages'=>$cnt_page,'count_data'=>$cnt];
-
-                }elseif (strlen($cond)=='18')
-                {
-                    if (!$this->is_idcard($cond))
-                    {
-                        return ['error'=>'1','msg'=>'身份证号码有误'];
+                        $this->system_log('修改认证表的认证结果','把主键是'.$pid.'的认证结果改成了<Y>');
                     }else
                     {
-                        //用身份证查询数据
-
+                        $data->save();
                     }
-                }elseif (strlen($cond)=='11')
-                {
-                    //用手机号查询数据
+
+                    $this->system_log('修改认证表备注','把主键是'.$pid.'的备注改成了<'.$cond.'>');
+
+                    return ['error'=>'0','msg'=>'修改成功'];
 
                 }else
                 {
-                    return ['error'=>'1','msg'=>'您输入的既不是[有效身份证]也不是[手机号]'];
+                    return ['error'=>'1','msg'=>'查询数据失败'];
                 }
-
-
-
-
-
 
                 break;
 
@@ -1177,4 +1279,5 @@ class DataController extends Controller
 
         }
     }
+
 }

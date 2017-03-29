@@ -98,4 +98,16 @@ Route::get('statistics','WebController@statistics');
 //分析
 Route::get('analysis','WebController@analysis');
 
+//change_btw打开的iframe
+Route::get('change_btw/{id}', function ($id) {
+    $id=$id;
+    return view('change_btw',compact('id'));
+});
+
+
+
+
+
+
+
 

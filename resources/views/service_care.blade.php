@@ -84,13 +84,14 @@
                     <div class="col-sm-12">
                         <table id="service_care_table" class="table table-bordered table-hover dataTable" role="grid" aria-describedby="example2_info">
                             <thead>
-                            <th style="text-align: center">属地</th>
-                            <th style="text-align: center">参保</th>
                             <th style="text-align: center">姓名</th>
                             <th style="text-align: center">身份证</th>
-                            <th style="text-align: center">社保号</th>
                             <th style="text-align: center">认证电话</th>
                             <th style="text-align: center">备用电话</th>
+                            <th style="text-align: center">类型</th>
+                            <th style="text-align: center">时间</th>
+                            <th style="text-align: center">结果</th>
+                            <th style="text-align: center">备注</th>
                             </thead>
                             <tbody>
 

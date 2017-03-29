@@ -826,7 +826,8 @@ function service_care_change(curr) {
         _token:$("input[name=_token]").val(),
         page  :curr||1,
         type  :'service_care_change',
-        key   :$("#service_care_form").serializeArray()
+        key   :$("#service_care_form").serializeArray(),
+        tip   :'0'
     };
 
     $.post(url,data,function (response) {
@@ -841,10 +842,107 @@ function service_care_change(curr) {
             for(var i=0;i<response.data.length;i++){
 
                 var tabletr=$("<tr></tr>");
+                var id='0';
 
                 $.each(response.data[i],function (k,v) {
 
-                    tabletr.append('<td align="center">'+v+'</td>');
+                    if(k=='confirm_num')
+                    {
+                        tabletr.attr('id',v);
+                        id=v;
+                    }else if(k=='confirm_btw')
+                    {
+                        if(v=='')
+                        {
+                            //没有备注的情况
+                            tabletr.append('<td align=center><i onclick=change_btw($(this).attr("id")); id='+id+' class="fa fa-edit"></i></td>');
+                        }else
+                        {
+                            //有备注的情况
+                            tabletr.append('<td onclick=change_btw($(this).attr("id")); id='+id+' align="center">'+v+'</td>');
+                        }
+
+                    }else
+                    {
+                        tabletr.append('<td align="center">'+v+'</td>');
+                    }
+
+                });
+
+                $("#service_care_table tbody").append(tabletr);
+
+            }
+
+            //显示分页
+            laypage({
+                cont: 'service_care_laypage', //容器
+                pages: response.pages, //通过后台拿到的总页数
+                curr: curr || 1, //当前页
+                jump: function(obj, first){ //触发分页后的回调
+                    if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
+                        service_care_change(obj.curr);
+                    }
+                }
+            });
+
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
+
+function service_care_change_1(curr) {
+
+    $("#service_care_table tbody").children().remove();
+
+    var url ='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        page  :curr||1,
+        type  :'service_care_change',
+        key   :$("#service_care_form_1").serializeArray(),
+        tip   :'1'
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.msg(response.msg);
+
+            $("#data_total").html(response.count_data);
+
+            //遍历返回的数据-表内容
+            for(var i=0;i<response.data.length;i++){
+
+                var tabletr=$("<tr></tr>");
+                var id='0';
+
+                $.each(response.data[i],function (k,v) {
+
+                    if(k=='confirm_num')
+                    {
+                        tabletr.attr('id',v);
+                        id=v;
+                    }else if(k=='confirm_btw')
+                    {
+                        if(v=='')
+                        {
+                            //没有备注的情况
+                            tabletr.append('<td align=center><i onclick=change_btw($(this).attr("id")); id='+id+' class="fa fa-edit"></i></td>');
+                        }else
+                        {
+                            //有备注的情况
+                            tabletr.append('<td onclick=change_btw($(this).attr("id")); id='+id+' align="center">'+v+'</td>');
+                        }
+
+                    }else
+                    {
+                        tabletr.append('<td align="center">'+v+'</td>');
+                    }
 
                 });
 
@@ -944,6 +1042,46 @@ function api_register(id) {
         }
 
     },'json');
+
+}
+
+function change_btw(id) {
+
+    //传入的是customer_confirm的主键
+    layer.open({
+        type: 2,
+        title: '修改备注信息',
+        shadeClose: true,
+        shade: 0.8,
+        area: ['400px', '300px'],
+        resize:false,
+        content: ['/change_btw/'+id,'no'] //iframe的url
+    });
+
+}
+
+function aaa() {
+
+    var url ='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        type  :'modify_btw',
+        key   :$("#change_btw_form").serializeArray()
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.msg(response.msg);
+            location.reload(true);
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
 
 }
 
