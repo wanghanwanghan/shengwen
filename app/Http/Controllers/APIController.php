@@ -7,6 +7,7 @@ use App\Http\Model\LogModel;
 use App\Http\Model\VocalPrintModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Redis;
 
 class APIController extends Controller
 {
@@ -69,6 +70,16 @@ class APIController extends Controller
                 curl_close($curl);//释放
 
                 return ['error'=>'0','msg'=>'发送验证请求成功'];
+
+                break;
+
+            case 'loop_call':
+
+
+
+
+
+                return ['error'=>'0','msg'=>'redis'];
 
                 break;
         }
@@ -152,7 +163,7 @@ class APIController extends Controller
         define('AUDIO_FILE', public_path('test.wav'));
         $url = "http://vop.baidu.com/server_api";
 
-//put your params here
+        //put your params here
         $cuid = "9394757";
         $apiKey = "eDQD692rXYXa3Sj1CrNHk1ZZ";
         $secretKey = "bc6f23033ebad89a413f0fc9726fc835";
@@ -209,6 +220,18 @@ class APIController extends Controller
         var_dump($response);
     }
 
+    //马上删除
+    public function test()
+    {
+        $res=CustModel::find($_GET['id']);
 
+        if (empty($res))
+        {
+            dd('没有用户');
+        }else
+        {
+            dd($res->toArray());
+        }
+    }
 
 }

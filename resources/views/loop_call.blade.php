@@ -14,14 +14,6 @@
                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
 
                         <div class="col-sm-2">
-                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){statistics_change();}});" name="star_date" placeholder="开始时间"/>
-                        </div>
-
-                        <div class="col-sm-2">
-                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){statistics_change();}});" name="stop_date" placeholder="结束时间"/>
-                        </div>
-
-                        <div class="col-sm-2">
                             <select class="form-control" name="cust_project" style="padding-left: 8px;">
                                 @foreach($staff_project as $k=>$v)
                                     <option value={{$k}}>{{$v}}</option>
@@ -101,32 +93,29 @@
         <!-- /.box-body -->
     </div>
 
-
     <script>
 
-        $("input[name=star_date]").change(function () {
-            statistics_change();
-        });
+        $(function () {
 
-        $("input[name=stop_date]").change(function () {
-            statistics_change();
-        });
+            var url ='/api/loop/call';
+            var data={
+                _token:$("input[name=_token]").val(),
+                type  :'loop_call'
+            };
 
-        $("select[name=cust_project]").change(function () {
-            statistics_change();
-        });
+            $.post(url,data,function (response) {
 
-        $("select[name=cust_si_type]").change(function () {
-            statistics_change();
-        });
+                if(response.error=='0')
+                {
+                    layer.msg(response.msg);
+                }else
+                {
+                    layer.msg(response.msg);
+                }
 
-        $("select[name=cust_register_flag]").change(function () {
-            statistics_change();
-        });
+            },'json');
 
-        $("select[name=cust_type]").change(function () {
-            statistics_change();
-        });
+        })
 
     </script>
 

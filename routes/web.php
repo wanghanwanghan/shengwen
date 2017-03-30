@@ -57,6 +57,17 @@ Route::group(['middleware'=>['APIMiddleware']],function (){
     //ivr返回验证的结果
     Route::get('api/verify/return','APIController@ivr_return_2');
 
+    //轮播
+    Route::post('api/loop/call','APIController@web_ivr_api');
+
+    //测试http请求能不能执行
+    Route::get('api/test','APIController@test');
+
+
+
+
+
+
     //声纹引擎的操作
     Route::post('api/vocalprint','APIController@web_vocalprint_api');
 
