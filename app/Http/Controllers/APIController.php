@@ -75,11 +75,11 @@ class APIController extends Controller
 
             case 'loop_call':
 
+                $res=request()->url();
 
 
 
-
-                return ['error'=>'0','msg'=>'redis'];
+                return ['error'=>'0','msg'=>$res];
 
                 break;
         }
