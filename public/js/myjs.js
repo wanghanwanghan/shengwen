@@ -453,7 +453,7 @@ function refresh_A(curr) {
                         }else
                         {
                             //验证，删除按钮
-                            tabletr.append('<td align="center">'+'<a class="btn btn-info" id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
+                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
                         }
                     }else if (k=='cust_relation_flag')
                     {
@@ -1028,6 +1028,29 @@ function api_register(id) {
     var data={
         _token:$("input[name=_token]").val(),
         type  :'register',
+        key   :id
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.msg(response.msg);
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
+
+function api_verify(id) {
+
+    var url ='/api/register';
+    var data={
+        _token:$("input[name=_token]").val(),
+        type  :'verify',
         key   :id
     };
 

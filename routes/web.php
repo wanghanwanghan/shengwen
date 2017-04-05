@@ -48,10 +48,16 @@ Route::group(['middleware'=>['RootMiddleware']],function (){
 //本web的接口路由组******************************************
 Route::group(['middleware'=>['APIMiddleware']],function (){
 
-    //登记用户信息页面，A类用户，开始注册按钮
+    //查询
+    Route::get('api/select','APIController@select_something');
+
+    //开始注册按钮
     Route::post('api/register','APIController@web_ivr_api');
 
-    //ivr返回注册用户的结果
+    //开始验证按钮
+    Route::post('api/verify','APIController@web_ivr_api');
+
+    //ivr返回注册的结果
     Route::get('api/register/return','APIController@ivr_return_1');
 
     //ivr返回验证的结果
@@ -60,24 +66,19 @@ Route::group(['middleware'=>['APIMiddleware']],function (){
     //轮播
     Route::post('api/loop/call','APIController@web_ivr_api');
 
-    //测试http请求能不能执行
-    Route::get('api/test','APIController@test');
 
 
 
 
 
-
-    //声纹引擎的操作
-    Route::post('api/vocalprint','APIController@web_vocalprint_api');
 
 });//*******************************************************
 
 //登陆
-//Route::get('/','APIController@baiducheck');
 Route::get('/', function () {
     return view('login');
 });
+//Route::get('/','APIController@ceshi_test');
 
 //所有ajax数据处理
 Route::post('data/ajax','DataController@ajax');
