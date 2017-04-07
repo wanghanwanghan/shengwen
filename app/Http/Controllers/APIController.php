@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Model\CustModel;
 use App\Http\Model\LogModel;
+use App\Http\Model\ProjectModel;
+use App\Http\Model\SiTypeModel;
 use App\Http\Model\VocalPrintModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
@@ -54,6 +56,70 @@ class APIController extends Controller
                 break;
 
         }
+    }
+
+    public function ajax()
+    {
+        switch (Input::get('type'))
+        {
+            case 'get_loop_mongo_data':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=12;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                $obj=$this->mymongo();
+
+                //查询数据
+                $res=$obj->ivrlog->loop->find()->sort(['time'=>-1])->limit($limit)->skip($offset);
+
+                //总页数
+                $cnt=$obj->ivrlog->loop->find()->count();
+                $cnt_page=intval(ceil($cnt/$limit));
+
+                foreach ($res as $row)
+                {
+                    //把所有mongo数据取出来
+                    $tmp[]=$row;
+                }
+
+                //重新整理并发送给前端显示
+                foreach ($tmp as &$row)
+                {
+                    unset($row['_id']);
+
+                    $row['time']=date("Y-m-d H:i:s",$row['time']);
+
+                    if ($row['result']=='0')
+                    {
+                        $row['result']='正常';
+                    }else
+                    {
+                        $row['result']='异常';
+                    }
+                }
+
+                $data=$tmp;
+
+                return ['error'=>'0','data'=>$data,'pages'=>$cnt_page,'count_data'=>$cnt];
+
+                break;
+
+            case '':
+
+
+
+                break;
+
+        }
+
+
+
     }
 
     //web到ivr的接口
@@ -121,9 +187,112 @@ class APIController extends Controller
             //web给ivr发送轮播认证请求
             case 'loop_call':
 
+                foreach (Input::get('key') as $row)
+                {
+                    //判断开始时间是不是空
+                    if ($row['name']=='star_date')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'开始时间不能为空'];
+                        }else
+                        {
+                            $start=$row['value'];
+                        }
+                    }
 
+                    //判断结束时间是不是空
+                    if ($row['name']=='stop_date')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'结束时间不能为空'];
+                        }else
+                        {
+                            $stop=$row['value'];
+                        }
+                    }
 
+                    if ($row['name']=='cust_project')
+                    {
+                        $cond['cust_project']=$row['value'];
+                    }
 
+                    if ($row['name']=='cust_si_type')
+                    {
+                        $cond['cust_si_type']=$row['value'];
+                    }
+
+                    if ($row['name']=='cust_type')
+                    {
+                        $cond['cust_type']=$row['value'];
+                    }
+                }
+
+                $res=CustModel::where($cond)->distinct()->get(['cust_review_num']);
+
+                foreach ($res as $row)
+                {
+                    Redis::lpush('start_loop',$row->cust_review_num);
+                }
+
+                for ($i=1;$i<=3;$i++)
+                {
+                    $rand_num[]=rand(100000,999999);
+                }
+
+                $rand_txt=[];
+
+                $data=[
+                    'phone_array'=>'start_loop',//redis队列名
+                    'text_array'=>[$rand_txt,$rand_num],//文本相关，动态口令
+                    'cust_type'=>$cond['cust_type'],//客户类型
+                    'time'=>[$start,$stop]//认证时间段
+                ];
+
+                //发送请求
+                $res=$this->mycurl('http://localhost:7510/loop',$data);
+
+                //拼接mongo的log用
+                $tar=ProjectModel::find($cond['cust_project'])->project_name;
+                $si =SiTypeModel::find($cond['cust_si_type'])->si_name;
+
+                //判断发送是否成功
+                if ($res['error']=='1')
+                {
+                    $name=Session::get('user');
+                    $obj=$this->mymongo();
+                    $obj->ivrlog->loop->insert([
+                        'who'=>$name[0]['staff_account'],
+                        'action'=>'发送轮播请求',
+                        'proj'=>$tar,
+                        'si'=>$si,
+                        'ctype'=>$cond['cust_type'],
+                        'until'=>$start.'~'.$stop,
+                        'result'=>$res['error'],
+                        'message'=>$res['msg'],
+                        'time'=>time()
+                    ]);
+
+                    return ['error'=>'1','msg'=>'发送注册请求失败'];
+                }else
+                {
+                    $name=Session::get('user');
+                    $obj=$this->mymongo();
+                    $obj->ivrlog->loop->insert([
+                        'who'=>$name[0]['staff_account'],
+                        'action'=>'发送轮播请求',
+                        'proj'=>$tar,
+                        'si'=>$si,
+                        'ctype'=>$cond['cust_type'],
+                        'until'=>$start.'~'.$stop,
+                        'result'=>$res['error'],
+                        'message'=>'轮播请求已发送',
+                        'time'=>time()
+                    ]);
+
+                    return ['error'=>'0','msg'=>'发送轮播请求成功'];
+                }
 
                 break;
         }

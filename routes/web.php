@@ -50,6 +50,7 @@ Route::group(['middleware'=>['APIMiddleware']],function (){
 
     //查询
     Route::get('api/select','APIController@select_something');
+    Route::post('api/ajax','APIController@ajax');
 
     //开始注册按钮
     Route::post('api/register','APIController@web_ivr_api');

@@ -62,7 +62,7 @@ return [
             'charset' => 'utf8',
             'collation' => 'utf8_unicode_ci',
             'prefix' => 'zbxl_',
-            'strict' => true,
+            'strict' => false,//严格模式
             'engine' => null,
         ],
 

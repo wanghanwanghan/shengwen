@@ -20,6 +20,14 @@
                                     <form id="service_care_form">
 
                         <div class="col-sm-2">
+                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){service_care_change();}});" name="star_date" placeholder="开始时间"/>
+                        </div>
+
+                        <div class="col-sm-2">
+                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){service_care_change();}});" name="stop_date" placeholder="结束时间"/>
+                        </div>
+
+                        <div class="col-sm-2">
                             <select class="form-control" name="cust_project" style="padding-left: 8px;">
                                 @foreach($staff_project as $k=>$v)
                                     <option value={{$k}}>{{$v}}</option>

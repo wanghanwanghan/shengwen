@@ -327,6 +327,20 @@ class Controller extends BaseController
         return $final;
     }
 
+    //传入的参数是数组里面包裹着对象
+    public function obj2arr($obj)
+    {
+        $arr=null;
+
+        foreach ($obj as $row)
+        {
+            //$row是对象
+            $arr[]=get_object_vars($row);
+        }
+
+        return $arr;
+    }
+
 
 
 
