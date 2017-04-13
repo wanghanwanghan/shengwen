@@ -26,6 +26,9 @@
 	<script src="{{asset('public/zTree/js/jquery.ztree.core.min.js')}}"></script>
 	<script src="{{asset('public/zTree/js/jquery.ztree.excheck.min.js')}}"></script>
 	<script src="{{asset('public/background/quietflow.min.js')}}"></script>
+
+	<script src="{{asset('public/xeditable/dist/bootstrap3-editable/css/bootstrap-editable.css')}}"></script>
+	<script src="{{asset('public/xeditable/dist/bootstrap3-editable/js/bootstrap-editable.js')}}"></script>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 @yield('body')

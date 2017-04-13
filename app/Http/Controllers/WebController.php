@@ -147,7 +147,35 @@ class WebController extends Controller
 
     public function select_info()
     {
+        foreach (Session::get('user') as $row)
+        {
+            $staff_project=$row['staff_project'];
+            $staff_si_type=$row['staff_si_type'];
+            $staff_level=$row['staff_level'];
+        }
 
+        $staff_project=explode(',',$staff_project);
+        $staff_project=ProjectModel::whereIn('project_id',$staff_project)->get(['project_id','project_name'])->toArray();
+        //遍历成键值对数组，发给前台页面
+        foreach ($staff_project as $row)
+        {
+            $proj[$row['project_id']]=$row['project_name'];
+        }
+        $staff_project=$proj;
+
+        $staff_si_type=explode(',',$staff_si_type);
+        $staff_si_type=SiTypeModel::whereIn('si_id',$staff_si_type)->get(['si_id','si_name'])->toArray();
+        //遍历成键值对数组，发给前台页面
+        foreach ($staff_si_type as $row)
+        {
+            $si[$row['si_id']]=$row['si_name'];
+        }
+        $staff_si_type=$si;
+
+        $confirm_type=ConfirmTypeModel::get(['confirm_name'])->toArray();
+        $confirm_type=array_flatten($confirm_type);
+
+        return view('select_info',compact('staff_project','staff_si_type'));
     }
 
     public function loop_call()
@@ -181,6 +209,29 @@ class WebController extends Controller
         $confirm_type=array_flatten($confirm_type);
 
         return view('loop_call',compact('staff_project','staff_si_type'));
+    }
+
+    public function modify_cust_info()
+    {
+        foreach (Session::get('user') as $row)
+        {
+            $staff_project=$row['staff_project'];
+            $staff_si_type=$row['staff_si_type'];
+            $staff_level=$row['staff_level'];
+        }
+
+        $staff_project=explode(',',$staff_project);
+        $staff_project=ProjectModel::whereIn('project_id',$staff_project)->get(['project_name'])->toArray();
+        $staff_project=array_flatten($staff_project);
+
+        $staff_si_type=explode(',',$staff_si_type);
+        $staff_si_type=SiTypeModel::whereIn('si_id',$staff_si_type)->get(['si_name'])->toArray();
+        $staff_si_type=array_flatten($staff_si_type);
+
+        $confirm_type=ConfirmTypeModel::get(['confirm_name'])->toArray();
+        $confirm_type=array_flatten($confirm_type);
+
+        return view('modify_cust_info',compact('staff_project','staff_si_type','confirm_type'));
     }
 
     public function statistics()

@@ -102,6 +102,9 @@ Route::get('add/cust/b','WebController@add_cust_b');
 //查询用户声纹信息
 Route::get('select/info','WebController@select_info');
 
+//修改客户信息
+Route::get('modify/cust/info','WebController@modify_cust_info');
+
 //循环拨打用户认证
 Route::get('loop/call','WebController@loop_call');
 
