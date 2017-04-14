@@ -19,8 +19,14 @@
                     <div class="box-header">
                         <div class="col-sm-12">
                             <div class="row">
+                                <div class="col-sm-3">
+                                    <input class="form-control" type="text" id="cond" name="cond" placeholder="输入年审号码或者身份证号码"/>
+                                </div>
                                 <div class="col-sm-2">
-                                    <input class="form-control" type="text" id="" onclick="" name="" placeholder="输入年审号码"/>
+                                    <select style="padding-left: 8px" name="cust_review_flag" class="form-control">
+                                        <option value="1">第一年审人</option>
+                                        <option value="2">第二年审人</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -30,20 +36,13 @@
 
                         <div class="row">
                             <div class="col-sm-12">
-                                <table id="service_care_table" class="table table-bordered table-hover dataTable" role="grid" aria-describedby="example2_info">
-                                    <thead>
-                                    <th style="text-align: center">姓名</th>
-                                    <th style="text-align: center">身份证</th>
-                                    <th style="text-align: center">认证电话</th>
-                                    <th style="text-align: center">备用电话</th>
-                                    <th style="text-align: center">类型</th>
-                                    <th style="text-align: center">时间</th>
-                                    <th style="text-align: center">结果</th>
-                                    <th style="text-align: center">备注</th>
-                                    </thead>
-                                    <tbody>
+                                <table  onclick="modify_cust_info_click();" id="modify_cust_info" class="table table-bordered table-hover dataTable" role="grid" aria-describedby="example2_info">
 
-                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-sm-12">
+                                <table id="modify_vopr_info" class="table table-bordered table-hover dataTable" role="grid" aria-describedby="example2_info">
+
                                 </table>
                             </div>
                         </div>
@@ -55,16 +54,242 @@
             </div>
             <div class="tab-pane" id="modify_cust_info_2" style="height: auto;">
                 <span>
-                    <a href="#" id="username1" data-type="text" data-title="用户名">用户名</a>
+                    <a href="#" id="username">用户名</a>
                 </span>
             </div>
         </div>
     </div>
 
     <script>
-        $(function () {
 
+        function modify_cust_info_click() {
+
+            $('#modify_cust_name').editable({
+                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                title: "",                   //编辑框的标题
+                disabled: false,             //是否禁用编辑
+                emptytext: "空",             //空值的默认文本
+                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                validate: function (value) { //字段验证
+                    //判断是不是空**********************************
+                    if (!$.trim(value)) {
+                        return '不能为空';
+                    }
+                    //*********************************************
+                    //判断姓名是不是中文****************************
+                    var pattern=/^[\u4E00-\u9FA5]{1,10}$/;
+                    var res=pattern.test(value);
+                    if (res==false) {
+                        return '必须是中文';
+                    }
+                    //*********************************************
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_name',
+                        key   :value,
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
+                }
+            });
+
+            $('#modify_cust_id').editable({
+                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                title: "",                   //编辑框的标题
+                disabled: false,             //是否禁用编辑
+                emptytext: "空",             //空值的默认文本
+                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                validate: function (value) { //字段验证
+                    //判断是不是空**********************************
+                    if (!$.trim(value)) {
+                        return '不能为空';
+                    }
+                    //*********************************************
+                    //判断身份证号正确性****************************
+                    if (!check_id_card(value)) {
+                        return '号码错误';
+                    }
+                    //*********************************************
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_id',
+                        key   :value,
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
+                }
+            });
+
+            $('#modify_cust_si_id').editable({
+                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                title: "",                   //编辑框的标题
+                disabled: false,             //是否禁用编辑
+                emptytext: "空",             //空值的默认文本
+                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                validate: function (value) { //字段验证
+                    //判断是不是空**********************************
+                    //可以是空
+                    //*********************************************
+                    //判断社保号正确性******************************
+                    //不判断了
+                    //*********************************************
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_si_id',
+                        key   :$.trim(value),
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
+                }
+            });
+
+            $('#modify_cust_review_num').editable({
+                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                title: "",                   //编辑框的标题
+                disabled: false,             //是否禁用编辑
+                emptytext: "空",             //空值的默认文本
+                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                validate: function (value) { //字段验证
+                    if (!$.trim(value)) {
+                        return '不能为空';
+                    }
+                }
+            });
+
+            $('#modify_cust_phone_num').editable({
+                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                title: "",                   //编辑框的标题
+                disabled: false,             //是否禁用编辑
+                emptytext: "空",             //空值的默认文本
+                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                validate: function (value) { //字段验证
+                    if (!$.trim(value)) {
+                        return '不能为空';
+                    }
+                }
+            });
+
+            $('#modify_cust_address').editable({
+                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                title: "",                   //编辑框的标题
+                disabled: false,             //是否禁用编辑
+                emptytext: "空",             //空值的默认文本
+                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                validate: function (value) { //字段验证
+                    if (!$.trim(value)) {
+                        return '不能为空';
+                    }
+                }
+            });
+
+            $('#modify_cust_project').editable({
+                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                title: "",                   //编辑框的标题
+                disabled: false,             //是否禁用编辑
+                emptytext: "空",             //空值的默认文本
+                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                validate: function (value) { //字段验证
+                    if (!$.trim(value)) {
+                        return '不能为空';
+                    }
+                }
+            });
+
+            $('#modify_cust_si_type').editable({
+                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                title: "",                   //编辑框的标题
+                disabled: false,             //是否禁用编辑
+                emptytext: "空",             //空值的默认文本
+                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                validate: function (value) { //字段验证
+                    if (!$.trim(value)) {
+                        return '不能为空';
+                    }
+                }
+            });
+
+            $('#modify_cust_confirm_type').editable({
+                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                title: "",                   //编辑框的标题
+                disabled: false,             //是否禁用编辑
+                emptytext: "空",             //空值的默认文本
+                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                validate: function (value) { //字段验证
+                    if (!$.trim(value)) {
+                        return '不能为空';
+                    }
+                }
+            });
+
+        }
+
+        function all() {
+
+            var url ='/data/ajax';
+            var data={
+                _token:$("input[name=_token]").val(),
+                cond1   :$("#cond").val(),
+                cond2   :$('select[name=cust_review_flag]').val(),
+                type  :'modify_info'
+            };
+
+            $.post(url,data,function (response) {
+
+                if(response.error=='0')
+                {
+                    layer.msg(response.msg);
+
+                    //清空表格
+                    $("#modify_cust_info").children().remove();
+
+                    $.each(response.data,function (k,v) {
+
+                        //创建一行
+                        var table_tr=$("<tr></tr>");
+
+                        table_tr.append("<td align='center' width='20%'>"+k+"</td>");
+                        table_tr.append("<td>"+v+"</td>");
+
+                        $("#modify_cust_info").append(table_tr);
+
+                    })
+
+                }else
+                {
+                    layer.msg(response.msg);
+                }
+
+            },'json');
+
+        }
+
+        $('#cond').change(function () {
+            all();
         });
+
+        $('select[name=cust_review_flag]').change(function () {
+            all();
+        });
+
+
     </script>
 
 

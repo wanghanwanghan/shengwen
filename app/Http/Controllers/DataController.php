@@ -1350,6 +1350,104 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
+            case 'modify_info';
+
+                $cond=trim(Input::get('cond1'));
+                $cust_review_flag=Input::get('cond2');
+
+                if ($cond=='')
+                {
+                    //是空
+                    return ['error'=>'1','msg'=>'查询条件不能是空'];
+                }elseif ($this->check_something($cond,'phonenumber',null))
+                {
+                    //是手机号
+                    $phone=$cond;
+                }elseif ($this->is_idcard($cond))
+                {
+                    //是身份证号
+                    $id=$cond;
+                }else
+                {
+                    //非空，但什么也不是
+                    return ['error'=>'1','msg'=>'既不是年审号也不是身份证号'];
+                }
+
+                //判断到底拿到了哪个值
+                if (isset($phone))
+                {
+                    $where=['cust_review_num'=>$phone,'cust_review_flag'=>$cust_review_flag];
+                }else
+                {
+                    $where=['cust_id'=>$id,'cust_review_flag'=>$cust_review_flag];
+                }
+
+                //开始查询
+                $res=CustModel::where($where)->get()->toArray();
+
+                if (empty($res))
+                {
+                    return ['error'=>'1','msg'=>'查无结果'];
+                }else
+                {
+                    $data['客户姓名']='<a id=modify_cust_name>'.$res[0]['cust_name'].'</a>';
+                    $data['身份证号']='<a id=modify_cust_id>'.$res[0]['cust_id'].'</a>';
+                    $data['社保编号']='<a id=modify_cust_si_id>'.$res[0]['cust_si_id'].'</a>';
+                    $data['年审号码']='<a id=modify_cust_review_num>'.$res[0]['cust_review_num'].'</a>';
+                    $data['备用号码']='<a id=modify_cust_phone_num>'.$res[0]['cust_phone_num'].'</a>';
+                    $data['客户地址']='<a id=modify_cust_address>'.$res[0]['cust_address'].'</a>';
+                    $data['所属区域']='<a id=modify_cust_project>'.ProjectModel::find($res[0]['cust_project'])->project_name.'</a>';
+                    $data['参保类型']='<a id=modify_cust_si_type>'.SiTypeModel::find($res[0]['cust_si_type'])->si_name.'</a>';
+                    $data['认证类型']='<a id=modify_cust_confirm_type>'.ConfirmTypeModel::find($res[0]['cust_confirm_type'])->confirm_name.'</a>';
+                    $data['客户类别']='<a id=modify_cust_type>'.$res[0]['cust_type'].'类客户'.'</a>';
+                    $data['创建时间']='<a id=modify_created_at>'.$res[0]['created_at'].'</a>';
+                    $data['年审人号']='<a id=modify_cust_review_flag>'.'第'.$res[0]['cust_review_flag'].'年审人'.'</a>';
+                    $data['唯一主键']='<a id=modify_pid value='.$res[0]['cust_num'].'>'.$res[0]['cust_num'].'</a>';
+                    $data['更多操作']='<a class="btn btn-danger" id='.$res[0]['cust_num'].'>删除该客户</a>';
+
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$data];
+                }
+
+                break;
+
+            case 'modify_cust_name':
+
+                $name=Input::get('key');
+                $pid=Input::get('pid');
+
+                $res=CustModel::find($pid);
+                $res->cust_name=$name;
+                $res->save();
+
+                return ['error'=>'0','msg'=>'修改成功'];
+
+                break;
+
+            case 'modify_cust_id':
+
+                $id=Input::get('key');
+                $pid=Input::get('pid');
+
+                if (!$this->is_idcard($id))
+                {
+                    return ['error'=>'1','msg'=>'身份证输入不正确'];
+                }
+
+                $res=CustModel::where(['cust_id'=>$id])->get()->toArray();
+
+                if (!empty($res))
+                {
+                    return ['error'=>'1','msg'=>'身份证已存在，修改失败'];
+                }
+
+                $res=CustModel::find($pid);
+                $res->cust_id=$id;
+                $res->save();
+
+                return ['error'=>'0','msg'=>'修改成功'];
+
+                break;
+
 
 
 

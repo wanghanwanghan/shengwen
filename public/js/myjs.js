@@ -1,3 +1,21 @@
+function check_id_card(value){
+    var arrExp = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];//加权因子
+    var arrValid = [1, 0, "X", 9, 8, 7, 6, 5, 4, 3, 2];//校验码
+    if(/^\d{17}\d|x$/i.test(value)){
+        var sum = 0, idx;
+        for(var i = 0; i < value.length - 1; i++){
+            // 对前17位数字与权值乘积求和
+            sum += parseInt(value.substr(i, 1), 10) * arrExp[i];
+        }
+        // 计算模（固定算法）
+        idx = sum % 11;
+        // 检验第18为是否与校验码相等
+        return arrValid[idx] == value.substr(17, 1).toUpperCase();
+    }else{
+        return false;
+    }
+}
+
 function staff_login() {
 
     var url ='/data/ajax';
