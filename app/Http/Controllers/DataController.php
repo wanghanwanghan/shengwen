@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Model\ConfirmTypeModel;
 use App\Http\Model\CustConfirmModel;
+use App\Http\Model\CustDeleteModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\LevelModel;
 use App\Http\Model\ProjectModel;
@@ -1403,7 +1404,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $data['创建时间']='<a id=modify_created_at>'.$res[0]['created_at'].'</a>';
                     $data['年审人号']='<a id=modify_cust_review_flag>'.'第'.$res[0]['cust_review_flag'].'年审人'.'</a>';
                     $data['唯一主键']='<a id=modify_pid value='.$res[0]['cust_num'].'>'.$res[0]['cust_num'].'</a>';
-                    $data['更多操作']='<a class="btn btn-danger" id='.$res[0]['cust_num'].'>删除该客户</a>';
+                    $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>';
 
                     return ['error'=>'0','msg'=>'查询成功','data'=>$data];
                 }
@@ -1416,6 +1417,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $pid=Input::get('pid');
 
                 $res=CustModel::find($pid);
+                $this->system_log('修改客户姓名','主键:'.$pid.'修改内容:'.$res->cust_name.'=>'.$name);
                 $res->cust_name=$name;
                 $res->save();
 
@@ -1441,6 +1443,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }
 
                 $res=CustModel::find($pid);
+                $this->system_log('修改身份证','主键:'.$pid.'修改内容:'.$res->cust_id.'=>'.$id);
                 $res->cust_id=$id;
                 $res->save();
 
@@ -1448,6 +1451,169 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
+            case 'modify_cust_si_id':
+
+                $id=Input::get('key');
+                $pid=Input::get('pid');
+
+                if ($id=='')
+                {
+                    $res=CustModel::find($pid);
+                    $this->system_log('修改社保编号','主键:'.$pid.'修改内容:'.$res->cust_si_id.'=>'.$id);
+                    $res->cust_si_id=$id;
+                    $res->save();
+
+                    return ['error'=>'0','msg'=>'修改成功'];
+                }else
+                {
+                    $res=CustModel::where(['cust_si_id'=>$id])->get()->toArray();
+
+                    if (!empty($res))
+                    {
+                        return ['error'=>'1','msg'=>'社保编号已存在，修改失败'];
+                    }
+
+                    $res=CustModel::find($pid);
+                    $this->system_log('修改社保编号','主键:'.$pid.'修改内容:'.$res->cust_si_id.'=>'.$id);
+                    $res->cust_si_id=$id;
+                    $res->save();
+
+                    return ['error'=>'0','msg'=>'修改成功'];
+                }
+
+                break;
+
+            case 'modify_cust_review_num':
+
+                $phone=Input::get('key');
+                $pid=Input::get('pid');
+
+                if (!$this->check_something($phone,'phonenumber',null))
+                {
+                    return ['error'=>'1','msg'=>'手机号码输入不正确'];
+                }
+
+                $res=CustModel::where(['cust_review_num'=>$phone])->get()->toArray();
+
+                if (!empty($res))
+                {
+                    return ['error'=>'1','msg'=>'手机号码已存在，修改失败'];
+                }else
+                {
+                    $res=CustModel::find($pid);
+                    $this->system_log('修改年审号码','主键:'.$pid.'修改内容:'.$res->cust_review_num.'=>'.$phone);
+                    $res->cust_review_num=$phone;
+                    $res->save();
+
+                    return ['error'=>'0','msg'=>'修改成功'];
+                }
+
+                break;
+
+            case 'modify_cust_phone_num':
+
+                $phone=Input::get('key');
+                $pid=Input::get('pid');
+
+                $res=CustModel::find($pid);
+                $this->system_log('修改备用号码','主键:'.$pid.'修改内容:'.$res->cust_phone_num.'=>'.$phone);
+                $res->cust_phone_num=$phone;
+                $res->save();
+
+                return ['error'=>'0','msg'=>'修改成功'];
+
+                break;
+
+            case 'modify_cust_address':
+
+                $phone=Input::get('key');
+                $pid=Input::get('pid');
+
+                $res=CustModel::find($pid);
+                $this->system_log('修改客户地址','主键:'.$pid.'修改内容:'.$res->cust_address.'=>'.$phone);
+                $res->cust_address=$phone;
+                $res->save();
+
+                return ['error'=>'0','msg'=>'修改成功'];
+
+                break;
+
+            case 'modify_get_data':
+
+                $proj=ProjectModel::get(['project_id','project_name'])->toArray();
+                $si=SiTypeModel::get(['si_id','si_name'])->toArray();
+                $confirm=ConfirmTypeModel::get(['confirm_id','confirm_name'])->toArray();
+
+                $tmp=$this->change_arr_key($proj,['project_id'=>'value']);
+                $proj=$this->change_arr_key($tmp,['project_name'=>'text']);
+
+                $tmp=$this->change_arr_key($si,['si_id'=>'value']);
+                $si=$this->change_arr_key($tmp,['si_name'=>'text']);
+
+                $tmp=$this->change_arr_key($confirm,['confirm_id'=>'value']);
+                $confirm=$this->change_arr_key($tmp,['confirm_name'=>'text']);
+
+                return ['proj'=>$proj,'si'=>$si,'confirm'=>$confirm];
+
+                break;
+
+            case 'modify_cust_project':
+
+                $proj=Input::get('key');
+                $pid=Input::get('pid');
+
+                $res=CustModel::find($pid);
+                $this->system_log('修改客户属地','主键:'.$pid.'修改内容:'.$res->cust_project.'=>'.$proj);
+                $res->cust_project=$proj;
+                $res->save();
+
+                return ['error'=>'0','msg'=>'修改成功'];
+
+                break;
+
+            case 'modify_cust_si_type':
+
+                $si=Input::get('key');
+                $pid=Input::get('pid');
+
+                $res=CustModel::find($pid);
+                $this->system_log('修改参保类型','主键:'.$pid.'修改内容:'.$res->cust_si_type.'=>'.$si);
+                $res->cust_si_type=$si;
+                $res->save();
+
+                return ['error'=>'0','msg'=>'修改成功'];
+
+                break;
+
+            case 'modify_cust_confirm_type':
+
+                $confirm=Input::get('key');
+                $pid=Input::get('pid');
+
+                $res=CustModel::find($pid);
+                $this->system_log('修改认证类型','主键:'.$pid.'修改内容:'.$res->cust_confirm_type.'=>'.$confirm);
+                $res->cust_confirm_type=$confirm;
+                $res->save();
+
+                return ['error'=>'0','msg'=>'修改成功'];
+
+                break;
+
+            case 'modify_cust_delete':
+
+                $pid=Input::get('pid');
+
+                $res=CustModel::find($pid);
+
+                $this->system_log('删除客户信息','主键:'.$pid);
+
+                CustDeleteModel::create($res->toArray());
+
+                $res->delete();
+
+                return ['error'=>'0','msg'=>'删除成功'];
+
+                break;
 
 
 

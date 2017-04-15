@@ -62,7 +62,40 @@
 
     <script>
 
+        $(function () {
+
+            var url ='/data/ajax';
+            var data={
+                _token:$("input[name=_token]").val(),
+                type  :'modify_get_data'};
+            $.post(url,data,function (response) {
+                {window.modify_proj=response.proj;window.modify_si=response.si;window.modify_confirm=response.confirm;}
+            },'json');
+
+        })
+
         function modify_cust_info_click() {
+
+            $("#cust_delete_btn").click(function () {
+                layer.confirm('确认真的要删除吗', {
+                    btn: ['确认','取消'], //按钮
+                    shade: false //不显示遮罩
+                }, function(index){
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_delete',
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);location.reload();}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
+                    layer.close(index);
+                });
+            });
 
             $('#modify_cust_name').editable({
                 type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
@@ -168,9 +201,31 @@
                 emptytext: "空",             //空值的默认文本
                 mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
                 validate: function (value) { //字段验证
+                    //判断是不是空**********************************
                     if (!$.trim(value)) {
                         return '不能为空';
                     }
+                    //*********************************************
+                    //判断手机号码正确性*****************************
+                    var pattern=/^(((1[0-9]{2})|159|153)+\d{8})$/;
+                    var res=pattern.test(value);
+                    if (res==false) {
+                        return '号码错误';
+                    }
+                    //*********************************************
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_review_num',
+                        key   :value,
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
                 }
             });
 
@@ -181,9 +236,25 @@
                 emptytext: "空",             //空值的默认文本
                 mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
                 validate: function (value) { //字段验证
-                    if (!$.trim(value)) {
-                        return '不能为空';
-                    }
+                    //判断是不是空**********************************
+                    //不用判断
+                    //*********************************************
+                    //判断手机号码正确性*****************************
+                    //不用判断
+                    //*********************************************
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_phone_num',
+                        key   :$.trim(value),
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
                 }
             });
 
@@ -194,48 +265,112 @@
                 emptytext: "空",             //空值的默认文本
                 mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
                 validate: function (value) { //字段验证
-                    if (!$.trim(value)) {
-                        return '不能为空';
-                    }
+                    //判断是不是空**********************************
+                    //不用判断
+                    //*********************************************
+                    //判断手机号码正确性*****************************
+                    //不用判断
+                    //*********************************************
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_address',
+                        key   :$.trim(value),
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
                 }
             });
 
             $('#modify_cust_project').editable({
-                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
-                title: "",                   //编辑框的标题
-                disabled: false,             //是否禁用编辑
-                emptytext: "空",             //空值的默认文本
-                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                type: "select",              //编辑框的类型。支持text|textarea|select|date|checklist等
+                source: modify_proj,
+                title: "请选择",           //编辑框的标题
+                disabled: false,           //是否禁用编辑
+                emptytext: "空文本",       //空值的默认文本
+                mode: "popup",            //编辑框的模式：支持popup和inline两种模式，默认是popup
                 validate: function (value) { //字段验证
+                    //判断是不是空**********************************
                     if (!$.trim(value)) {
                         return '不能为空';
                     }
+                    //*********************************************
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_project',
+                        key   :value,
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
                 }
             });
 
             $('#modify_cust_si_type').editable({
-                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
-                title: "",                   //编辑框的标题
-                disabled: false,             //是否禁用编辑
-                emptytext: "空",             //空值的默认文本
-                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                type: "select",              //编辑框的类型。支持text|textarea|select|date|checklist等
+                source: modify_si,
+                title: "请选择",           //编辑框的标题
+                disabled: false,           //是否禁用编辑
+                emptytext: "空文本",       //空值的默认文本
+                mode: "popup",            //编辑框的模式：支持popup和inline两种模式，默认是popup
                 validate: function (value) { //字段验证
+                    //判断是不是空**********************************
                     if (!$.trim(value)) {
                         return '不能为空';
                     }
+                    //*********************************************
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_si_type',
+                        key   :value,
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
                 }
             });
 
             $('#modify_cust_confirm_type').editable({
-                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
-                title: "",                   //编辑框的标题
-                disabled: false,             //是否禁用编辑
-                emptytext: "空",             //空值的默认文本
-                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                type: "select",              //编辑框的类型。支持text|textarea|select|date|checklist等
+                source: modify_confirm,
+                title: "请选择",           //编辑框的标题
+                disabled: false,           //是否禁用编辑
+                emptytext: "空文本",       //空值的默认文本
+                mode: "popup",            //编辑框的模式：支持popup和inline两种模式，默认是popup
                 validate: function (value) { //字段验证
+                    //判断是不是空**********************************
                     if (!$.trim(value)) {
                         return '不能为空';
                     }
+                    //*********************************************
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_confirm_type',
+                        key   :value,
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
                 }
             });
 
