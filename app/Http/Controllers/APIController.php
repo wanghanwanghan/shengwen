@@ -19,6 +19,28 @@ class APIController extends Controller
     {
         switch ($_GET['key'])
         {
+            case 'pid':
+
+                $get=[
+                    'cust_num',
+                    'cust_name',
+                    'cust_confirm_type',
+                    'cust_review_flag',
+                    'cust_type'
+                ];
+
+                $res=CustModel::find($_GET['cond'])->get($get)->toArray();
+
+                if (empty($res))
+                {
+                    return ['error'=>'0','msg'=>'we dont have this number in the database'];
+                }else
+                {
+                    return ['error'=>'0','msg'=>'you got it','data'=>$res];
+                }
+
+                break;
+
             case 'phone':
 
                 if (!$this->check_something($_GET['cond'],'phonenumber',null))
@@ -38,7 +60,7 @@ class APIController extends Controller
 
                     if (empty($res))
                     {
-                        return ['error'=>'0','msg'=>'we dont have the number in the database'];
+                        return ['error'=>'0','msg'=>'we dont have this number in the database'];
                     }else
                     {
                         return ['error'=>'0','msg'=>'you got it','data'=>$res];
@@ -58,6 +80,7 @@ class APIController extends Controller
         }
     }
 
+    //ajax处理
     public function ajax()
     {
         switch (Input::get('type'))
@@ -140,11 +163,11 @@ class APIController extends Controller
                     'pid'=>Input::get('key'),//用户的主键号
                     'name'=>$cust_name,//用户的姓名
                     'phone'=>$cust_review_num,//年审手机号
-                    'confirm_type'=>$cust_confirm_type,//认证类型，文本无关，文本相关，动态口令
+                    'confirm_type'=>(string)$cust_confirm_type,//认证类型，文本无关，文本相关，动态口令
                     'confirm_text'=>''//用户要说的话
                 ];
 
-                $res=$this->mycurl('http://localhost:7510/register',$data);
+                $res=$this->mycurl('http://127.0.0.1:7510/register',$data);
 
                 //判断发送是否成功
                 if ($res['error']=='1')
@@ -180,7 +203,50 @@ class APIController extends Controller
             //web给ivr发送用户验证请求
             case 'verify'://web给ivr发送用户验证请求，系统主动验证
 
-                return ['error'=>'0','msg'=>'wanghan'];
+                //通过客户编号查询年审号码
+                $info=CustModel::find(Input::get('key'));
+                $cust_name=$info->cust_name;
+                $cust_review_num=$info->cust_review_num;
+                $cust_confirm_type=$info->cust_confirm_type;
+
+                $data=[
+                    'pid'=>Input::get('key'),//用户的主键号
+                    'name'=>$cust_name,//用户的姓名
+                    'phone'=>$cust_review_num,//年审手机号
+                    'confirm_type'=>(string)$cust_confirm_type,//认证类型，文本无关，文本相关，动态口令
+                    'confirm_text'=>''//用户要说的话
+                ];
+
+                $res=$this->mycurl('http://127.0.0.1:7510/verify',$data);
+
+                //判断发送是否成功
+                if ($res['error']=='1')
+                {
+                    $name=Session::get('user');
+                    $obj=$this->mymongo();
+                    $obj->ivrlog->test1->insert([
+                        'who'=>$name[0]['staff_account'],
+                        'action'=>'web给ivr发送验证请求',
+                        'result'=>$res['error'],
+                        'message'=>$res['msg'],
+                        'time'=>time()
+                    ]);
+
+                    return ['error'=>'1','msg'=>'发送验证请求失败'];
+                }else
+                {
+                    $name=Session::get('user');
+                    $obj=$this->mymongo();
+                    $obj->ivrlog->test1->insert([
+                        'who'=>$name[0]['staff_account'],
+                        'action'=>'web给ivr发送验证请求',
+                        'result'=>$res['error'],
+                        'message'=>$cust_name.'验证请求已发送',
+                        'time'=>time()
+                    ]);
+
+                    return ['error'=>'0','msg'=>'发送验证请求成功'];
+                }
 
                 break;
 
@@ -347,7 +413,44 @@ class APIController extends Controller
     //ivr返回验证的结果
     public function ivr_return_2()
     {
+        //接收参数
+        $pid=$_GET['pid'] ? $_GET['pid'] : '';//客户主键
+        $url=$_GET['url'] ? $_GET['url'] : '';//客户录音文件
+        $model_url=$_GET['model_url'] ? $_GET['model_url'] : '';//客户声纹模型
 
+        //找到这个客户
+        $model=CustModel::find($pid);
+
+        if ($pid!='' && $url!='' && $model_url!='')
+        {
+            //把该客户的声纹url存起来
+            VocalPrintModel::create(['vp_id'=>$pid,'vp_ivr_url'=>$url,'vp_model_url'=>$model_url]);
+
+            //通知mongo
+            $obj=$this->mymongo();
+            $obj->ivrlog->test1->insert([
+                'who'=>'ivr',
+                'action'=>'ivr返回用户验证结果',
+                'result'=>'0',
+                'message'=>$model->cust_name.'验证成功',
+                'time'=>time()
+            ]);
+
+            return ['error'=>'0'];
+        }else
+        {
+            //通知mongo
+            $obj=$this->mymongo();
+            $obj->ivrlog->test1->insert([
+                'who'=>'ivr',
+                'action'=>'ivr返回用户验证结果',
+                'result'=>'1',
+                'message'=>$model->cust_name.'验证失败',
+                'time'=>time()
+            ]);
+
+            return ['error'=>'1'];
+        }
     }
 
     //百度语音识别
@@ -413,6 +516,7 @@ class APIController extends Controller
         var_dump($response);
     }
 
+    //测试用的
     public function ceshi_test()
     {
 
