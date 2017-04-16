@@ -24,6 +24,7 @@ class APIController extends Controller
                 $get=[
                     'cust_num',
                     'cust_name',
+                    'cust_id',
                     'cust_confirm_type',
                     'cust_review_flag',
                     'cust_type'
@@ -51,6 +52,7 @@ class APIController extends Controller
                     $get=[
                         'cust_num',
                         'cust_name',
+                        'cust_id',
                         'cust_confirm_type',
                         'cust_review_flag',
                         'cust_type'
@@ -416,15 +418,14 @@ class APIController extends Controller
         //接收参数
         $pid=$_GET['pid'] ? $_GET['pid'] : '';//客户主键
         $url=$_GET['url'] ? $_GET['url'] : '';//客户录音文件
-        $model_url=$_GET['model_url'] ? $_GET['model_url'] : '';//客户声纹模型
 
         //找到这个客户
         $model=CustModel::find($pid);
 
-        if ($pid!='' && $url!='' && $model_url!='')
+        if ($pid!='' && $url!='')
         {
             //把该客户的声纹url存起来
-            VocalPrintModel::create(['vp_id'=>$pid,'vp_ivr_url'=>$url,'vp_model_url'=>$model_url]);
+            VocalPrintModel::create(['vp_id'=>$pid,'vp_ivr_url'=>$url,'vp_model_url'=>'']);
 
             //通知mongo
             $obj=$this->mymongo();
