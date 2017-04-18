@@ -28,6 +28,9 @@
                                         <option value="2">第二年审人</option>
                                     </select>
                                 </div>
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse" style="float: right">
+                                    <i class="fa fa-minus"></i>
+                                </button>
                             </div>
                         </div>
                     </div>

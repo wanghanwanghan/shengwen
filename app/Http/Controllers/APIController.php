@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Model\CustConfirmModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\LogModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SiTypeModel;
 use App\Http\Model\VocalPrintModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
@@ -24,20 +26,19 @@ class APIController extends Controller
                 $get=[
                     'cust_num',
                     'cust_name',
-                    'cust_id',
                     'cust_confirm_type',
                     'cust_review_flag',
                     'cust_type'
                 ];
 
-                $res=CustModel::find($_GET['cond'])->get($get)->toArray();
+                $res=CustModel::where(['cust_num'=>$_GET['cond']])->get($get)->toArray();
 
                 if (empty($res))
                 {
-                    return ['error'=>'0','msg'=>'we dont have this number in the database'];
+                    return ['error'=>'0','msg'=>'数据库中没有这个电话'];
                 }else
                 {
-                    return ['error'=>'0','msg'=>'you got it','data'=>$res];
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$res];
                 }
 
                 break;
@@ -46,13 +47,12 @@ class APIController extends Controller
 
                 if (!$this->check_something($_GET['cond'],'phonenumber',null))
                 {
-                    return ['error'=>'1','msg'=>'wrong number'];
+                    return ['error'=>'1','msg'=>'电话号码格式错误'];
                 }else
                 {
                     $get=[
                         'cust_num',
                         'cust_name',
-                        'cust_id',
                         'cust_confirm_type',
                         'cust_review_flag',
                         'cust_type'
@@ -62,22 +62,60 @@ class APIController extends Controller
 
                     if (empty($res))
                     {
-                        return ['error'=>'0','msg'=>'we dont have this number in the database'];
+                        return ['error'=>'0','msg'=>'数据库中没有这个电话'];
                     }else
                     {
-                        return ['error'=>'0','msg'=>'you got it','data'=>$res];
+                        return ['error'=>'0','msg'=>'查询成功','data'=>$res];
                     }
                 }
 
                 break;
 
-            case 'review';
+            case 'review':
 
+                $cond=isset($_GET['cond']) ? $_GET['cond'] : '';//客户主键
+                $start_time=isset($_GET['start_time']) ? $_GET['start_time'].' 00:00:00' : '';//开始时间
+                $stop_time=isset($_GET['stop_time']) ? $_GET['stop_time'].' 23:59:59' : '';//结束时间
 
+                if ($cond!='' && $start_time!='' && $stop_time!='')
+                {
+                    $res=CustConfirmModel::where(['confirm_pid'=>$cond,'confirm_res'=>'Y'])
+                        ->wherebetween('created_at',[$start_time,$stop_time])->get()->toArray();
 
+                    if (empty($res))
+                    {
+                        return 'N';//还没有通过
+                    }else
+                    {
+                        return 'Y';//已经通过了
+                    }
 
+                }else
+                {
+                    return ['error'=>'1','msg'=>'参数错误'];
+                }
 
                 break;
+
+            case 'idcard':
+
+                $res=CustModel::find($_GET['cond']);
+
+                if (empty($res))
+                {
+                    return ['error'=>'0','msg'=>'数据库中没有这个身份证号码'];
+                }else
+                {
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$res->cust_id];
+                }
+
+                break;
+
+
+
+
+
+
 
         }
     }
@@ -117,6 +155,118 @@ class APIController extends Controller
                 foreach ($tmp as &$row)
                 {
                     unset($row['_id']);
+
+                    $row['time']=date("Y-m-d H:i:s",$row['time']);
+
+                    if ($row['result']=='0')
+                    {
+                        $row['result']='正常';
+                    }else
+                    {
+                        $row['result']='异常';
+                    }
+                }
+
+                $data=$tmp;
+
+                return ['error'=>'0','data'=>$data,'pages'=>$cnt_page,'count_data'=>$cnt];
+
+                break;
+
+            case 'get_register_verify_mongo_data':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=15;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                $obj=$this->mymongo();
+
+                //查询数据
+                $res=$obj->ivrlog->test1->find()->sort(['time'=>-1])->limit($limit)->skip($offset);
+
+                //总页数
+                $cnt=$obj->ivrlog->test1->find()->count();
+                $cnt_page=intval(ceil($cnt/$limit));
+
+                foreach ($res as $row)
+                {
+                    //把所有mongo数据取出来
+                    $tmp[]=$row;
+                }
+
+                //重新整理并发送给前端显示
+                foreach ($tmp as &$row)
+                {
+                    unset($row['_id']);
+
+                    if ($row['mysqlPID']!='')
+                    {
+                        $row['mysqlPID']='<a target=_BLANK href='.Config::get('constant.voice_path').VocalPrintModel::find($row['mysqlPID'])->vp_ivr_url.'>'.'语音'.'</a>';
+                    }else
+                    {
+                        $row['mysqlPID']='空';
+                    }
+
+                    $row['time']=date("Y-m-d H:i:s",$row['time']);
+
+                    if ($row['result']=='0')
+                    {
+                        $row['result']='正常';
+                    }else
+                    {
+                        $row['result']='异常';
+                    }
+                }
+
+                $data=$tmp;
+
+                return ['error'=>'0','data'=>$data,'pages'=>$cnt_page,'count_data'=>$cnt];
+
+                break;
+
+            case 'get_loop_return_mongo_data':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=15;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                $obj=$this->mymongo();
+
+                //查询数据
+                $res=$obj->ivrlog->loopreturn->find()->sort(['time'=>-1])->limit($limit)->skip($offset);
+
+                //总页数
+                $cnt=$obj->ivrlog->loopreturn->find()->count();
+                $cnt_page=intval(ceil($cnt/$limit));
+
+                foreach ($res as $row)
+                {
+                    //把所有mongo数据取出来
+                    $tmp[]=$row;
+                }
+
+                //重新整理并发送给前端显示
+                foreach ($tmp as &$row)
+                {
+                    unset($row['_id']);
+
+                    if ($row['mysqlPID']!='')
+                    {
+                        $row['mysqlPID']='<a target=_BLANK href='.Config::get('constant.voice_path').VocalPrintModel::find($row['mysqlPID'])->vp_ivr_url.'>'.'语音'.'</a>';
+                    }else
+                    {
+                        $row['mysqlPID']='空';
+                    }
 
                     $row['time']=date("Y-m-d H:i:s",$row['time']);
 
@@ -298,10 +448,12 @@ class APIController extends Controller
                 }
 
                 $res=CustModel::where($cond)->distinct()->get(['cust_review_num']);
+                $phone_array=null;
 
                 foreach ($res as $row)
                 {
-                    Redis::lpush('start_loop',$row->cust_review_num);
+                    //Redis::lpush('start_loop',$row->cust_review_num);
+                    $phone_array[]=$row->cust_review_num;
                 }
 
                 for ($i=1;$i<=3;$i++)
@@ -312,14 +464,14 @@ class APIController extends Controller
                 $rand_txt=[];
 
                 $data=[
-                    'phone_array'=>'start_loop',//redis队列名
+                    'phone_array'=>$phone_array,//电话数组
                     'text_array'=>[$rand_txt,$rand_num],//文本相关，动态口令
-                    'cust_type'=>$cond['cust_type'],//客户类型
+                    'cust_type'=>(string)$cond['cust_type'],//客户类型
                     'time'=>[$start,$stop]//认证时间段
                 ];
 
                 //发送请求
-                $res=$this->mycurl('http://localhost:7510/loop',$data);
+                $res=$this->mycurl('http://127.0.0.1:7510/loop',$data);
 
                 //拼接mongo的log用
                 $tar=ProjectModel::find($cond['cust_project'])->project_name;
@@ -342,7 +494,7 @@ class APIController extends Controller
                         'time'=>time()
                     ]);
 
-                    return ['error'=>'1','msg'=>'发送注册请求失败'];
+                    return ['error'=>'1','msg'=>'发送轮播请求失败'];
                 }else
                 {
                     $name=Session::get('user');
@@ -370,9 +522,9 @@ class APIController extends Controller
     public function ivr_return_1()
     {
         //接收参数
-        $pid=$_GET['pid'] ? $_GET['pid'] : '';//客户主键
-        $url=$_GET['url'] ? $_GET['url'] : '';//客户录音文件
-        $model_url=$_GET['model_url'] ? $_GET['model_url'] : '';//客户声纹模型
+        $pid=isset($_GET['pid']) ? $_GET['pid'] : '';//客户主键
+        $url=isset($_GET['url']) ? $_GET['url'] : '';//客户录音文件
+        $model_url=isset($_GET['model_url']) ? $_GET['model_url'] : '';//客户声纹模型
 
         //找到这个客户
         $model=CustModel::find($pid);
@@ -383,7 +535,10 @@ class APIController extends Controller
             $model->update(['cust_register_flag'=>'1']);
 
             //把该客户的声纹url存起来
-            VocalPrintModel::create(['vp_id'=>$pid,'vp_ivr_url'=>$url,'vp_model_url'=>$model_url]);
+            $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'登记','vp_ivr_url'=>$url,'vp_model_url'=>$model_url]);
+
+            //拿到这次返回结果插入数据库中的主键
+            //dd($id->vp_pid);
 
             //通知mongo
             $obj=$this->mymongo();
@@ -392,12 +547,16 @@ class APIController extends Controller
                 'action'=>'ivr返回用户登记结果',
                 'result'=>'0',
                 'message'=>$model->cust_name.'登记成功',
+                'mysqlPID'=>$id->vp_pid,
                 'time'=>time()
             ]);
 
             return ['error'=>'0'];
-        }else
+        }elseif($pid!='' && $url!='' && $model_url=='')
         {
+            //把该客户的声纹url存起来
+            $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'登记','vp_ivr_url'=>$url,'vp_model_url'=>'']);
+
             //通知mongo
             $obj=$this->mymongo();
             $obj->ivrlog->test1->insert([
@@ -405,10 +564,14 @@ class APIController extends Controller
                 'action'=>'ivr返回用户登记结果',
                 'result'=>'1',
                 'message'=>$model->cust_name.'登记失败',
+                'mysqlPID'=>$id->vp_pid,
                 'time'=>time()
             ]);
 
             return ['error'=>'1'];
+        }else
+        {
+            return ['error'=>'1','msg'=>'参数不正确'];
         }
     }
 
@@ -416,16 +579,17 @@ class APIController extends Controller
     public function ivr_return_2()
     {
         //接收参数
-        $pid=$_GET['pid'] ? $_GET['pid'] : '';//客户主键
-        $url=$_GET['url'] ? $_GET['url'] : '';//客户录音文件
+        $pid=isset($_GET['pid']) ? $_GET['pid'] : '';//客户主键
+        $url=isset($_GET['url']) ? $_GET['url'] : '';//客户录音文件
+        $res=isset($_GET['res']) ? $_GET['res'] : '';//客户验证返回结果
 
         //找到这个客户
         $model=CustModel::find($pid);
 
-        if ($pid!='' && $url!='')
+        if ($pid!='' && $url!='' && $res=='Y')
         {
             //把该客户的声纹url存起来
-            VocalPrintModel::create(['vp_id'=>$pid,'vp_ivr_url'=>$url,'vp_model_url'=>'']);
+            $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'验证','vp_ivr_url'=>$url,'vp_model_url'=>'']);
 
             //通知mongo
             $obj=$this->mymongo();
@@ -434,23 +598,145 @@ class APIController extends Controller
                 'action'=>'ivr返回用户验证结果',
                 'result'=>'0',
                 'message'=>$model->cust_name.'验证成功',
+                'mysqlPID'=>$id->vp_pid,
                 'time'=>time()
             ]);
 
             return ['error'=>'0'];
-        }else
+        }elseif ($pid!='' && $url!='' && $res=='N')
         {
+            //把该客户的声纹url存起来
+            $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'验证','vp_ivr_url'=>$url,'vp_model_url'=>'']);
+
             //通知mongo
             $obj=$this->mymongo();
             $obj->ivrlog->test1->insert([
                 'who'=>'ivr',
                 'action'=>'ivr返回用户验证结果',
                 'result'=>'1',
-                'message'=>$model->cust_name.'验证失败',
+                'message'=>$model->cust_name.'验证失败，模型不匹配',
+                'mysqlPID'=>$id->vp_pid,
                 'time'=>time()
             ]);
 
             return ['error'=>'1'];
+        }else
+        {
+            return ['error'=>'1','msg'=>'参数不正确'];
+        }
+    }
+
+    //ivr返回轮播的结果
+    public function ivr_return_3()
+    {
+        //接收参数
+        $pid=isset($_GET['pid']) ? $_GET['pid'] : '';//客户主键
+        $url=isset($_GET['url']) ? $_GET['url'] : '';//客户录音文件
+        $res=isset($_GET['res']) ? $_GET['res'] : '';//客户验证返回结果
+
+        //找到这个客户
+        $model=CustModel::find($pid);
+
+        if ($pid!='' && $url!='' && $res=='Y')
+        {
+            //把该客户的声纹url存起来
+            $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'轮播','vp_ivr_url'=>$url,'vp_model_url'=>'']);
+
+            //加入认证表中
+            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'']);
+
+            //通知mongo
+            $obj=$this->mymongo();
+            $obj->ivrlog->loopreturn->insert([
+                'who'=>'ivr',
+                'action'=>'ivr返回用户轮播结果',
+                'result'=>'0',
+                'message'=>$model->cust_name.'认证成功',
+                'mysqlPID'=>$id->vp_pid,
+                'time'=>time()
+            ]);
+
+            return ['error'=>'0'];
+        }elseif ($pid!='' && $url!='' && $res=='N')
+        {
+            //把该客户的声纹url存起来
+            $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'轮播','vp_ivr_url'=>$url,'vp_model_url'=>'']);
+
+            //加入认证表中
+            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'']);
+
+            //通知mongo
+            $obj=$this->mymongo();
+            $obj->ivrlog->loopreturn->insert([
+                'who'=>'ivr',
+                'action'=>'ivr返回用户轮播结果',
+                'result'=>'1',
+                'message'=>$model->cust_name.'认证失败，模型不匹配',
+                'mysqlPID'=>$id->vp_pid,
+                'time'=>time()
+            ]);
+
+            return ['error'=>'1'];
+        }else
+        {
+            return ['error'=>'1','msg'=>'参数不正确'];
+        }
+    }
+
+    //客户主动认证的结果
+    public function ivr_return_4()
+    {
+        //接收参数
+        $pid=isset($_GET['pid']) ? $_GET['pid'] : '';//客户主键
+        $url=isset($_GET['url']) ? $_GET['url'] : '';//客户录音文件
+        $res=isset($_GET['res']) ? $_GET['res'] : '';//客户验证返回结果
+
+        //找到这个客户
+        $model=CustModel::find($pid);
+
+        if ($pid!='' && $url!='' && $res=='Y')
+        {
+            //把该客户的声纹url存起来
+            $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'主动','vp_ivr_url'=>$url,'vp_model_url'=>'']);
+
+            //加入认证表中
+            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'']);
+
+            //通知mongo
+            $obj=$this->mymongo();
+            $obj->ivrlog->loopreturn->insert([
+                'who'=>'ivr',
+                'action'=>'ivr返回用户主动认证',
+                'result'=>'0',
+                'message'=>$model->cust_name.'认证成功',
+                'mysqlPID'=>$id->vp_pid,
+                'time'=>time()
+            ]);
+
+            return ['error'=>'0'];
+        }elseif ($pid!='' && $url!='' && $res=='N')
+        {
+            //把该客户的声纹url存起来
+            $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'主动','vp_ivr_url'=>$url,'vp_model_url'=>'']);
+
+            //加入认证表中
+            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'']);
+
+            //通知mongo
+            $obj=$this->mymongo();
+            $obj->ivrlog->loopreturn->insert([
+                'who'=>'ivr',
+                'action'=>'ivr返回用户主动认证',
+                'result'=>'1',
+                'message'=>$model->cust_name.'认证失败，模型不匹配',
+                'mysqlPID'=>$id->vp_pid,
+                'time'=>time()
+            ]);
+
+            return ['error'=>'1'];
+        }else
+        {
+            return ['error'=>'1','msg'=>'参数不正确'];
         }
     }
 

@@ -1150,6 +1150,110 @@ function start_loop() {
 
 }
 
+function get_register_verify_mongo_data(curr) {
+
+    $("#loop_table tbody").children().remove();
+
+    var url ='/api/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        page  :curr||1,
+        type  :'get_register_verify_mongo_data'
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            $("#data_total").html(response.count_data);
+
+            //遍历返回的数据-表内容
+            for(var i=0;i<response.data.length;i++) {
+
+                var tabletr = $("<tr></tr>");
+
+                $.each(response.data[i], function (k, v) {
+
+                    tabletr.append('<td align="center">' + v + '</td>');
+
+                });
+
+                $("#loop_table tbody").append(tabletr);
+
+                //显示分页
+                laypage({
+                    cont: 'loop_laypage', //容器
+                    pages: response.pages, //通过后台拿到的总页数
+                    curr: curr || 1, //当前页
+                    jump: function(obj, first){ //触发分页后的回调
+                        if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
+                            get_register_verify_mongo_data(obj.curr);
+                        }
+                    }
+                });
+            }
+
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
+
+function get_loop_return_mongo_data(curr) {
+
+    $("#loop_table tbody").children().remove();
+
+    var url ='/api/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        page  :curr||1,
+        type  :'get_loop_return_mongo_data'
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            $("#data_total").html(response.count_data);
+
+            //遍历返回的数据-表内容
+            for(var i=0;i<response.data.length;i++) {
+
+                var tabletr = $("<tr></tr>");
+
+                $.each(response.data[i], function (k, v) {
+
+                    tabletr.append('<td align="center">' + v + '</td>');
+
+                });
+
+                $("#loop_table tbody").append(tabletr);
+
+                //显示分页
+                laypage({
+                    cont: 'loop_laypage', //容器
+                    pages: response.pages, //通过后台拿到的总页数
+                    curr: curr || 1, //当前页
+                    jump: function(obj, first){ //触发分页后的回调
+                        if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
+                            get_loop_return_mongo_data(obj.curr);
+                        }
+                    }
+                });
+            }
+
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
+
 function get_loop_mongo_data(curr) {
 
     $("#loop_table tbody").children().remove();

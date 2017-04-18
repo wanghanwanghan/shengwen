@@ -8,6 +8,7 @@ class CustDeleteModel extends Model
 {
     //定义ORM属性
     protected $table='customer_info_delete_use';
+    protected $primaryKey='pid';
     //黑名单
     protected $guarded=[];
 }

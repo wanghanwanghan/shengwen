@@ -58,16 +58,20 @@ Route::group(['middleware'=>['APIMiddleware']],function (){
     //开始验证按钮
     Route::post('api/verify','APIController@web_ivr_api');
 
+    //轮播
+    Route::post('api/loop/call','APIController@web_ivr_api');
+
     //ivr返回注册的结果
     Route::get('api/register/return','APIController@ivr_return_1');
 
     //ivr返回验证的结果
     Route::get('api/verify/return','APIController@ivr_return_2');
 
-    //轮播
-    Route::post('api/loop/call','APIController@web_ivr_api');
+    //ivr返回轮播的结果
+    Route::get('api/loop/return','APIController@ivr_return_3');
 
-
+    //客户主动认证的结果
+    Route::get('api/initiative/return','APIController@ivr_return_4');
 
 
 
@@ -105,8 +109,14 @@ Route::get('select/info','WebController@select_info');
 //修改客户信息
 Route::get('modify/cust/info','WebController@modify_cust_info');
 
+//录音返回信息
+Route::get('ivr/return/msg','WebController@ivr_return_msg');
+
 //循环拨打用户认证
 Route::get('loop/call','WebController@loop_call');
+
+//轮播返回信息
+Route::get('ivr/return/loop/msg','WebController@ivr_return_loop_msg');
 
 //统计
 Route::get('statistics','WebController@statistics');

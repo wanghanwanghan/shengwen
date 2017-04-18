@@ -219,6 +219,7 @@
                         </a>
                         <ul class="treeview-menu">
                             <li><a href="{{url('modify/cust/info')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改客户信息</a></li>
+                            <li><a href="{{url('ivr/return/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>录音返回信息</a></li>
                         </ul>
                     </li>
 
@@ -229,8 +230,9 @@
                             </span>
                         </a>
                         <ul class="treeview-menu">
-                            <!--<li><a href="{{url('select/info')}}"><i class="fa fa-fw fa-hand-o-right"></i>查询用户声纹信息</a></li>-->
+                        <!--<li><a href="{{url('select/info')}}"><i class="fa fa-fw fa-hand-o-right"></i>查询用户声纹信息</a></li>-->
                             <li><a href="{{url('loop/call')}}"><i class="fa fa-fw fa-hand-o-right"></i>循环拨打用户认证</a></li>
+                            <li><a href="{{url('ivr/return/loop/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>轮播返回信息</a></li>
                             <li><a href="{{url('statistics')}}"><i class="fa fa-fw fa-hand-o-right"></i>统计</a></li>
                             <li><a href="{{url('analysis')}}"><i class="fa fa-fw fa-hand-o-right"></i>分析</a></li>
                         </ul>
