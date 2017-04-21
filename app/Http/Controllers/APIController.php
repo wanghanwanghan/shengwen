@@ -331,6 +331,7 @@ class APIController extends Controller
                         'action'=>'web给ivr发送登记请求',
                         'result'=>$res['error'],
                         'message'=>$res['msg'],
+                        'mysqlPID'=>'',
                         'time'=>time()
                     ]);
 
@@ -344,6 +345,7 @@ class APIController extends Controller
                         'action'=>'web给ivr发送登记请求',
                         'result'=>$res['error'],
                         'message'=>$cust_name.'登记请求已发送',
+                        'mysqlPID'=>'',
                         'time'=>time()
                     ]);
 
@@ -381,6 +383,7 @@ class APIController extends Controller
                         'action'=>'web给ivr发送验证请求',
                         'result'=>$res['error'],
                         'message'=>$res['msg'],
+                        'mysqlPID'=>'',
                         'time'=>time()
                     ]);
 
@@ -394,6 +397,7 @@ class APIController extends Controller
                         'action'=>'web给ivr发送验证请求',
                         'result'=>$res['error'],
                         'message'=>$cust_name.'验证请求已发送',
+                        'mysqlPID'=>'',
                         'time'=>time()
                     ]);
 

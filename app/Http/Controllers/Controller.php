@@ -9,10 +9,12 @@ use App\Http\Model\LogModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SiTypeModel;
 use App\Http\Model\StaffModel;
+use App\Http\Model\VocalPrintModel;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Session;
 use phpDocumentor\Reflection\Types\Array_;
 
@@ -78,6 +80,50 @@ class Controller extends BaseController
         $log_info['log_detail']=$detail;
 
         LogModel::create($log_info);
+    }
+
+    //修改或删除声纹文件,参数一：客户主键，参数二：操作modify、delete，参数三：条件['phone'=>'13800138000']
+    public function voice_file_ModifyOrDelete($pid,$oper,$cond='')
+    {
+        $phone=CustModel::find($pid)->cust_review_num;
+        $id=CustModel::find($pid)->cust_id;
+
+        if ($oper=='delete')
+        {
+            $mkdir=date('Ymd',time());
+
+            system('mkdir '.Config::get('constant.voice_remove_path').$mkdir);
+
+            system('mv '.Config::get('constant.voice_path').$phone.'_'.$id.'*'.' '.Config::get('constant.voice_remove_path').$mkdir.'/');
+
+            return;
+
+        }elseif ($oper=='modify')
+        {
+            foreach ($cond as $key=>$value)
+            {
+                if ($key=='phone')
+                {
+                    //改录音文件
+                    system('cd '.Config::get('constant.voice_path').';'.'rename '.$phone.' '.$value.' *');
+
+                    //改模型文件文件
+                    system('cd '.Config::get('constant.model_path').';'.'rename '.$phone.' '.$value.' *');
+
+                    return;
+                }
+            }
+
+
+
+
+
+        }else
+        {
+            return '参数错误';
+        }
+
+
     }
 
     //无限分类函数

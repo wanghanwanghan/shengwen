@@ -260,6 +260,7 @@
                             </span>
                         </a>
                         <ul class="treeview-menu">
+                            <li><a href="{{url('edit/staff')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改员工信息</a></li>
                             <li><a href="{{url('send/staffmail')}}"><i class="fa fa-fw fa-hand-o-right"></i>给员工发邮件</a></li>
                         </ul>
                     </li>

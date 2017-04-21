@@ -84,7 +84,7 @@
                     btn: ['确认','取消'], //按钮
                     shade: false //不显示遮罩
                 }, function(index){
-                    //修改数据*************************************
+                    //删除数据*************************************
                     var url ='/data/ajax';
                     var data={
                         _token:$("input[name=_token]").val(),

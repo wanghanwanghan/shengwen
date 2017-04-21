@@ -11,6 +11,7 @@ use App\Http\Model\ProjectModel;
 use App\Http\Model\SendMailModel;
 use App\Http\Model\SiTypeModel;
 use App\Http\Model\StaffModel;
+use App\Http\Model\VocalPrintModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Session;
@@ -1505,6 +1506,8 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $res->cust_review_num=$phone;
                     $res->save();
 
+                    $this->voice_file_ModifyOrDelete($pid,'modify',['phone'=>$phone]);
+
                     return ['error'=>'0','msg'=>'修改成功'];
                 }
 
@@ -1605,13 +1608,86 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 $res=CustModel::find($pid);
 
+                $this->voice_file_ModifyOrDelete($pid,'delete');
+
                 $this->system_log('删除客户信息','主键:'.$pid);
 
                 CustDeleteModel::create($res->toArray());
 
                 $res->delete();
 
+                VocalPrintModel::where(['vp_id'=>$pid])->delete();
+
                 return ['error'=>'0','msg'=>'删除成功'];
+
+                break;
+
+            case 'edit_staff':
+
+                //遍历参数
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='staff_account')
+                    {
+                        $staff_info['staff_account']=$row['value'];
+                    }
+                    if ($row['name']=='staff_password')
+                    {
+                        if (!trim($row['value'])=='')
+                        {
+                            $staff_info['staff_password']=substr(md5(trim($row['value'])),0,24);
+                        }
+                    }
+                    if ($row['name']=='staff_project')
+                    {
+                        $staff_project=$this->arr2str(json_decode($row['value'],true));
+                        if (empty($staff_project))
+                        {
+                            return ['error'=>'1','msg'=>'选择所属区域'];
+                        }else
+                        {
+                            $staff_info['staff_project']=$staff_project;
+                        }
+                    }
+                    if ($row['name']=='staff_si_type')
+                    {
+                        $staff_si_type=$this->arr2str(json_decode($row['value'],true));
+                        if (empty($staff_si_type))
+                        {
+                            return ['error'=>'1','msg'=>'选择参保类型'];
+                        }else
+                        {
+                            $staff_info['staff_si_type']=$staff_si_type;
+                        }
+                    }
+                    if ($row['name']=='staff_level')
+                    {
+                        $staff_level=$this->arr2str(json_decode($row['value'],true));
+                        if (empty($staff_level))
+                        {
+                            return ['error'=>'1','msg'=>'选择员工权限'];
+                        }else
+                        {
+                            $staff_info['staff_level']=$staff_level;
+                        }
+                    }
+                }
+
+                //确认用户是否存在
+                $res=StaffModel::where(['staff_account'=>$staff_info['staff_account']])->get();
+
+                if (empty($res->toArray()))
+                {
+                    return ['error'=>'1','msg'=>'没有找到该员工账号'];
+                }else
+                {
+                    StaffModel::where(['staff_account'=>$staff_info['staff_account']])
+                        ->update($staff_info);
+
+                    $this->system_log('修改员工信息','员工账号是:'.$staff_info['staff_account']);
+
+                    return ['error'=>'0','msg'=>'修改完成'];
+                }
 
                 break;
 

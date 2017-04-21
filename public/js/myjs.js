@@ -279,6 +279,63 @@ function add_staff() {
 
 }
 
+function edit_staff() {
+
+    var treeObj1 = $.fn.zTree.getZTreeObj("ztree_staff_project");
+    var nodes1 = treeObj1.getCheckedNodes(true);
+    var checked_list1 = {};
+    $.each(nodes1, function(index, val) {
+        var checked1 = {};
+        checked1.id = val.id;
+        checked_list1[index] = checked1;
+    });
+    var json1 = JSON.stringify(checked_list1);
+    $("input[name=staff_project]").val(json1);
+
+    var treeObj2 = $.fn.zTree.getZTreeObj("ztree_staff_si_type");
+    var nodes2 = treeObj2.getCheckedNodes(true);
+    var checked_list2 = {};
+    $.each(nodes2, function(index, val) {
+        var checked2 = {};
+        checked2.id = val.id;
+        checked_list2[index] = checked2;
+    });
+    var json2 = JSON.stringify(checked_list2);
+    $("input[name=staff_si_type]").val(json2);
+
+    var treeObj3 = $.fn.zTree.getZTreeObj("ztree_staff_level");
+    var nodes3 = treeObj3.getCheckedNodes(true);
+    var checked_list3 = {};
+    $.each(nodes3, function(index, val) {
+        var checked3 = {};
+        checked3.id = val.id;
+        checked_list3[index] = checked3;
+    });
+    var json3 = JSON.stringify(checked_list3);
+    $("input[name=staff_level]").val(json3);
+
+    var url ='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        type  :'edit_staff',
+        key   :$("#edit_staff_form").serializeArray(),
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.alert(response.msg);
+            location.reload();
+        }else
+        {
+            layer.alert(response.msg);
+        }
+
+    },'json');
+
+}
+
 function add_level() {
 
     var url ='/data/ajax';

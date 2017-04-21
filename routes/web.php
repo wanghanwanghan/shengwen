@@ -38,6 +38,11 @@ Route::group(['middleware'=>['LoginMiddleware']],function (){
 //超级管理员路由组
 Route::group(['middleware'=>['RootMiddleware']],function (){
 
+    //修改员工信息
+    Route::get('edit/staff', function () {
+        return view('edit_staff');
+    });
+
     //给员工发邮件
     Route::get('send/staffmail', function () {
         return view('send_staffmail');
@@ -72,10 +77,6 @@ Route::group(['middleware'=>['APIMiddleware']],function (){
 
     //客户主动认证的结果
     Route::get('api/initiative/return','APIController@ivr_return_4');
-
-
-
-
 
 });//*******************************************************
 
