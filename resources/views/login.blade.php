@@ -1,5 +1,6 @@
 @extends('layouts.plane')
 @section('body')
+
 <div class="login-box">
   <div class="login-logo">
     <a href="#"><b>声纹管理系统</b></a>

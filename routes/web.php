@@ -1,7 +1,69 @@
 <?php
+//登陆
+Route::get('/', function () {
+    return view('login');
+});
+Route::group(['middleware'=>['LoginMiddleware']],function (){
+
+    //主页
+    Route::get('index', function () {
+        return view('index');
+    });
+
+});
+
+//用户登记
+Route::group(['middleware'=>['LoginMiddleware','AddCustMiddleware']],function (){
+
+    //添加客户信息A
+    Route::get('add/cust','WebController@add_cust');
+
+    //添加客户信息B
+    Route::get('add/cust/b','WebController@add_cust_b');
+
+    //添加第二年审人
+    Route::get('add/second','WebController@add_second');
+
+});
+
+//客服功能
+Route::group(['middleware'=>['LoginMiddleware','ServiceCareMiddleware']],function (){
+
+    //维护现有客户
+    Route::get('service/care','WebController@service_care');
+
+});
+
+//客户管理
+Route::group(['middleware'=>['LoginMiddleware','CustManagementMiddleware']],function (){
+
+    //修改客户信息
+    Route::get('modify/cust/info','WebController@modify_cust_info');
+
+    //录音返回信息
+    Route::get('ivr/return/msg','WebController@ivr_return_msg');
+
+});
+
+//声纹管理
+Route::group(['middleware'=>['LoginMiddleware','VoiceManagementMiddleware']],function (){
+
+    //循环拨打用户认证
+    Route::get('loop/call','WebController@loop_call');
+
+    //轮播返回信息
+    Route::get('ivr/return/loop/msg','WebController@ivr_return_loop_msg');
+
+    //统计
+    Route::get('statistics','WebController@statistics');
+
+    //分析
+    Route::get('analysis','WebController@analysis');
+
+});
 
 //系统设置的路由组
-Route::group(['middleware'=>['SetSystemMiddleware']],function (){
+Route::group(['middleware'=>['LoginMiddleware','SetSystemMiddleware']],function (){
 
     Route::get('set/project', function () {
         return view('set_project');
@@ -25,18 +87,8 @@ Route::group(['middleware'=>['SetSystemMiddleware']],function (){
 
 });
 
-//如果session里没有user，就转到登陆页面
-Route::group(['middleware'=>['LoginMiddleware']],function (){
-
-    //主页
-    Route::get('index', function () {
-        return view('index');
-    });
-
-});
-
 //超级管理员路由组
-Route::group(['middleware'=>['RootMiddleware']],function (){
+Route::group(['middleware'=>['LoginMiddleware','RootMiddleware']],function (){
 
     //修改员工信息
     Route::get('edit/staff', function () {
@@ -51,7 +103,7 @@ Route::group(['middleware'=>['RootMiddleware']],function (){
 });
 
 //本web的接口路由组******************************************
-Route::group(['middleware'=>['APIMiddleware']],function (){
+Route::group(['middleware'=>['LoginMiddleware','APIMiddleware']],function (){
 
     //查询
     Route::get('api/select','APIController@select_something');
@@ -80,50 +132,8 @@ Route::group(['middleware'=>['APIMiddleware']],function (){
 
 });//*******************************************************
 
-//登陆
-Route::get('/', function () {
-    return view('login');
-});
-//Route::get('/','APIController@ceshi_test');
-
 //所有ajax数据处理
 Route::post('data/ajax','DataController@ajax');
-
-//添加客户信息A
-Route::get('add/cust','WebController@add_cust');
-
-//添加客户信息B
-Route::get('add/cust/b','WebController@add_cust_b');
-
-//维护现有客户
-Route::get('service/care','WebController@service_care');
-
-//添加第二年审人
-Route::get('add/second','WebController@add_second');
-
-//添加客户信息B
-Route::get('add/cust/b','WebController@add_cust_b');
-
-//查询用户声纹信息
-Route::get('select/info','WebController@select_info');
-
-//修改客户信息
-Route::get('modify/cust/info','WebController@modify_cust_info');
-
-//录音返回信息
-Route::get('ivr/return/msg','WebController@ivr_return_msg');
-
-//循环拨打用户认证
-Route::get('loop/call','WebController@loop_call');
-
-//轮播返回信息
-Route::get('ivr/return/loop/msg','WebController@ivr_return_loop_msg');
-
-//统计
-Route::get('statistics','WebController@statistics');
-
-//分析
-Route::get('analysis','WebController@analysis');
 
 //change_btw打开的iframe
 Route::get('change_btw/{id}', function ($id) {

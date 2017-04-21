@@ -56,5 +56,9 @@ class Kernel extends HttpKernel
         'LoginMiddleware' => \App\Http\Middleware\LoginMiddleware::class,
         'RootMiddleware' => \App\Http\Middleware\RootMiddleware::class,
         'APIMiddleware' => \App\Http\Middleware\APIMiddleware::class,
+        'AddCustMiddleware' => \App\Http\Middleware\AddCustMiddleware::class,
+        'ServiceCareMiddleware' => \App\Http\Middleware\ServiceCareMiddleware::class,
+        'CustManagementMiddleware' => \App\Http\Middleware\CustManagementMiddleware::class,
+        'VoiceManagementMiddleware' => \App\Http\Middleware\VoiceManagementMiddleware::class,
     ];
 }

@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Support\Facades\Session;
 use App\Http\Model\LevelModel;
 
-class RootMiddleware
+class VoiceManagementMiddleware
 {
     public function handle($request, Closure $next)
     {
@@ -15,7 +15,7 @@ class RootMiddleware
         $level_users=$level_users[0]['staff_level'];
         $level_users=explode(',',$level_users);
 
-        $level_mysql=array_flatten(LevelModel::where(['level_name'=>'超级管理员功能'])->get(['level_id'])->toArray());
+        $level_mysql=array_flatten(LevelModel::where(['level_name'=>'声纹管理'])->get(['level_id'])->toArray());
         $level_mysql=$level_mysql[0];
 
         if(in_array($level_mysql,$level_users))
