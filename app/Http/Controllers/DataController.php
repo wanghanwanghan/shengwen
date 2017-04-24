@@ -1691,10 +1691,16 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
+            case 'delete_cust_voice':
 
+                $res=CustModel::find(Input::get('key'));
 
+                $res->cust_register_flag='0';
+                $res->save();
 
+                return ['error'=>'0','msg'=>'可以重新注册了'];
 
+                break;
 
 
 

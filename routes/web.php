@@ -1,4 +1,5 @@
 <?php
+
 //登陆
 Route::get('/', function () {
     return view('login');
@@ -103,7 +104,7 @@ Route::group(['middleware'=>['LoginMiddleware','RootMiddleware']],function (){
 });
 
 //本web的接口路由组******************************************
-Route::group(['middleware'=>['LoginMiddleware','APIMiddleware']],function (){
+Route::group(['middleware'=>['APIMiddleware']],function (){
 
     //查询
     Route::get('api/select','APIController@select_something');
