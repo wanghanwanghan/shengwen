@@ -15,6 +15,7 @@ use App\Http\Model\VocalPrintModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Config;
 
 class DataController extends Controller
 {
@@ -1702,6 +1703,29 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
+            case 'get_config':
+
+                return ['error'=>'0','DynamicPassword'=>Config::get('confirm_type.repeat'),
+                    'TextDependent'=>Config::get('confirm_type.text')];
+
+                break;
+
+            case 'set_config':
+
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='DynamicPassword')
+                    {
+                        Config::set('confirm_type.repeat',$row['value']);
+                        dd(Config::get('confirm_type.repeat'));
+                    }
+
+                }
+
+
+                return ['error'=>'0'];
+
+                break;
 
 
         }

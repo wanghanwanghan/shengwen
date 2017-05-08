@@ -1387,6 +1387,29 @@ function get_loop_mongo_data(curr) {
 
 }
 
+function set_config() {
+
+    var url='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        key:$("#edit_config_form").serializeArray(),
+        type:'set_config'
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.msg("跑到了");
+        }else
+        {
+            layer.msg("未知错误");
+        }
+
+    },'json');
+
+}
+
 
 
 

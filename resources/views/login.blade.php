@@ -3,11 +3,11 @@
 
 <div class="login-box">
   <div class="login-logo">
-    <a href="#"><b>声纹管理系统</b></a>
+    <a href="#"><b>中保信联(北京)科技有限公司</b></a>
   </div>
   <!-- /.login-logo -->
   <div class="login-box-body">
-    <p class="login-box-msg">中保信联(北京)科技有限公司</p>
+    <p class="login-box-msg">声纹系统</p>
 
     <input type="hidden" name="_token" value="{{ csrf_token() }}">
 
@@ -36,17 +36,17 @@
       </div>
     </form>
 
-    <div class="social-auth-links text-center">
-      <p>- OR -</p>
-      <a href="#" class="btn btn-block btn-social btn-facebook btn-flat"><i class="fa fa-facebook"></i> Sign in using
-        Facebook</a>
-      <a href="#" class="btn btn-block btn-social btn-google btn-flat"><i class="fa fa-google-plus"></i> Sign in using
-        Google+</a>
-    </div>
-    <!-- /.social-auth-links -->
+    {{--<div class="social-auth-links text-center">--}}
+      {{--<p>- OR -</p>--}}
+      {{--<a href="#" class="btn btn-block btn-social btn-facebook btn-flat"><i class="fa fa-facebook"></i> Sign in using--}}
+        {{--Facebook</a>--}}
+      {{--<a href="#" class="btn btn-block btn-social btn-google btn-flat"><i class="fa fa-google-plus"></i> Sign in using--}}
+        {{--Google+</a>--}}
+    {{--</div>--}}
+    {{--<!-- /.social-auth-links -->--}}
 
-    <a href="#">I forgot my password</a><br>
-    <a href="#" class="text-center">Register a new membership</a>
+    {{--<a href="#">I forgot my password</a><br>--}}
+    {{--<a href="#" class="text-center">Register a new membership</a>--}}
 
   </div>
   <!-- /.login-box-body -->
@@ -62,14 +62,18 @@
     });
   });
 
-  $("body").quietflow({
-    theme : "bouncingBalls",
-    specificColors : [
-      "rgba(255, 10, 50, .5)",
-      "rgba(10, 255, 50, .5)",
-      "rgba(10, 50, 255, .5)",
-      "rgba(0, 0, 0, .5)"
-    ]
-  })
+  //$("body").quietflow({
+  //  theme : "bouncingBalls",
+  //  specificColors : [
+  //    "rgba(255, 10, 50, .5)",
+  //    "rgba(10, 255, 50, .5)",
+  //    "rgba(10, 50, 255, .5)",
+  //    "rgba(0, 0, 0, .5)"
+  //  ]
+  //})
+
+  $("body").css('background-color',"rgb(64,142,186)");
+
+
 </script>
 @stop

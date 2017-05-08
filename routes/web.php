@@ -91,6 +91,11 @@ Route::group(['middleware'=>['LoginMiddleware','SetSystemMiddleware']],function 
 //超级管理员路由组
 Route::group(['middleware'=>['LoginMiddleware','RootMiddleware']],function (){
 
+    //修改认证配置
+    Route::get('edit/config', function () {
+        return view('edit_config');
+    });
+
     //修改员工信息
     Route::get('edit/staff', function () {
         return view('edit_staff');
@@ -109,6 +114,9 @@ Route::group(['middleware'=>['APIMiddleware']],function (){
     //查询
     Route::get('api/select','APIController@select_something');
     Route::post('api/ajax','APIController@ajax');
+
+    //验证动态口令
+    Route::get('api/dynamic','APIController@check_dynamicpassword');
 
     //开始注册按钮
     Route::post('api/register','APIController@web_ivr_api');

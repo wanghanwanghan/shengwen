@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Model\ConfirmTypeModel;
 use App\Http\Model\CustConfirmModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\LogModel;
@@ -118,6 +119,32 @@ class APIController extends Controller
 
 
         }
+    }
+
+    //ivr验证动态口令
+    public function check_dynamicpassword()
+    {
+        //动态口令实际长度
+        $dp_sys=isset($_GET['str1']) ? $_GET['str1'] : '';
+
+        //客户录的动态口令
+        $dp_usr=isset($_GET['str2']) ? $_GET['str2'] : '';
+
+        if ($dp_sys=='' || $dp_usr=='')
+        {
+            return ['error'=>'1','msg'=>'错误，参数有空值'];
+        }
+
+        //一个一个对比
+        for ($i=0;$i<=strlen($dp_sys)-1;$i++)
+        {
+            if ($dp_sys[$i]!=$dp_usr[$i])
+            {
+                return ['error'=>'1','msg'=>'该组动态口令有不匹配的'];
+            }
+        }
+
+        return ['error'=>'0','msg'=>'对比成功，完全一致'];
     }
 
     //ajax处理
@@ -311,12 +338,37 @@ class APIController extends Controller
                 $cust_review_num=$info->cust_review_num;
                 $cust_confirm_type=$info->cust_confirm_type;
 
+                //查询客户的认证类型
+                switch (ConfirmTypeModel::find($cust_confirm_type)->confirm_name)
+                {
+                    case '文本无关':
+
+                        $confirm_text='';
+
+                        break;
+
+                    case '文本相关':
+
+                        $confirm_text=Config::get('confirm_type.text');
+
+                        break;
+
+                    case '动态口令':
+
+                        for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
+                        {
+                            $confirm_text[]=rand(100000,999999);
+                        }
+
+                        break;
+                }
+
                 $data=[
                     'pid'=>Input::get('key'),//用户的主键号
                     'name'=>$cust_name,//用户的姓名
                     'phone'=>$cust_review_num,//年审手机号
                     'confirm_type'=>(string)$cust_confirm_type,//认证类型，文本无关，文本相关，动态口令
-                    'confirm_text'=>''//用户要说的话
+                    'confirm_text'=>$confirm_text//用户要说的话
                 ];
 
                 $res=$this->mycurl('http://127.0.0.1:7510/register',$data);
@@ -363,12 +415,37 @@ class APIController extends Controller
                 $cust_review_num=$info->cust_review_num;
                 $cust_confirm_type=$info->cust_confirm_type;
 
+                //查询客户的认证类型
+                switch (ConfirmTypeModel::find($cust_confirm_type)->confirm_name)
+                {
+                    case '文本无关':
+
+                        $confirm_text='';
+
+                        break;
+
+                    case '文本相关':
+
+                        $confirm_text=Config::get('confirm_type.text');
+
+                        break;
+
+                    case '动态口令':
+
+                        for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
+                        {
+                            $confirm_text[]=rand(100000,999999);
+                        }
+
+                        break;
+                }
+
                 $data=[
                     'pid'=>Input::get('key'),//用户的主键号
                     'name'=>$cust_name,//用户的姓名
                     'phone'=>$cust_review_num,//年审手机号
                     'confirm_type'=>(string)$cust_confirm_type,//认证类型，文本无关，文本相关，动态口令
-                    'confirm_text'=>''//用户要说的话
+                    'confirm_text'=>$confirm_text//用户要说的话
                 ];
 
                 $res=$this->mycurl('http://127.0.0.1:7510/verify',$data);
@@ -460,16 +537,14 @@ class APIController extends Controller
                     $phone_array[]=$row->cust_review_num;
                 }
 
-                for ($i=1;$i<=3;$i++)
+                for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
                 {
                     $rand_num[]=rand(100000,999999);
                 }
 
-                $rand_txt=[];
-
                 $data=[
                     'phone_array'=>$phone_array,//电话数组
-                    'text_array'=>[$rand_txt,$rand_num],//文本相关，动态口令
+                    'text_array'=>[Config::get('confirm_type.text'),$rand_num],//文本相关，动态口令
                     'cust_type'=>(string)$cond['cust_type'],//客户类型
                     'time'=>[$start,$stop]//认证时间段
                 ];
