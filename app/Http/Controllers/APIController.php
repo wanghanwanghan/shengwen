@@ -233,7 +233,7 @@ class APIController extends Controller
 
                     if ($row['mysqlPID']!='')
                     {
-                        $row['mysqlPID']='<a target=_BLANK href='.Config::get('constant.voice_path').VocalPrintModel::find($row['mysqlPID'])->vp_ivr_url.'>'.'语音'.'</a>';
+                        $row['mysqlPID']='<a target=_BLANK href=/'.Config::get('constant.voice_path').VocalPrintModel::find($row['mysqlPID'])->vp_ivr_url.'>'.'语音'.'</a>';
                     }else
                     {
                         $row['mysqlPID']='空';
@@ -289,7 +289,7 @@ class APIController extends Controller
 
                     if ($row['mysqlPID']!='')
                     {
-                        $row['mysqlPID']='<a target=_BLANK href='.Config::get('constant.voice_path').VocalPrintModel::find($row['mysqlPID'])->vp_ivr_url.'>'.'语音'.'</a>';
+                        $row['mysqlPID']='<a target=_BLANK href=/'.Config::get('constant.voice_path').VocalPrintModel::find($row['mysqlPID'])->vp_ivr_url.'>'.'语音'.'</a>';
                     }else
                     {
                         $row['mysqlPID']='空';
