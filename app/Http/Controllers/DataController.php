@@ -398,6 +398,9 @@ class DataController extends Controller
                             return ['error'=>'1','msg'=>'身份证输入不正确'];
                         }
 
+                        //转换成大写
+                        $row['value']=strtoupper($row['value']);
+
                         //验证一下数据库中是否有相同的项
                         if (count(CustModel::where(['cust_id'=>$row['value']])->get()->toArray())!='0')
                         {
