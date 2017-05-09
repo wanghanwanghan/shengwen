@@ -427,6 +427,29 @@ class DataController extends Controller
                         if (count(CustModel::where(['cust_review_num'=>$row['value']])->get()->toArray())>='2')
                         {
                             return ['error'=>'1','msg'=>'此手机号（年审号）已经存在，不能添加了'];
+                        }else
+                        {
+                            //添加A类的时候查找一下B类有没有这个电话，如果有，则添加失败
+                            if (Input::get('cust_type')=='A')
+                            {
+                                $cust_type='B';
+                            }else
+                            {
+                                $cust_type='A';
+                            }
+                            if (!empty(count(CustModel::where(['cust_review_num'=>$row['value'],'cust_type'=>$cust_type])->get()->toArray())))
+                            {
+                                return ['error'=>'1','msg'=>'此手机号（年审号）不属于当前客户类型，不能添加了'];
+                            }
+
+                            //检查一下是否已经添加过相同的第一年审人了
+                            if (Input::get('cust_review_flag')=='1')
+                            {
+                                if (!empty(count(CustModel::where(['cust_review_num'=>$row['value'],'cust_review_flag'=>Input::get('cust_review_flag')])->get()->toArray())))
+                                {
+                                    return ['error'=>'1','msg'=>'此手机号（年审号）已经添加过第一年审人，不能添加了'];
+                                }
+                            }
                         }
 
                         $cust_info['cust_review_num']=$row['value'];
@@ -1353,7 +1376,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
-            case 'modify_info';
+            case 'modify_info':
 
                 $cond=trim(Input::get('cond1'));
                 $cust_review_flag=Input::get('cond2');
