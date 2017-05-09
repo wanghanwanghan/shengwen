@@ -241,7 +241,7 @@ class APIController extends Controller
                         }
                         catch(ModelNotFoundException $e)
                         {
-                            $row['mysqlPID']='<a target=_BLANK href=#>'.'已删除'.'</a>';
+                            $row['mysqlPID']='<a href=#>'.'客户被删除'.'</a>';
                         }
                     }else
                     {
@@ -298,7 +298,15 @@ class APIController extends Controller
 
                     if ($row['mysqlPID']!='')
                     {
-                        $row['mysqlPID']='<a target=_BLANK href=/'.Config::get('constant.voice_path').VocalPrintModel::find($row['mysqlPID'])->vp_ivr_url.'>'.'语音'.'</a>';
+                        try
+                        {
+                            $vocal=VocalPrintModel::findOrFail($row['mysqlPID']);
+                            $row['mysqlPID']='<a target=_BLANK href=/'.Config::get('constant.voice_path').$vocal->vp_ivr_url.'>'.'语音'.'</a>';
+                        }
+                        catch(ModelNotFoundException $e)
+                        {
+                            $row['mysqlPID']='<a href=#>'.'客户被删除'.'</a>';
+                        }
                     }else
                     {
                         $row['mysqlPID']='空';
