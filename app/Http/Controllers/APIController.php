@@ -64,7 +64,7 @@ class APIController extends Controller
 
                     if (empty($res))
                     {
-                        return ['error'=>'0','msg'=>'数据库中没有这个电话'];
+                        return ['error'=>'1','msg'=>'数据库中没有这个电话'];
                     }else
                     {
                         return ['error'=>'0','msg'=>'查询成功','data'=>$res];
@@ -113,12 +113,26 @@ class APIController extends Controller
 
                 break;
 
+            case 'is_register':
 
+                try
+                {
+                    $res=CustModel::findOrFail($_GET['cond']);
 
+                    if ($res->cust_register_flag=='1')
+                    {
+                        return 'Y';
+                    }else
+                    {
+                        return 'N';
+                    }
+                }
+                catch(ModelNotFoundException $e)
+                {
+                    return ['error'=>'1','msg'=>'该客户不存在'];
+                }
 
-
-
-
+                break;
         }
     }
 

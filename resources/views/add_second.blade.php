@@ -15,17 +15,17 @@
                     <tbody>
                     <tr>
                         <td>
-                            <div class="col-xs-8">
+                            <div class="col-xs-9">
                                 <input type="text" disabled class="form-control" value={{$model['cust_name']}}>
                             </div>
                         </td>
                         <td>
-                            <div class="col-xs-8">
-                                <input type="text" disabled class="form-control" value={{$model['cust_review_num']}}年审>
+                            <div class="col-xs-9">
+                                <input type="text" disabled class="form-control" value={{$model['cust_review_num']}}年审号>
                             </div>
                         </td>
                         <td>
-                            <div class="col-xs-8">
+                            <div class="col-xs-9">
                                 <input type="text" disabled class="form-control" value={{$model['cust_project']}}>
                             </div>
                         </td>
@@ -33,17 +33,17 @@
 
                     <tr>
                         <td>
-                            <div class="col-xs-8">
+                            <div class="col-xs-9">
                                 <input type="text" disabled class="form-control" value={{$model['cust_id']}}>
                             </div>
                         </td>
                         <td>
-                            <div class="col-xs-8">
-                                <input type="text" disabled class="form-control" value={{$model['cust_phone_num']}}备用>
+                            <div class="col-xs-9">
+                                <input type="text" disabled class="form-control" value={{$model['cust_phone_num']}}备用号>
                             </div>
                         </td>
                         <td>
-                            <div class="col-xs-8">
+                            <div class="col-xs-9">
                                 <input type="text" disabled class="form-control" value={{$model['cust_confirm_type']}}>
                             </div>
                         </td>
@@ -51,17 +51,17 @@
 
                     <tr>
                         <td>
-                            <div class="col-xs-8">
+                            <div class="col-xs-9">
                                 <input type="text" disabled class="form-control" value={{$model['cust_si_id']}}>
                             </div>
                         </td>
                         <td>
-                            <div class="col-xs-8">
+                            <div class="col-xs-9">
                                 <input type="text" disabled class="form-control" value={{$model['cust_address']}}>
                             </div>
                         </td>
                         <td>
-                            <div class="col-xs-8">
+                            <div class="col-xs-9">
                                 <input type="text" disabled class="form-control" value={{$model['cust_si_type']}}>
                             </div>
                         </td>
