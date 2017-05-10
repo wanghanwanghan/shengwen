@@ -100,6 +100,48 @@
                 });
             });
 
+            $("#cust_death_btn").click(function () {
+                layer.confirm('确认真的要设置成<去世>状态吗', {
+                    btn: ['确认','取消'], //按钮
+                    shade: false //不显示遮罩
+                }, function(index){
+                    //设置数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_death',
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);location.reload();}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
+                    layer.close(index);
+                });
+            });
+
+            $("#cust_restore_btn").click(function () {
+                layer.confirm('确认真的要设置成<认证>状态吗', {
+                    btn: ['确认','取消'], //按钮
+                    shade: false //不显示遮罩
+                }, function(index){
+                    //设置数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_restore',
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);location.reload();}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
+                    layer.close(index);
+                });
+            });
+
             $('#modify_cust_name').editable({
                 type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
                 title: "",                   //编辑框的标题

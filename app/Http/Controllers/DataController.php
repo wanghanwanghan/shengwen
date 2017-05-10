@@ -508,6 +508,9 @@ class DataController extends Controller
                 //从这里添加的默认为未注册
                 $cust_info['cust_register_flag']=Input::get('cust_register_flag');
 
+                //默认为用户未死亡
+                $cust_info['cust_death_flag']='0';
+
                 if (Input::get('cust_relation_flag')=='0')
                 {
                     //从这里添加的默认为还没有添加第二年审人
@@ -558,13 +561,14 @@ class DataController extends Controller
                 //查询的字段
                 $get=
                     [
-                    'cust_num',
-                    'cust_project',
-                    'cust_si_type',
-                    'cust_name',
-                    'cust_review_num',
-                    'cust_register_flag',
-                    'cust_relation_flag'
+                        'cust_num',
+                        'cust_project',
+                        'cust_si_type',
+                        'cust_name',
+                        'cust_review_num',
+                        'cust_register_flag',
+                        'cust_relation_flag',
+                        'cust_death_flag'
                     ];
 
                 //得到这个用户可以看见的地区和参保类型
@@ -591,12 +595,31 @@ class DataController extends Controller
                     $row['cust_project']=ProjectModel::where(['project_id'=>$row['cust_project']])->first()->project_name;
                     $row['cust_si_type']=SiTypeModel::where(['si_id'=>$row['cust_si_type']])->first()->si_name;
 
+                    //查看第一年审人有没有被标记为去世
+                    if ($row['cust_death_flag']=='1')
+                    {
+                        $row['cust_register_flag']='3';
+                    }
+
+                    unset($row['cust_death_flag']);
+
                     //添加上第二年审人信息，如果有的话
                     if ($row['cust_relation_flag']!='0')
                     {
                         $row['cust_relation_flag']=CustModel::where(['cust_num'=>$row['cust_relation_flag']])
-                            ->get(['cust_num','cust_name','cust_register_flag'])
+                            ->get(['cust_num','cust_name','cust_register_flag','cust_death_flag'])
                             ->toArray();
+
+                        //查看第二年审人有没有被标记为去世
+                        foreach ($row['cust_relation_flag'] as &$val)
+                        {
+                            if ($val['cust_death_flag']=='1')
+                            {
+                                $val['cust_register_flag']='3';
+                            }
+
+                            unset($val['cust_death_flag']);
+                        }
                     }
                 }
 
@@ -627,7 +650,8 @@ class DataController extends Controller
                         'cust_name',
                         'cust_review_num',
                         'cust_register_flag',
-                        'cust_relation_flag'
+                        'cust_relation_flag',
+                        'cust_death_flag'
                     ];
 
                 //得到这个用户可以看见的地区和参保类型
@@ -654,12 +678,31 @@ class DataController extends Controller
                     $row['cust_project']=ProjectModel::where(['project_id'=>$row['cust_project']])->first()->project_name;
                     $row['cust_si_type']=SiTypeModel::where(['si_id'=>$row['cust_si_type']])->first()->si_name;
 
+                    //查看第一年审人有没有被标记为去世
+                    if ($row['cust_death_flag']=='1')
+                    {
+                        $row['cust_register_flag']='3';
+                    }
+
+                    unset($row['cust_death_flag']);
+
                     //添加上第二年审人信息，如果有的话
                     if ($row['cust_relation_flag']!='0')
                     {
                         $row['cust_relation_flag']=CustModel::where(['cust_num'=>$row['cust_relation_flag']])
-                            ->get(['cust_num','cust_name','cust_register_flag'])
+                            ->get(['cust_num','cust_name','cust_register_flag','cust_death_flag'])
                             ->toArray();
+
+                        //查看第二年审人有没有被标记为去世
+                        foreach ($row['cust_relation_flag'] as &$val)
+                        {
+                            if ($val['cust_death_flag']=='1')
+                            {
+                                $val['cust_register_flag']='3';
+                            }
+
+                            unset($val['cust_death_flag']);
+                        }
                     }
                 }
 
@@ -922,8 +965,18 @@ class DataController extends Controller
 
                             //从数据库中查询符合条件的数据
                             $data=CustModel::where(['cust_project'=>$proj])->where('created_at','like',$yearAndmonth.'%')
-                                ->get(['created_at'])->toArray();
-                            $data=array_flatten($data);
+                                ->orderBy('created_at','asc')
+                                ->groupBy('cust_review_num')
+                                ->get(['created_at','cust_review_num'])
+                                ->toArray();
+
+                            //只要数组中的创建时间
+                            foreach ($data as $row)
+                            {
+                                $tmp[]=$row['created_at'];
+                            }
+
+                            $data=isset($tmp) ? $tmp : null;
 
                             if (empty($data))
                             {
@@ -1419,6 +1472,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     return ['error'=>'1','msg'=>'查无结果'];
                 }else
                 {
+                    $nbsp='&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp';
                     $data['客户姓名']='<a id=modify_cust_name>'.$res[0]['cust_name'].'</a>';
                     $data['身份证号']='<a id=modify_cust_id>'.$res[0]['cust_id'].'</a>';
                     $data['社保编号']='<a id=modify_cust_si_id>'.$res[0]['cust_si_id'].'</a>';
@@ -1432,7 +1486,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $data['创建时间']='<a id=modify_created_at>'.$res[0]['created_at'].'</a>';
                     $data['年审人号']='<a id=modify_cust_review_flag>'.'第'.$res[0]['cust_review_flag'].'年审人'.'</a>';
                     $data['唯一主键']='<a id=modify_pid value='.$res[0]['cust_num'].'>'.$res[0]['cust_num'].'</a>';
-                    $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>';
+                    if ($res[0]['cust_death_flag']=='1')
+                    {
+                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-info" id=cust_restore_btn>恢复认证状态</a>';
+                    }else
+                    {
+                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-warning" id=cust_death_btn>设成去世状态</a>';
+                    }
 
                     return ['error'=>'0','msg'=>'查询成功','data'=>$data];
                 }
@@ -1646,6 +1706,36 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 VocalPrintModel::where(['vp_id'=>$pid])->delete();
 
                 return ['error'=>'0','msg'=>'删除成功'];
+
+                break;
+
+            case 'modify_cust_death':
+
+                $pid=Input::get('pid');
+
+                $res=CustModel::find($pid);
+
+                $res->cust_death_flag='1';
+                $res->save();
+
+                $this->system_log('设置客户为去世状态','主键:'.$pid);
+
+                return ['error'=>'0','msg'=>'设置成功'];
+
+                break;
+
+            case 'modify_cust_restore':
+
+                $pid=Input::get('pid');
+
+                $res=CustModel::find($pid);
+
+                $res->cust_death_flag='0';
+                $res->save();
+
+                $this->system_log('设置客户为认证状态','主键:'.$pid);
+
+                return ['error'=>'0','msg'=>'设置成功'];
 
                 break;
 

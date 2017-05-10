@@ -525,6 +525,10 @@ function refresh_A(curr) {
                         {
                             //开始注册按钮
                             tabletr.append('<td align="center">'+'<a class="btn btn-success" onclick=api_register($(this).attr("id")); id='+response.data[i]['cust_num']+'>开始注册</a>'+'</td>');
+                        }else if (v=='3')
+                        {
+                            //客户已去世
+                            tabletr.append('<td align="center">'+'客户已去世'+'</td>');
                         }else
                         {
                             //验证，删除按钮
@@ -549,6 +553,10 @@ function refresh_A(curr) {
                                     {
                                         //开始注册按钮
                                         tabletr.append('<td align="center">'+'<a class="btn btn-success" onclick=api_register($(this).attr("id")); id='+v[0]['cust_num']+'>开始注册</a>'+'</td>');
+                                    }else if (value=='3')
+                                    {
+                                        //客户已去世
+                                        tabletr.append('<td align="center">'+'客户已去世'+'</td>');
                                     }else
                                     {
                                         //验证，删除按钮
@@ -620,6 +628,10 @@ function refresh_B(curr) {
                         {
                             //开始注册按钮
                             tabletr.append('<td align="center">'+'<a class="btn btn-success" onclick=api_register($(this).attr("id")); id='+response.data[i]['cust_num']+'>开始注册</a>'+'</td>');
+                        }else if (v=='3')
+                        {
+                            //客户已去世
+                            tabletr.append('<td align="center">'+'客户已去世'+'</td>');
                         }else
                         {
                             //验证，删除按钮
@@ -644,6 +656,10 @@ function refresh_B(curr) {
                                     {
                                         //开始注册按钮
                                         tabletr.append('<td align="center">'+'<a class="btn btn-success" onclick=api_register($(this).attr("id")); id='+v[0]['cust_num']+'>开始注册</a>'+'</td>');
+                                    }else if (value=='3')
+                                    {
+                                        //客户已去世
+                                        tabletr.append('<td align="center">'+'客户已去世'+'</td>');
                                     }else
                                     {
                                         //验证，删除按钮
