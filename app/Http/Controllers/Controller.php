@@ -387,6 +387,15 @@ class Controller extends BaseController
         return $arr;
     }
 
+    //产生不重复的随机数
+    public function myrand()
+    {
+        for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
+        {
+            $new=rand(100000,999999);
+            $rand_num[]=rand(100000,999999);
+        }
+    }
 
 
 

@@ -1655,9 +1655,29 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 {
                     $res=CustModel::find($pid);
                     $this->system_log('修改年审号码','主键:'.$pid.'修改内容:'.$res->cust_review_num.'=>'.$phone);
+                    //保存一下电话号码，修改下一个客户用，如果有的话***********
+                    $old=$res->cust_review_num;
+                    $new=$phone;
+                    //******************************************************
                     $res->cust_review_num=$phone;
                     $res->save();
 
+                    //修改另一个客户，如果有的话
+                    $res=CustModel::where(['cust_review_num'=>$old])->first();
+                    if (!empty($res))
+                    {
+                        $res->cust_review_num=$new;
+                        $res->save();
+                        $this->system_log('修改年审号码','主键:'.$res->cust_num.'修改内容:'.$old.'=>'.$new);
+                    }
+
+                    //修改vocalprint表中的数据，把电话号码改成新的
+                    $sql='replace(vp_ivr_url,'.$old.','.$new.')';
+                    \DB::table('vocalprint')->update(['vp_ivr_url'=>\DB::raw($sql)]);
+                    $sql='replace(vp_model_url,'.$old.','.$new.')';
+                    \DB::table('vocalprint')->update(['vp_model_url'=>\DB::raw($sql)]);
+
+                    //修改linux文件名
                     $this->voice_file_ModifyOrDelete($pid,'modify',['phone'=>$phone]);
 
                     return ['error'=>'0','msg'=>'修改成功'];
