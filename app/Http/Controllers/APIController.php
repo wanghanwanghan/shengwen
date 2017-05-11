@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
+use League\Flysystem\Exception;
 
 class APIController extends Controller
 {
@@ -120,6 +121,27 @@ class APIController extends Controller
                     $res=CustModel::findOrFail($_GET['cond']);
 
                     if ($res->cust_register_flag=='1')
+                    {
+                        return 'Y';
+                    }else
+                    {
+                        return 'N';
+                    }
+                }
+                catch(ModelNotFoundException $e)
+                {
+                    return ['error'=>'1','msg'=>'该客户不存在'];
+                }
+
+                break;
+
+            case 'is_death':
+
+                try
+                {
+                    $res=CustModel::findOrFail($_GET['cond']);
+
+                    if ($res->cust_death_flag=='1')
                     {
                         return 'Y';
                     }else

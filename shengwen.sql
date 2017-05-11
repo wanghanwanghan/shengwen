@@ -60,12 +60,12 @@ CREATE TABLE `zbxl_customer_confirm` (
 DROP TABLE IF EXISTS `zbxl_customer_info`;
 CREATE TABLE `zbxl_customer_info` (
   `cust_num` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '客户编号',
-  `cust_name` varchar(60) NOT NULL COMMENT '客户姓名',
+  `cust_name` varchar18) NOT NULL COMMENT '客户姓名',
   `cust_id` char(18) NOT NULL COMMENT '客户身份证号',
-  `cust_si_id` varchar(60) DEFAULT NULL COMMENT '客户社保编号',
-  `cust_phone_num` varchar(60) DEFAULT NULL COMMENT '客户备用手机号',
-  `cust_review_num` varchar(60) NOT NULL COMMENT '客户认证手机号',
-  `cust_address` varchar(200) DEFAULT NULL COMMENT '客户地址',
+  `cust_si_id` varchar(20) DEFAULT NULL COMMENT '客户社保编号',
+  `cust_phone_num` varchar(20) DEFAULT NULL COMMENT '客户备用手机号',
+  `cust_review_num` varchar(11) NOT NULL COMMENT '客户认证手机号',
+  `cust_address` varchar(100) DEFAULT NULL COMMENT '客户地址',
   `cust_project` int(10) unsigned NOT NULL COMMENT '客户所属项目',
   `cust_si_type` int(10) unsigned NOT NULL COMMENT '客户所属保险类型',
   `cust_confirm_type` int(10) unsigned NOT NULL COMMENT '客户认证类型',

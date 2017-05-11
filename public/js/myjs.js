@@ -747,10 +747,45 @@ function select_data_A(curr) {
                         {
                             //开始注册按钮
                             tabletr.append('<td align="center">'+'<a class="btn btn-success" onclick=api_register($(this).attr("id")); id='+response.data[i]['cust_num']+'>开始注册</a>'+'</td>');
+                        }else if (v=='3')
+                        {
+                            //客户已去世
+                            tabletr.append('<td align="center">'+'客户已去世'+'</td>');
                         }else
                         {
                             //验证，删除按钮
-                            tabletr.append('<td align="center">'+'<a class="btn btn-info" id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
+                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
+                        }
+                    }else if (k=='cust_relation_flag')
+                    {
+                        if (v=='0')
+                        {
+                            //还没有添加第二年审人的情况
+                            tabletr.append('<td align="center">'+'<a class="btn btn-warning" onclick="add_second($(this));" id='+response.data[i]['cust_num']+'>添加第二年审人</a>'+'</td>');
+                        }else
+                        {
+                            //显示第二年审人姓名
+                            $.each(v[0],function (key,value) {
+                                if (key=='cust_name')
+                                {
+                                    tabletr.append('<td align="center">'+value+'</td>');
+                                }else if (key=='cust_register_flag')
+                                {
+                                    if (value=='0')
+                                    {
+                                        //开始注册按钮
+                                        tabletr.append('<td align="center">'+'<a class="btn btn-success" onclick=api_register($(this).attr("id")); id='+v[0]['cust_num']+'>开始注册</a>'+'</td>');
+                                    }else if (value=='3')
+                                    {
+                                        //客户已去世
+                                        tabletr.append('<td align="center">'+'客户已去世'+'</td>');
+                                    }else
+                                    {
+                                        //验证，删除按钮
+                                        tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+v[0]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+v[0]['cust_num']+'>删除</a>'+'</td>');
+                                    }
+                                }
+                            });
                         }
                     }else
                     {
@@ -815,10 +850,45 @@ function select_data_B(curr) {
                         {
                             //开始注册按钮
                             tabletr.append('<td align="center">'+'<a class="btn btn-success" onclick=api_register($(this).attr("id")); id='+response.data[i]['cust_num']+'>开始注册</a>'+'</td>');
+                        }else if (v=='3')
+                        {
+                            //客户已去世
+                            tabletr.append('<td align="center">'+'客户已去世'+'</td>');
                         }else
                         {
                             //验证，删除按钮
-                            tabletr.append('<td align="center">'+'<a class="btn btn-info" id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
+                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
+                        }
+                    }else if (k=='cust_relation_flag')
+                    {
+                        if (v=='0')
+                        {
+                            //还没有添加第二年审人的情况
+                            tabletr.append('<td align="center">'+'<a class="btn btn-warning" onclick="add_second($(this));" id='+response.data[i]['cust_num']+'>添加第二年审人</a>'+'</td>');
+                        }else
+                        {
+                            //显示第二年审人姓名
+                            $.each(v[0],function (key,value) {
+                                if (key=='cust_name')
+                                {
+                                    tabletr.append('<td align="center">'+value+'</td>');
+                                }else if (key=='cust_register_flag')
+                                {
+                                    if (value=='0')
+                                    {
+                                        //开始注册按钮
+                                        tabletr.append('<td align="center">'+'<a class="btn btn-success" onclick=api_register($(this).attr("id")); id='+v[0]['cust_num']+'>开始注册</a>'+'</td>');
+                                    }else if (value=='3')
+                                    {
+                                        //客户已去世
+                                        tabletr.append('<td align="center">'+'客户已去世'+'</td>');
+                                    }else
+                                    {
+                                        //验证，删除按钮
+                                        tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+v[0]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+v[0]['cust_num']+'>删除</a>'+'</td>');
+                                    }
+                                }
+                            });
                         }
                     }else
                     {

@@ -12,6 +12,7 @@ use App\Http\Model\SendMailModel;
 use App\Http\Model\SiTypeModel;
 use App\Http\Model\StaffModel;
 use App\Http\Model\VocalPrintModel;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Session;
@@ -623,6 +624,8 @@ class DataController extends Controller
                     }
                 }
 
+                //dd($model);
+
                 return ['error'=>'0','msg'=>'数据读取成功','pages'=>$cnt_page,'data'=>$model];
 
                 break;
@@ -747,7 +750,9 @@ class DataController extends Controller
                         'cust_name',
                         'cust_review_num',
                         'cust_register_flag',
-                        'cust_relation_flag'
+                        'cust_relation_flag',
+                        'cust_review_flag',
+                        'cust_death_flag'
                     ];
 
                 //判断数组中是否存在指定键，因为用户不可以查询范围外的数据
@@ -769,7 +774,37 @@ class DataController extends Controller
                 {
                     $row['cust_project']=ProjectModel::where(['project_id'=>$row['cust_project']])->first()->project_name;
                     $row['cust_si_type']=SiTypeModel::where(['si_id'=>$row['cust_si_type']])->first()->si_name;
+
+                    //查看有没有被标记为去世
+                    if ($row['cust_death_flag']=='1')
+                    {
+                        $row['cust_register_flag']='3';
+                    }
+
+                    unset($row['cust_death_flag']);
+
+                    //如果是该行数据是第一年审人，则暂存起来
+                    if ($row['cust_review_flag']=='1')
+                    {
+                        unset($row['cust_review_flag']);
+                        $tmp_one[]=$row;
+                    }else
+                    {
+                        $tmp_two[0]['cust_num']=$row['cust_num'];
+                        $tmp_two[0]['cust_name']=$row['cust_name'];
+                        $tmp_two[0]['cust_register_flag']=$row['cust_register_flag'];
+                    }
                 }
+
+                //组合数组，给前台页面显示
+                if (isset($tmp_two))
+                {
+                    $tmp_one[0]['cust_relation_flag']=$tmp_two;
+                }
+
+                $model=$tmp_one;
+
+                //dd($model);
 
                 return ['error'=>'0','msg'=>'查询成功','data'=>$model,'pages'=>$cnt_page];
 
@@ -812,7 +847,9 @@ class DataController extends Controller
                         'cust_name',
                         'cust_review_num',
                         'cust_register_flag',
-                        'cust_relation_flag'
+                        'cust_relation_flag',
+                        'cust_review_flag',
+                        'cust_death_flag'
                     ];
 
                 //判断数组中是否存在指定键，因为用户不可以查询范围外的数据
@@ -834,7 +871,35 @@ class DataController extends Controller
                 {
                     $row['cust_project']=ProjectModel::where(['project_id'=>$row['cust_project']])->first()->project_name;
                     $row['cust_si_type']=SiTypeModel::where(['si_id'=>$row['cust_si_type']])->first()->si_name;
+
+                    //查看有没有被标记为去世
+                    if ($row['cust_death_flag']=='1')
+                    {
+                        $row['cust_register_flag']='3';
+                    }
+
+                    unset($row['cust_death_flag']);
+
+                    //如果是该行数据是第一年审人，则暂存起来
+                    if ($row['cust_review_flag']=='1')
+                    {
+                        unset($row['cust_review_flag']);
+                        $tmp_one[]=$row;
+                    }else
+                    {
+                        $tmp_two[0]['cust_num']=$row['cust_num'];
+                        $tmp_two[0]['cust_name']=$row['cust_name'];
+                        $tmp_two[0]['cust_register_flag']=$row['cust_register_flag'];
+                    }
                 }
+
+                //组合数组，给前台页面显示
+                if (isset($tmp_two))
+                {
+                    $tmp_one[0]['cust_relation_flag']=$tmp_two;
+                }
+
+                $model=$tmp_one;
 
                 return ['error'=>'0','msg'=>'查询成功','data'=>$model,'pages'=>$cnt_page];
 
@@ -1694,6 +1759,33 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $pid=Input::get('pid');
 
                 $res=CustModel::find($pid);
+
+                //第一年审人不能直接删除，必须先删除第二年审人
+                if ($res->cust_relation_flag!='0')
+                {
+                    try
+                    {
+                        //查询是否存在第二年审人
+                        CustModel::findOrFail($res->cust_relation_flag);
+
+                        return ['error'=>'1','msg'=>'不可以直接删除第一年审人'];
+                    }catch (ModelNotFoundException $exception)
+                    {
+
+                    }
+                }else
+                {
+                    //如果等于0，说明是删除的第二年审人，或者，还没有添加第二年审人的第一年审人
+                    //可以直接删除
+                    //需要把第一年审人的cust_relation_flag改为0
+                    $a=CustModel::where(['cust_relation_flag'=>$pid])->first();
+
+                    if ($a!=null)
+                    {
+                        $a->cust_relation_flag='0';
+                        $a->save();
+                    }
+                }
 
                 $this->voice_file_ModifyOrDelete($pid,'delete');
 
