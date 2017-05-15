@@ -1253,6 +1253,21 @@ function api_verify(id) {
 
 }
 
+function detail_info(id) {
+
+    //传入的是redis的key
+    layer.open({
+        type: 2,
+        title: '详细信息',
+        shadeClose: true,
+        shade: 0.8,
+        area: ['500px', '250px'],
+        resize:false,
+        content: ['/detail_info/'+id,'no'] //iframe的url
+    });
+
+}
+
 function change_btw(id) {
 
     //传入的是customer_confirm的主键
@@ -1292,30 +1307,31 @@ function aaa() {
 
 }
 
-function start_loop() {
-
-    var url ='/api/loop/call';
-    var data={
-        _token:$("input[name=_token]").val(),
-        key   :$("#loop_form").serializeArray(),
-        type  :'loop_call'
-    };
-
-    $.post(url,data,function (response) {
-
-        if(response.error=='0')
-        {
-            layer.msg(response.msg);
-        }else
-        {
-            layer.msg(response.msg);
-        }
-
-        location.reload();
-
-    },'json');
-
-}
+//迁移到轮播页面了
+// function start_loop() {
+//
+//     var url ='/api/loop/call';
+//     var data={
+//         _token:$("input[name=_token]").val(),
+//         key   :$("#loop_form").serializeArray(),
+//         type  :'loop_call'
+//     };
+//
+//     $.post(url,data,function (response) {
+//
+//         if(response.error=='0')
+//         {
+//             layer.msg(response.msg);
+//         }else
+//         {
+//             layer.msg(response.msg);
+//         }
+//
+//         location.reload();
+//
+//     },'json');
+//
+// }
 
 function get_register_verify_mongo_data(curr) {
 
@@ -1445,7 +1461,13 @@ function get_loop_mongo_data(curr) {
 
                 $.each(response.data[i], function (k, v) {
 
-                    tabletr.append('<td align="center">' + v + '</td>');
+                    if (k=='finishANDtotal' && v!='')
+                    {
+                        tabletr.append('<td align="center"><a onclick=detail_info('+v+'); href=#>' + '详细信息' + '</a></td>');
+                    }else
+                    {
+                        tabletr.append('<td align="center">' + v + '</td>');
+                    }
 
                 });
 

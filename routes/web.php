@@ -150,6 +150,39 @@ Route::get('change_btw/{id}', function ($id) {
     return view('change_btw',compact('id'));
 });
 
+//轮播页面的详细信息超链接路由
+Route::get('detail_info/{id}', function ($id) {
+    $id=$id;
+
+    static $redis=null;
+    if ($redis==null)
+    {
+        $redis=new Redis;
+        $host='127.0.0.1';
+        $post='6379';
+        $res=$redis->connect($host,$post);
+        if(!$res) die('redis server链接失败');
+    }
+
+    //轮播总用户数
+    $loop_totle=$redis->get('loop_totle_'.$id);
+    if($loop_totle==false) $loop_totle='未取得';
+    //未完成用户数
+    $loop_unfinished=$redis->get('loop_unfinished_'.$id);
+    if($loop_unfinished==false) $loop_unfinished='未取得';
+    //完成用户数
+    $loop_finish=$redis->get('loop_finish_'.$id);
+    if($loop_finish==false) $loop_finish='未取得';
+    //未认证通过用户数
+    $loop_unpass=$redis->get('loop_unpass_'.$id);
+    if($loop_unpass==false) $loop_unpass='未取得';
+    //认证通过用户数
+    $loop_pass=$redis->get('loop_pass_'.$id);
+    if($loop_pass==false) $loop_pass='未取得';
+
+    return view('detail_info',compact('loop_totle','loop_unfinished','loop_finish','loop_unpass','loop_pass'));
+});
+
 
 
 

@@ -11,6 +11,12 @@ return [
     'model_path'=>'VoiceAndModel/Model/',
 
     //删除的录音文件
-    'voice_remove_path'=>'VoiceAndModel/Tmp/'
+    'voice_remove_path'=>'VoiceAndModel/Tmp/',
+
+    //轮播认证次数
+    'loop_time'=>'1',
+
+    //相隔多少秒之内不能发起第二次轮播
+    'until_time'=>'300'
 
 ];

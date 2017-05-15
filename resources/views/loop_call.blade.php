@@ -45,7 +45,7 @@
                         </div>
 
                         <div class="col-sm-2">
-                            <a style="width: 100px;height: 100%;" onclick="start_loop();" class="btn btn-block btn-primary btn-sm">开始认证</a>
+                            <a style="width: 100px;height: 100%;" id="start_loop" class="btn btn-block btn-primary btn-sm">开始认证</a>
                         </div>
 
                     </form>
@@ -78,6 +78,7 @@
                             <th style="text-align: center">结果</th>
                             <th style="text-align: center">结果信息</th>
                             <th style="text-align: center">操作时间</th>
+                            <th style="text-align: center">已拨/总共</th>
                             </thead>
                             <tbody>
 
@@ -104,6 +105,59 @@
         $(function () {
             get_loop_mongo_data(1);
         })
+
+        $("#start_loop").click(function () {
+            layer.confirm('确认真的要开始吗？', {
+                btn: ['确认','取消'], //按钮
+                shade: false //不显示遮罩
+            }, function(index0){
+                //开始轮播*************************************
+
+                layer.confirm('那我真的开始了！', {
+                    btn: ['确认','取消'], //按钮
+                    shade: false //不显示遮罩
+                }, function(index1){
+                    //开始轮播*************************************
+
+                    layer.confirm('开始就不能改了！！！', {
+                        btn: ['确认','取消'], //按钮
+                        shade: false //不显示遮罩
+                    }, function(index2){
+                        //开始轮播*************************************
+
+                        var url ='/api/loop/call';
+                        var data={
+                            _token:$("input[name=_token]").val(),
+                            key   :$("#loop_form").serializeArray(),
+                            type  :'loop_call'
+                        };
+
+                        $.post(url,data,function (response) {
+
+                            if(response.error=='0')
+                            {
+                                layer.msg(response.msg);
+                            }else
+                            {
+                                layer.msg(response.msg);
+                            }
+
+                            location.reload();
+
+                        },'json');
+
+                        //********************************************
+                        layer.close(index2);
+                    });
+
+                    //********************************************
+                    layer.close(index1);
+                });
+
+                //********************************************
+                layer.close(index0);
+            });
+        });
 
     </script>
 

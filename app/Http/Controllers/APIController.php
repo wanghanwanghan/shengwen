@@ -539,6 +539,22 @@ class APIController extends Controller
             //web给ivr发送轮播认证请求
             case 'loop_call':
 
+                //当前时间
+                $now=time();
+
+                //多少秒之内不能发送第二次
+                if (Redis::get('last_time_of_loop')==null)
+                {
+                    Redis::set('last_time_of_loop',$now);
+                }else
+                {
+                    //小于多少秒
+                    if ($now-Redis::get('last_time_of_loop')<Config::get('constant.until_time'))
+                    {
+                        return ['error'=>'1','msg'=>Config::get('constant.until_time').'秒之内不能发第二次轮播了'];
+                    }
+                }
+
                 foreach (Input::get('key') as $row)
                 {
                     //判断开始时间是不是空
@@ -581,12 +597,15 @@ class APIController extends Controller
                     }
                 }
 
+                //$res是给ivr发送的电话列表
                 $res=CustModel::where($cond)->distinct()->get(['cust_review_num']);
                 $phone_array=null;
 
+                //$totle是redis里记录的这次轮播的人数
+                $totle=CustModel::where($cond)->count();
+
                 foreach ($res as $row)
                 {
-                    //Redis::lpush('start_loop',$row->cust_review_num);
                     $phone_array[]=$row->cust_review_num;
                 }
 
@@ -599,7 +618,8 @@ class APIController extends Controller
                     'phone_array'=>$phone_array,//电话数组
                     'text_array'=>[Config::get('confirm_type.text'),$rand_num],//文本相关，动态口令
                     'cust_type'=>(string)$cond['cust_type'],//客户类型
-                    'time'=>[$start,$stop]//认证时间段
+                    'time'=>[$start,$stop],//认证时间段
+                    'unix_time'=>$now//当前时间
                 ];
 
                 //发送请求
@@ -623,7 +643,8 @@ class APIController extends Controller
                         'until'=>$start.'~'.$stop,
                         'result'=>$res['error'],
                         'message'=>$res['msg'],
-                        'time'=>time()
+                        'time'=>time(),
+                        'finishANDtotal'=>''
                     ]);
 
                     return ['error'=>'1','msg'=>'发送轮播请求失败'];
@@ -640,8 +661,22 @@ class APIController extends Controller
                         'until'=>$start.'~'.$stop,
                         'result'=>$res['error'],
                         'message'=>'轮播请求已发送',
-                        'time'=>time()
+                        'time'=>time(),
+                        'finishANDtotal'=>$now//这个时间戳也是redis的键值
                     ]);
+
+                    //设置redis的键值对
+                    Redis::set('last_time_of_loop',$now);
+                    //轮播总用户数
+                    Redis::set('loop_totle_'.$now,$totle);
+                    //未完成用户数
+                    Redis::set('loop_unfinished_'.$now,$totle);
+                    //完成用户数
+                    Redis::set('loop_finish_'.$now,0);
+                    //未认证通过用户数
+                    Redis::set('loop_unpass_'.$now,0);
+                    //认证通过用户数
+                    Redis::set('loop_pass_'.$now,0);
 
                     return ['error'=>'0','msg'=>'发送轮播请求成功'];
                 }
