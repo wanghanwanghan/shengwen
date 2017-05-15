@@ -1653,6 +1653,10 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     return ['error'=>'1','msg'=>'手机号码已存在，修改失败'];
                 }else
                 {
+                    //修改linux文件名
+                    $this->voice_file_ModifyOrDelete($pid,'modify',['phone'=>$phone]);
+
+                    //修改数据库中的年审号码
                     $res=CustModel::find($pid);
                     $this->system_log('修改年审号码','主键:'.$pid.'修改内容:'.$res->cust_review_num.'=>'.$phone);
                     //保存一下电话号码，修改下一个客户用，如果有的话***********
@@ -1676,9 +1680,6 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     \DB::table('vocalprint')->update(['vp_ivr_url'=>\DB::raw($sql)]);
                     $sql='replace(vp_model_url,'.$old.','.$new.')';
                     \DB::table('vocalprint')->update(['vp_model_url'=>\DB::raw($sql)]);
-
-                    //修改linux文件名
-                    $this->voice_file_ModifyOrDelete($pid,'modify',['phone'=>$phone]);
 
                     return ['error'=>'0','msg'=>'修改成功'];
                 }
