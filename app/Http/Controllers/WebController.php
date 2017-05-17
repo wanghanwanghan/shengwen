@@ -366,6 +366,12 @@ class WebController extends Controller
         return view('analysis',compact('staff_project','staff_si_type'));
     }
 
+    public function get_username()
+    {
+        $res=Session::get('user');
+        return $res[0]['staff_name'];
+    }
+
 
 
 

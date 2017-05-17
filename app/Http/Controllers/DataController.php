@@ -1279,55 +1279,120 @@ class DataController extends Controller
                     if (count($YorN)=='1' && $YorN[0]=='N')
                     {
                         //仅仅是查询未通过的
+//                        $sql="select confirm_num,confirm_pid,confirm_res,confirm_btw,created_at,COUNT(confirm_pid) as num
+//FROM (select * from zbxl_customer_confirm as t1 where created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2
+//GROUP BY confirm_pid HAVING (num<? AND confirm_res=?) limit ? offset ?";
                         $sql="select confirm_num,confirm_pid,confirm_res,confirm_btw,created_at,COUNT(confirm_pid) as num 
 FROM (select * from zbxl_customer_confirm as t1 where created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2 
-GROUP BY confirm_pid HAVING (num<? AND confirm_res=?) limit ? offset ?";
+GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
-                        $res1=\DB::select($sql,[$start,$stop,'2','N',$limit,$offset]);
+//                        $res1=\DB::select($sql,[$start,$stop,'2','N',$limit,$offset]);
+                        $res1=\DB::select($sql,[$start,$stop,'2','N']);
 
                         //对象转数组
                         $res2=$this->obj2arr($res1);
+
+                        if (empty($res2))
+                        {
+                            return ['error'=>'0','msg'=>'查询成功'];
+                        }
 
                         //给每个数组里插入客户相关信息
                         foreach ($res2 as &$row)
                         {
                             $data=CustModel::find($row['confirm_pid']);
-                            $row['cust_name']=$data->cust_name;
-                            $row['cust_id']=$data->cust_id;
-                            $row['cust_review_num']=$data->cust_review_num;
-                            $row['cust_phone_num']=$data->cust_phone_num;
-                            $row['cust_type']=$data->cust_type;
+                            if ($data->cust_project==$condition['cust_project'] && $data->cust_si_type==$condition['cust_si_type'])
+                            {
+                                //判断要查询的是A还是B用户
+                                if (count($AorB)=='2')
+                                {
+                                    //全部的用户
+                                    $row['cust_name']=$data->cust_name;
+                                    $row['cust_id']=$data->cust_id;
+                                    $row['cust_review_num']=$data->cust_review_num;
+                                    $row['cust_phone_num']=$data->cust_phone_num;
+                                    $row['cust_type']=$data->cust_type;
+                                }else
+                                {
+                                    //只是A或者B
+                                    if ($data->cust_type==$AorB[0])
+                                    {
+                                        $row['cust_name']=$data->cust_name;
+                                        $row['cust_id']=$data->cust_id;
+                                        $row['cust_review_num']=$data->cust_review_num;
+                                        $row['cust_phone_num']=$data->cust_phone_num;
+                                        $row['cust_type']=$data->cust_type;
+                                    }else
+                                    {
+                                        //不满族条件直接清除数据
+                                        $row=[];
+                                    }
+                                }
+                            }else
+                            {
+                                //不满族条件直接清除数据
+                                $row=[];
+                            }
                         }
-                        unset($row);
 
-                        //为了符合前台页面显示，数组里的数据顺序需要改一下
-                        $data1=null;
-                        foreach ($res2 as $row)
+                        unset($row);
+                        //去掉空数组后，这才是满族条件的所有数据
+                        $res2=array_filter($res2);
+                        $res2=array_values($res2);
+
+                        //自制分页
+                        $data1=[];
+                        for ($i=$offset;$i<=$limit*Input::get('page')-1;$i++)
                         {
+                            if (!isset($res2[$i]))
+                            {
+                                break;
+                            }
                             $data2=null;
 
-                            $data2['cust_name']=$row['cust_name'];
-                            $data2['cust_id']=$row['cust_id'];
-                            $data2['cust_review_num']=$row['cust_review_num'];
-                            $data2['cust_phone_num']=$row['cust_phone_num'];
-                            $data2['cust_type']=$row['cust_type'];
-                            $data2['created_at']=$row['created_at'];
-                            $data2['confirm_res']=$row['confirm_res'];
-                            $data2['confirm_num']=$row['confirm_num'];
-                            $data2['confirm_btw']=$row['confirm_btw'];
+                            //为了符合前台页面显示，数组里的数据顺序需要改一下
+                            $data2['cust_name']=$res2[$i]['cust_name'];
+                            $data2['cust_id']=$res2[$i]['cust_id'];
+                            $data2['cust_review_num']=$res2[$i]['cust_review_num'];
+                            $data2['cust_phone_num']=$res2[$i]['cust_phone_num'];
+                            $data2['cust_type']=$res2[$i]['cust_type'];
+                            $data2['created_at']=$res2[$i]['created_at'];
+                            $data2['confirm_res']=$res2[$i]['confirm_res'];
+                            $data2['confirm_num']=$res2[$i]['confirm_num'];
+                            $data2['confirm_btw']=$res2[$i]['confirm_btw'];
 
                             $data1[]=$data2;
                         }
 
+                        //为了符合前台页面显示，数组里的数据顺序需要改一下
+//                        $data1=null;
+//                        foreach ($res2 as $row)
+//                        {
+//                            $data2=null;
+//
+//                            $data2['cust_name']=$row['cust_name'];
+//                            $data2['cust_id']=$row['cust_id'];
+//                            $data2['cust_review_num']=$row['cust_review_num'];
+//                            $data2['cust_phone_num']=$row['cust_phone_num'];
+//                            $data2['cust_type']=$row['cust_type'];
+//                            $data2['created_at']=$row['created_at'];
+//                            $data2['confirm_res']=$row['confirm_res'];
+//                            $data2['confirm_num']=$row['confirm_num'];
+//                            $data2['confirm_btw']=$row['confirm_btw'];
+//
+//                            $data1[]=$data2;
+//                        }
+
                         //总页数
-                        $sql="select confirm_num,confirm_pid,confirm_res,created_at,COUNT(confirm_pid) as num 
-FROM (select * from zbxl_customer_confirm as t1 where created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2 
-GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
+//                        $sql="select confirm_num,confirm_pid,confirm_res,created_at,COUNT(confirm_pid) as num
+//FROM (select * from zbxl_customer_confirm as t1 where created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2
+//GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
-                        $res3=count(\DB::select($sql,[$start,$stop,'2','N']));
-                        $cnt_page=intval(ceil($res3/$limit));
+//                        $res3=count(\DB::select($sql,[$start,$stop,'2','N']));
+//                        $cnt_page=intval(ceil($res3/$limit));
 
-                        return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>$cnt_page,'count_data'=>$res3];
+//                        return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>$cnt_page,'count_data'=>$res3];
+                        return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>intval(ceil(count($res2)/$limit)),'count_data'=>count($res2)];
                     }else
                     {
                         //查询数据

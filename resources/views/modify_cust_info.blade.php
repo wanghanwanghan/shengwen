@@ -57,7 +57,7 @@
             </div>
             <div class="tab-pane" id="modify_cust_info_2" style="height: auto;">
                 <span>
-                    <a href="#" id="username">用户名</a>
+                    <a href="#" id="username">备用</a>
                 </span>
             </div>
         </div>
