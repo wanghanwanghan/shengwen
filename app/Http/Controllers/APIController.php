@@ -619,7 +619,7 @@ class APIController extends Controller
                     'text_array'=>[Config::get('confirm_type.text'),$rand_num],//文本相关，动态口令
                     'cust_type'=>(string)$cond['cust_type'],//客户类型
                     'time'=>[$start,$stop],//认证时间段
-                    'unix_time'=>$now//当前时间
+                    'unix_time'=>(string)$now//当前时间
                 ];
 
                 //发送请求
