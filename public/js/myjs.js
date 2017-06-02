@@ -1132,6 +1132,117 @@ function service_care_change_1(curr) {
 
 }
 
+function getMySlider1(cond) {
+
+    $("#myslider1").children().remove();
+    $("#myslider1").slider(cond);
+
+    $("#myslider1_count").css("color","red");
+    $(".slider-selection").css("background","red");
+
+    $("#myslider1").on("slide", function(slideEvt) {
+        $("#myslider1_count").text(slideEvt.value);
+    });
+
+}
+
+function allocation() {
+
+    var url ='/data/ajax';
+    var data={
+        _token :$("input[name=_token]").val(),
+        type   :'allocation',
+        key1   :$("#staff_form").serializeArray(),
+        key2   :$("#myslider1_count").html(),
+        key3   :$("#allocation_form").serializeArray()
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.msg(response.msg);
+            location.reload();
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
+
+function allocation_change(curr) {
+
+    $("#allocation_table tbody").children().remove();
+
+    var url ='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        page  :curr||1,
+        type  :'allocation_change',
+        key   :$("#allocation_form").serializeArray(),
+        tip   :'0'
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.msg(response.msg);
+
+            //创建滚动条************************************
+            $("#myslider1_count").html(response.count_data);
+            getMySlider1({
+                min:0,
+                max:response.count_data,
+                step:1,
+                value:response.count_data
+            });
+            //**********************************************
+
+            //遍历返回的员工信息
+            for(var i=0;i<response.staff.length;i++)
+            {
+                var tabletr=$("<tr></tr>");
+                
+                $.each(response.staff[i],function (index,value) {
+
+                    if(index=='staff_num')
+                    {
+                        tabletr.append('<td align=center><input type="radio" name="myRadios" value='+value+'></td>');
+                    }else
+                    {
+                        tabletr.append('<td align=center>'+value+'</td>');
+                    }
+
+                });
+
+                $("#allocation_table tbody").append(tabletr);
+
+            }
+
+            //显示分页
+            laypage({
+                cont: 'allocation_laypage', //容器
+                pages: response.pages, //通过后台拿到的总页数
+                curr: curr || 1, //当前页
+                jump: function(obj, first){ //触发分页后的回调
+                    if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
+                        allocation_change(obj.curr);
+                    }
+                }
+            });
+
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
+
 function analysis_change() {
 
     $("#line-chart").children().remove();

@@ -109,7 +109,7 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-5">
-                        <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">一共<<span style="color: red;" id="data_total">0</span>>条记录</div>
+                        <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">一共<<span style="color: red;" id="data_total">0</span>>条记录，超级管理员开始<a href="{{url('allocation')}}">分配</a></div>
                     </div>
                     <div class="col-sm-7">
                         <div id="service_care_laypage" class="pagination pagination-sm no-margin pull-right">

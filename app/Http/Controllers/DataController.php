@@ -15,6 +15,7 @@ use App\Http\Model\VocalPrintModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Config;
 
@@ -1283,11 +1284,12 @@ class DataController extends Controller
 //FROM (select * from zbxl_customer_confirm as t1 where created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2
 //GROUP BY confirm_pid HAVING (num<? AND confirm_res=?) limit ? offset ?";
                         $sql="select confirm_num,confirm_pid,confirm_res,confirm_btw,created_at,COUNT(confirm_pid) as num 
-FROM (select * from zbxl_customer_confirm as t1 where created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2 
+FROM (select * from zbxl_customer_confirm as t1 where belong_to=? AND created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2 
 GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
 //                        $res1=\DB::select($sql,[$start,$stop,'2','N',$limit,$offset]);
-                        $res1=\DB::select($sql,[$start,$stop,'2','N']);
+                        $mypid=Session::get('user')[0]['staff_num'];
+                        $res1=\DB::select($sql,[$mypid,$start,$stop,'2','N']);
 
                         //对象转数组
                         $res2=$this->obj2arr($res1);
@@ -1393,6 +1395,393 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
 //                        return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>$cnt_page,'count_data'=>$res3];
                         return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>intval(ceil(count($res2)/$limit)),'count_data'=>count($res2)];
+                    }else
+                    {
+                        //查询数据
+                        $res=\DB::table('customer_info')
+                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                            ->where($condition)
+                            ->where('belong_to',$mypid=Session::get('user')[0]['staff_num'])
+                            ->whereIn('customer_confirm.confirm_res',$YorN)
+                            ->whereIn('customer_info.cust_type',$AorB)
+                            ->orderBy('customer_confirm.confirm_pid','desc')
+                            ->orderBy('customer_confirm.created_at','desc')
+                            ->wherebetween('customer_confirm.created_at',[$start,$stop])
+                            ->offset($offset)->limit($limit)
+                            ->get($get);
+
+                        //查询总页数
+                        $cnt=\DB::table('customer_info')
+                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                            ->where($condition)
+                            ->where('belong_to',$mypid=Session::get('user')[0]['staff_num'])
+                            ->whereIn('customer_confirm.confirm_res',$YorN)
+                            ->whereIn('customer_info.cust_type',$AorB)
+                            ->wherebetween('customer_confirm.created_at',[$start,$stop])
+                            ->count();
+                        $cnt_page=intval(ceil($cnt/$limit));
+
+                        return ['error'=>'0','msg'=>'查询成功','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
+                    }
+
+                }else
+                {
+                    $cond=null;
+
+                    foreach (Input::get('key') as $row)
+                    {
+                        if ($row['name']=='cond')
+                        {
+                            $cond=trim($row['value']);
+                        }
+                    }
+
+                    //查询想要的数据
+                    $get=[
+                        'customer_info.cust_name',
+                        'customer_info.cust_id',
+                        'customer_info.cust_review_num',
+                        'customer_info.cust_phone_num',
+                        'customer_info.cust_type',
+                        'customer_confirm.created_at',
+                        'customer_confirm.confirm_res',
+                        'customer_confirm.confirm_num',
+                        'customer_confirm.confirm_btw'
+                    ];
+
+                    //判断用户输入的是手机号还是身份证号
+                    if ($this->is_idcard($cond))
+                    {
+                        //输入的是身份证
+                        //查询数据
+                        $res=\DB::table('customer_info')
+                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                            ->where(['cust_id'=>$cond])
+                            ->where('customer_confirm.created_at','like',date('Y',time()).'%')
+                            ->orderBy('customer_confirm.created_at','desc')
+                            ->offset($offset)->limit($limit)
+                            ->get($get);
+
+                        if (count($res)=='0')
+                        {
+                            return ['error'=>'1','msg'=>'此身份证不存在'];
+                        }
+
+                        //查询总页数
+                        $cnt=\DB::table('customer_info')
+                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                            ->where(['cust_id'=>$cond])
+                            ->where('customer_confirm.created_at','like',date('Y',time()).'%')
+                            ->count();
+                        $cnt_page=intval(ceil($cnt/$limit));
+
+                        return ['error'=>'0','msg'=>'查询成功','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
+
+                    }elseif ($this->check_something($cond,'phonenumber',null))
+                    {
+                        //输入的是手机号
+                        //查询数据
+                        $res=\DB::table('customer_info')
+                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                            ->where(['cust_review_num'=>$cond])
+                            ->where('customer_confirm.created_at','like',date('Y',time()).'%')
+                            ->orderBy('customer_confirm.created_at','desc')
+                            ->offset($offset)->limit($limit)
+                            ->get($get);
+
+                        if (count($res)=='0')
+                        {
+                            return ['error'=>'1','msg'=>'此手机号不存在'];
+                        }
+
+                        //查询总页数
+                        $cnt=\DB::table('customer_info')
+                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                            ->where(['cust_review_num'=>$cond])
+                            ->where('customer_confirm.created_at','like',date('Y',time()).'%')
+                            ->count();
+                        $cnt_page=intval(ceil($cnt/$limit));
+
+                        return ['error'=>'0','msg'=>'查询成功','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
+                    }else
+                    {
+                        //既不是身份证也不是手机号
+                        return ['error'=>'1','msg'=>'既不是身份证也不是手机号'];
+                    }
+
+                }
+
+                break;
+
+            case 'allocation':
+
+                $data=Input::all();
+
+                //员工主键
+                if (!isset($data['key1']))
+                {
+                    return ['error'=>'1','msg'=>'没有选择待分配的员工'];
+                }else
+                {
+                    $staff_pid=$data['key1'][0]['value'];
+                }
+
+                //要分配多少条
+                if ($data['key2']=='0')
+                {
+                    return ['error'=>'1','msg'=>'分配0条数据？'];
+                }else
+                {
+                    //要分配多少条
+                    $data_totle=$data['key2'];
+                }
+
+                //时间范围
+                foreach ($data['key3'] as $cond)
+                {
+                    if ($cond['name']=='star_date')
+                    {
+                        $start=$cond['value'].' '.'00:00:00';
+                    }
+                    if ($cond['name']=='stop_date')
+                    {
+                        $stop=$cond['value'].' '.'23:59:59';
+                    }
+                }
+
+                //从redis里取出数据主键，然后修改belong_to字段
+                //通过confirm_pid和时间范围确定更新哪些数据
+                $data_redis=json_decode(Redis::get('allocation'),true);
+
+                //判断一下要分配的条数是不是超过了redis中含有的条数
+                if ($data_totle > count($data_redis))
+                {
+                    return ['error'=>'1','msg'=>'要分配的数据超出了现有的数据'];
+                }
+
+                //拿出相应条数的数据
+                for ($i=0;$i<$data_totle;$i++)
+                {
+                    $data_tmp[]=array_pop($data_redis);
+                }
+
+                //只需要confrim_pid字段
+                foreach ($data_tmp as $row)
+                {
+                    $confirm_pid_array[]=$row['confirm_pid'];
+                }
+
+                $change=CustConfirmModel::whereIn('confirm_pid',$confirm_pid_array)
+                    ->whereBetween('created_at',[$start,$stop])
+                    ->update(['belong_to'=>$staff_pid]);
+
+                return ['error'=>'0','msg'=>'数据被分配完成'];
+
+                break;
+
+            case 'allocation_change':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=5;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                //查询条件
+                $condition=null;
+
+                if (Input::get('tip')=='0')
+                {
+                    //遍历出所有的查询条件
+                    foreach (Input::get('key') as $row)
+                    {
+                        //判断开始时间是不是空
+                        if ($row['name']=='star_date')
+                        {
+                            if ($row['value']=='')
+                            {
+                                return ['error'=>'1','msg'=>'开始时间不能为空'];
+                            }else
+                            {
+                                $start=$row['value'].' 00:00:00';
+                            }
+                        }
+
+                        //判断结束时间是不是空
+                        if ($row['name']=='stop_date')
+                        {
+                            if ($row['value']=='')
+                            {
+                                return ['error'=>'1','msg'=>'结束时间不能为空'];
+                            }else
+                            {
+                                $stop=$row['value'].' 23:59:59';
+                            }
+                        }
+
+                        if ($row['name']=='cust_project')
+                        {
+                            $condition['cust_project']=$row['value'];
+                            $staff_cond['staff_project']=$row['value'];
+                        }
+
+                        if ($row['name']=='cust_si_type')
+                        {
+                            $condition['cust_si_type']=$row['value'];
+                            $staff_cond['staff_si_type']=$row['value'];
+                        }
+
+                        if ($row['name']=='confirm_res')
+                        {
+                            if ($row['value']=='0')
+                            {
+                                $YorN=['Y','N'];
+                            }else
+                            {
+                                $YorN=[$row['value']];
+                            }
+                        }
+
+                        if ($row['name']=='cust_type')
+                        {
+                            if ($row['value']=='0')
+                            {
+                                $AorB=['A','B'];
+                            }else
+                            {
+                                $AorB=[$row['value']];
+                            }
+                        }
+                    }
+
+                    //查询想要的数据
+                    $get=[
+                        'customer_info.cust_name',
+                        'customer_info.cust_id',
+                        'customer_info.cust_review_num',
+                        'customer_info.cust_phone_num',
+                        'customer_info.cust_type',
+                        'customer_confirm.created_at',
+                        'customer_confirm.confirm_res',
+                        'customer_confirm.confirm_num',
+                        'customer_confirm.confirm_btw'
+                    ];
+
+                    //查询数据
+                    if (count($YorN)=='1' && $YorN[0]=='N')
+                    {
+                        //仅仅是查询未通过的
+                        $sql="select confirm_num,confirm_pid,confirm_res,confirm_btw,created_at,COUNT(confirm_pid) as num 
+FROM (select * from zbxl_customer_confirm as t1 where belong_to=? AND created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2 
+GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
+
+                        $res1=\DB::select($sql,['0',$start,$stop,'2','N']);
+
+                        //对象转数组
+                        $res2=$this->obj2arr($res1);
+
+                        if (empty($res2))
+                        {
+                            return ['error'=>'0','msg'=>'查询成功，没有匹配的数据','count_data'=>'0'];
+                        }
+
+                        //给每个数组里插入客户相关信息
+                        foreach ($res2 as &$row)
+                        {
+                            $data=CustModel::find($row['confirm_pid']);
+                            if ($data->cust_project==$condition['cust_project'] && $data->cust_si_type==$condition['cust_si_type'])
+                            {
+                                //判断要查询的是A还是B用户
+                                if (count($AorB)=='2')
+                                {
+                                    //全部的用户
+                                    $row['cust_name']=$data->cust_name;
+                                    $row['cust_id']=$data->cust_id;
+                                    $row['cust_review_num']=$data->cust_review_num;
+                                    $row['cust_phone_num']=$data->cust_phone_num;
+                                    $row['cust_type']=$data->cust_type;
+                                }else
+                                {
+                                    //只是A或者B
+                                    if ($data->cust_type==$AorB[0])
+                                    {
+                                        $row['cust_name']=$data->cust_name;
+                                        $row['cust_id']=$data->cust_id;
+                                        $row['cust_review_num']=$data->cust_review_num;
+                                        $row['cust_phone_num']=$data->cust_phone_num;
+                                        $row['cust_type']=$data->cust_type;
+                                    }else
+                                    {
+                                        //不满足条件直接清除数据
+                                        $row=[];
+                                    }
+                                }
+                            }else
+                            {
+                                //不满足条件直接清除数据
+                                $row=[];
+                            }
+                        }
+
+                        unset($row);
+                        //去掉空数组后，这才是满足条件的所有数据
+                        $res2=array_filter($res2);
+                        $res2=array_values($res2);
+
+                        if (empty($res2))
+                        {
+                            return ['error'=>'0','msg'=>'查询成功，没有匹配的数据','count_data'=>'0'];
+                        }
+
+                        //这里的res2是待分配的客户数据，存到redis里
+                        Redis::set('allocation',json_encode($res2));
+
+                        //找到属于这个属地，这个参保类型的员工
+                        $staff_array=StaffModel::where('staff_num','<>','1')->get([
+                            'staff_name',
+                            'staff_account',
+                            'staff_num',
+                            'staff_project',
+                            'staff_si_type'
+                        ])->toArray();
+
+                        //最后给前端页面传过去的变量，存放员工信息
+                        $staff_array_info=null;
+
+                        foreach ($staff_array as $row)
+                        {
+                            if (in_array($condition['cust_project'],explode(',',$row['staff_project'])) && in_array($condition['cust_si_type'],explode(',',$row['staff_si_type'])))
+                            {
+                                //属于当前区域，并且属于当前参保类型
+                                $staff_array_info[]=$row;
+                            }else
+                            {
+                                //不满足其一的就不显示
+                            }
+                        }
+
+                        foreach ($staff_array_info as &$row)
+                        {
+                            unset($row['staff_project']);
+                            unset($row['staff_si_type']);
+                            $row['mission']=$row['staff_num'];
+                        }
+
+                        //员工信息的自制分页
+                        for ($i=$offset;$i<=$limit*Input::get('page')-1;$i++)
+                        {
+                            if (!isset($staff_array_info[$i]))
+                            {
+                                break;
+                            }
+
+                            $staff_tmp[]=$staff_array_info[$i];
+                        }
+
+                        return ['error'=>'0','msg'=>'查询成功','staff'=>$staff_tmp,'pages'=>intval(ceil(count($staff_array_info)/$limit)),'count_data'=>count($res2)];
                     }else
                     {
                         //查询数据

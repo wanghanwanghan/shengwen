@@ -22,6 +22,7 @@
 	<script src="{{asset('public/laydate/laydate.js')}}"></script>
 	<script src="{{asset('public/laypage/laypage/laypage.js')}}"></script>
 	<script src="{{asset('public/js/myjs.js')}}"></script>
+	<link rel="stylesheet" href="{{asset('public/css/mycss.css')}}">
 	<link rel="stylesheet" href="{{asset('public/zTree/css/zTreeStyle/zTreeStyle.css')}}">
 	<script src="{{asset('public/zTree/js/jquery.ztree.core.min.js')}}"></script>
 	<script src="{{asset('public/zTree/js/jquery.ztree.excheck.min.js')}}"></script>
@@ -29,6 +30,9 @@
 
 	<script src="{{asset('public/xeditable/dist/bootstrap3-editable/css/bootstrap-editable.css')}}"></script>
 	<script src="{{asset('public/xeditable/dist/bootstrap3-editable/js/bootstrap-editable.js')}}"></script>
+
+	<link rel="stylesheet" href="{{asset('public/css/bootstrap-slider.css')}}">
+	<script src="{{asset('public/js/bootstrap-slider.js')}}"></script>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 @yield('body')

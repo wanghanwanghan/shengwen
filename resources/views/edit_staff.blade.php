@@ -1,5 +1,5 @@
 @extends('layouts.dashboard')
-@section('page_heading','系统设置')
+@section('page_heading','超级管理员功能')
 @section('page_heading_small','修改员工信息')
 @section('section')
 

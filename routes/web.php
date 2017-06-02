@@ -106,6 +106,9 @@ Route::group(['middleware'=>['LoginMiddleware','RootMiddleware']],function (){
         return view('send_staffmail');
     });
 
+    //给客服分配需要电话回访的客户
+    Route::get('allocation','WebController@allocation')->name('allocation');
+
 });
 
 //本web的接口路由组******************************************

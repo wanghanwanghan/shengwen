@@ -215,6 +215,11 @@ class APIController extends Controller
                     $tmp[]=$row;
                 }
 
+                if (empty($tmp))
+                {
+                    return ['error'=>'1','msg'=>'没有轮播记录'];
+                }
+
                 //重新整理并发送给前端显示
                 foreach ($tmp as &$row)
                 {
@@ -261,6 +266,11 @@ class APIController extends Controller
                 {
                     //把所有mongo数据取出来
                     $tmp[]=$row;
+                }
+
+                if (empty($tmp))
+                {
+                    return ['error'=>'1','msg'=>'未取得数据或数据是空'];
                 }
 
                 //重新整理并发送给前端显示
@@ -325,6 +335,11 @@ class APIController extends Controller
                 {
                     //把所有mongo数据取出来
                     $tmp[]=$row;
+                }
+
+                if (empty($tmp))
+                {
+                    return ['error'=>'1','msg'=>'未取得数据或数据是空'];
                 }
 
                 //重新整理并发送给前端显示
@@ -810,7 +825,7 @@ class APIController extends Controller
             $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'轮播','vp_ivr_url'=>$url,'vp_model_url'=>'']);
 
             //加入认证表中
-            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'']);
+            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'','belong_to'=>'0']);
 
             //通知mongo
             $obj=$this->mymongo();
@@ -830,7 +845,7 @@ class APIController extends Controller
             $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'轮播','vp_ivr_url'=>$url,'vp_model_url'=>'']);
 
             //加入认证表中
-            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'']);
+            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'','belong_to'=>'0']);
 
             //通知mongo
             $obj=$this->mymongo();
@@ -867,7 +882,7 @@ class APIController extends Controller
             $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'主动','vp_ivr_url'=>$url,'vp_model_url'=>'']);
 
             //加入认证表中
-            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'']);
+            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'','belong_to'=>'0']);
 
             //通知mongo
             $obj=$this->mymongo();
@@ -887,7 +902,7 @@ class APIController extends Controller
             $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'主动','vp_ivr_url'=>$url,'vp_model_url'=>'']);
 
             //加入认证表中
-            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'']);
+            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>$res,'confirm_btw'=>'','belong_to'=>'0']);
 
             //通知mongo
             $obj=$this->mymongo();
