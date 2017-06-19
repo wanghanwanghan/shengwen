@@ -253,13 +253,14 @@
                         </ul>
                     </li>
 
-                    <li class="active treeview">
+                    <li class="treeview">
                         <a href="#"><i class="fa fa-link"></i> <span>超级管理员功能</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
                         <ul class="treeview-menu">
+                            <li><a href="{{url('source/cust/data')}}"><i class="fa fa-fw fa-hand-o-right"></i>导入待采集客户信息</a></li>
                             <li><a href="{{url('edit/config')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改认证配置</a></li>
                             <li><a href="{{url('edit/staff')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改员工信息</a></li>
                             <li><a href="{{url('send/staffmail')}}"><i class="fa fa-fw fa-hand-o-right"></i>给员工发邮件</a></li>

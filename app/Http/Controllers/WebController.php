@@ -405,6 +405,72 @@ class WebController extends Controller
         return view('allocation',compact('staff_project','staff_si_type','confirm_type'));
     }
 
+    public function source_cust_data()
+    {
+        foreach (Session::get('user') as $row)
+        {
+            $staff_project=$row['staff_project'];
+            $staff_si_type=$row['staff_si_type'];
+            $staff_level=$row['staff_level'];
+        }
+
+        $staff_project=explode(',',$staff_project);
+        $staff_project=ProjectModel::whereIn('project_id',$staff_project)->get(['project_id','project_name'])->toArray();
+        //遍历成键值对数组，发给前台页面
+        foreach ($staff_project as $row)
+        {
+            $proj[$row['project_id']]=$row['project_name'];
+        }
+        $staff_project=$proj;
+
+        $staff_si_type=explode(',',$staff_si_type);
+        $staff_si_type=SiTypeModel::whereIn('si_id',$staff_si_type)->get(['si_id','si_name'])->toArray();
+        //遍历成键值对数组，发给前台页面
+        foreach ($staff_si_type as $row)
+        {
+            $si[$row['si_id']]=$row['si_name'];
+        }
+        $staff_si_type=$si;
+
+        $confirm_type=ConfirmTypeModel::get(['confirm_name'])->toArray();
+        $confirm_type=array_flatten($confirm_type);
+
+        return view('source_cust_data',compact('staff_project','staff_si_type','confirm_type'));
+    }
+
+    public function testcontro()
+    {
+        $sql='select * from zbxl_customer_confirm where created_at 
+between \'2017-05-01 00:00:00\' and \'2017-05-30 23:59:59\' 
+and confirm_res = \'Y\'
+GROUP BY confirm_pid';
+
+
+        $res=\DB::select($sql);
+        $str = '';
+        foreach ($res as $row)
+        {
+            $str .= ',' . $row->confirm_pid;
+
+        }
+
+        $aa = ltrim($str, ',');
+
+        echo $aa;
+
+
+
+        $sql='select * from zbxl_customer_confirm where created_at 
+between \'2017-05-01 00:00:00\' and \'2017-05-30 23:59:59\' 
+and confirm_res = \'N\'
+and confirm_pid NOT IN(?)
+GROUP BY confirm_pid';
+
+        dd(\DB::select($sql,[$aa]));
+
+
+    }
+
 
 
 

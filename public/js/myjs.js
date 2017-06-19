@@ -1211,6 +1211,9 @@ function allocation_change(curr) {
                     if(index=='staff_num')
                     {
                         tabletr.append('<td align=center><input type="radio" name="myRadios" value='+value+'></td>');
+                    }else if(index=='mission')
+                    {
+                        tabletr.append('<td align=center>'+''+'</td>');
                     }else
                     {
                         tabletr.append('<td align=center>'+value+'</td>');
@@ -1417,32 +1420,6 @@ function aaa() {
     },'json');
 
 }
-
-//迁移到轮播页面了
-// function start_loop() {
-//
-//     var url ='/api/loop/call';
-//     var data={
-//         _token:$("input[name=_token]").val(),
-//         key   :$("#loop_form").serializeArray(),
-//         type  :'loop_call'
-//     };
-//
-//     $.post(url,data,function (response) {
-//
-//         if(response.error=='0')
-//         {
-//             layer.msg(response.msg);
-//         }else
-//         {
-//             layer.msg(response.msg);
-//         }
-//
-//         location.reload();
-//
-//     },'json');
-//
-// }
 
 function get_register_verify_mongo_data(curr) {
 

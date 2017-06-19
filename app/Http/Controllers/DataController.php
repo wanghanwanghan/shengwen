@@ -93,7 +93,12 @@ class DataController extends Controller
                             return ['error'=>'1','msg'=>'必须选择一个属地'];
                         }else
                         {
-                            ProjectModel::create(['project_name'=>$proj,'project_parent'=>$row['value']]);
+                            $project_id=ProjectModel::create(['project_name'=>$proj,'project_parent'=>$row['value']]);
+
+                            //给超级管理员加上
+                            $admin=StaffModel::find(1);
+                            $admin->staff_project=$admin->staff_project.','.$project_id->project_id;
+                            $admin->save();
 
                             $this->system_log('添加属地',$proj);
 
@@ -166,7 +171,12 @@ class DataController extends Controller
                             return ['error'=>'1','msg'=>'参保类型已经存在'];
                         }else
                         {
-                            SiTypeModel::create(['si_name'=>$row['value']]);
+                            $si_id=SiTypeModel::create(['si_name'=>$row['value']]);
+
+                            //给超级管理员加上
+                            $admin=StaffModel::find(1);
+                            $admin->staff_si_type=$admin->staff_si_type.','.$si_id->si_id;
+                            $admin->save();
 
                             $this->system_log('添加参保类型',$row['value']);
 
@@ -1280,16 +1290,25 @@ class DataController extends Controller
                     if (count($YorN)=='1' && $YorN[0]=='N')
                     {
                         //仅仅是查询未通过的
-//                        $sql="select confirm_num,confirm_pid,confirm_res,confirm_btw,created_at,COUNT(confirm_pid) as num
-//FROM (select * from zbxl_customer_confirm as t1 where created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2
-//GROUP BY confirm_pid HAVING (num<? AND confirm_res=?) limit ? offset ?";
-                        $sql="select confirm_num,confirm_pid,confirm_res,confirm_btw,created_at,COUNT(confirm_pid) as num 
+                        //判断是不是超级管理员
+                        if (Session::get('user')[0]['staff_num']=='1')
+                        {
+                            //是超管
+                            $sql="select confirm_num,confirm_pid,confirm_res,confirm_btw,created_at,COUNT(confirm_pid) as num 
+FROM (select * from zbxl_customer_confirm as t1 where created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2 
+GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
+
+                            $res1=\DB::select($sql,[$start,$stop,'2','N']);
+                        }else
+                        {
+                            //不是超管
+                            $sql="select confirm_num,confirm_pid,confirm_res,confirm_btw,created_at,COUNT(confirm_pid) as num 
 FROM (select * from zbxl_customer_confirm as t1 where belong_to=? AND created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2 
 GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
-//                        $res1=\DB::select($sql,[$start,$stop,'2','N',$limit,$offset]);
-                        $mypid=Session::get('user')[0]['staff_num'];
-                        $res1=\DB::select($sql,[$mypid,$start,$stop,'2','N']);
+                            $mypid=Session::get('user')[0]['staff_num'];
+                            $res1=\DB::select($sql,[$mypid,$start,$stop,'2','N']);
+                        }
 
                         //对象转数组
                         $res2=$this->obj2arr($res1);
@@ -1366,60 +1385,59 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             $data1[]=$data2;
                         }
 
-                        //为了符合前台页面显示，数组里的数据顺序需要改一下
-//                        $data1=null;
-//                        foreach ($res2 as $row)
-//                        {
-//                            $data2=null;
-//
-//                            $data2['cust_name']=$row['cust_name'];
-//                            $data2['cust_id']=$row['cust_id'];
-//                            $data2['cust_review_num']=$row['cust_review_num'];
-//                            $data2['cust_phone_num']=$row['cust_phone_num'];
-//                            $data2['cust_type']=$row['cust_type'];
-//                            $data2['created_at']=$row['created_at'];
-//                            $data2['confirm_res']=$row['confirm_res'];
-//                            $data2['confirm_num']=$row['confirm_num'];
-//                            $data2['confirm_btw']=$row['confirm_btw'];
-//
-//                            $data1[]=$data2;
-//                        }
-
-                        //总页数
-//                        $sql="select confirm_num,confirm_pid,confirm_res,created_at,COUNT(confirm_pid) as num
-//FROM (select * from zbxl_customer_confirm as t1 where created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2
-//GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
-
-//                        $res3=count(\DB::select($sql,[$start,$stop,'2','N']));
-//                        $cnt_page=intval(ceil($res3/$limit));
-
-//                        return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>$cnt_page,'count_data'=>$res3];
                         return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>intval(ceil(count($res2)/$limit)),'count_data'=>count($res2)];
                     }else
                     {
-                        //查询数据
-                        $res=\DB::table('customer_info')
-                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
-                            ->where($condition)
-                            ->where('belong_to',$mypid=Session::get('user')[0]['staff_num'])
-                            ->whereIn('customer_confirm.confirm_res',$YorN)
-                            ->whereIn('customer_info.cust_type',$AorB)
-                            ->orderBy('customer_confirm.confirm_pid','desc')
-                            ->orderBy('customer_confirm.created_at','desc')
-                            ->wherebetween('customer_confirm.created_at',[$start,$stop])
-                            ->offset($offset)->limit($limit)
-                            ->get($get);
+                        //判断是不是超管
+                        if (Session::get('user')[0]['staff_num']=='1')
+                        {
+                            //是超管
+                            $res=\DB::table('customer_info')
+                                ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                                ->where($condition)
+                                ->whereIn('customer_confirm.confirm_res',$YorN)
+                                ->whereIn('customer_info.cust_type',$AorB)
+                                ->orderBy('customer_confirm.confirm_pid','desc')
+                                ->orderBy('customer_confirm.created_at','desc')
+                                ->wherebetween('customer_confirm.created_at',[$start,$stop])
+                                ->offset($offset)->limit($limit)
+                                ->get($get);
 
-                        //查询总页数
-                        $cnt=\DB::table('customer_info')
-                            ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
-                            ->where($condition)
-                            ->where('belong_to',$mypid=Session::get('user')[0]['staff_num'])
-                            ->whereIn('customer_confirm.confirm_res',$YorN)
-                            ->whereIn('customer_info.cust_type',$AorB)
-                            ->wherebetween('customer_confirm.created_at',[$start,$stop])
-                            ->count();
-                        $cnt_page=intval(ceil($cnt/$limit));
+                            //查询总页数
+                            $cnt=\DB::table('customer_info')
+                                ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                                ->where($condition)
+                                ->whereIn('customer_confirm.confirm_res',$YorN)
+                                ->whereIn('customer_info.cust_type',$AorB)
+                                ->wherebetween('customer_confirm.created_at',[$start,$stop])
+                                ->count();
+                            $cnt_page=intval(ceil($cnt/$limit));
+                        }else
+                        {
+                            //不是超管
+                            $res=\DB::table('customer_info')
+                                ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                                ->where($condition)
+                                ->where('belong_to',$mypid=Session::get('user')[0]['staff_num'])
+                                ->whereIn('customer_confirm.confirm_res',$YorN)
+                                ->whereIn('customer_info.cust_type',$AorB)
+                                ->orderBy('customer_confirm.confirm_pid','desc')
+                                ->orderBy('customer_confirm.created_at','desc')
+                                ->wherebetween('customer_confirm.created_at',[$start,$stop])
+                                ->offset($offset)->limit($limit)
+                                ->get($get);
+
+                            //查询总页数
+                            $cnt=\DB::table('customer_info')
+                                ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
+                                ->where($condition)
+                                ->where('belong_to',$mypid=Session::get('user')[0]['staff_num'])
+                                ->whereIn('customer_confirm.confirm_res',$YorN)
+                                ->whereIn('customer_info.cust_type',$AorB)
+                                ->wherebetween('customer_confirm.created_at',[$start,$stop])
+                                ->count();
+                            $cnt_page=intval(ceil($cnt/$limit));
+                        }
 
                         return ['error'=>'0','msg'=>'查询成功','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
                     }
@@ -2409,7 +2427,6 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 return ['error'=>'0'];
 
                 break;
-
 
         }
     }
