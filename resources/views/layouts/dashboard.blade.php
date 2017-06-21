@@ -10,7 +10,9 @@
                 <!-- mini logo for sidebar mini 50x50 pixels -->
                 <span class="logo-mini"><b>ZBXL</b></span>
                 <!-- logo for regular state and mobile devices -->
-                <span class="logo-lg"><img height="100%" width="100%" src="{{asset('public/img/zbxl_logo.png')}}"/></span>
+                <span class="logo-lg">
+                    <img onclick="loginout();" height="100%" width="100%" src="{{asset('public/img/zbxl_logo.png')}}"/>
+                </span>
             </a>
 
             <!-- Header Navbar -->

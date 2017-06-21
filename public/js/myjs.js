@@ -39,6 +39,9 @@ function staff_login() {
 
 }
 
+function loginout() {
+    location.assign('/');
+}
 function SendMail() {
 
     var url ='/data/ajax';

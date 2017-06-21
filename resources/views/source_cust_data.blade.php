@@ -27,7 +27,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label>选择导入文件（文件后缀是.xls）</label>
+                                <label>选择导入文件（文件后缀是.xls，不是手动改，而是用另存为.xls）</label>
                                 <input type="file" name="myfile">
 
                                 <p class="help-block">如果对导入文件的格式或者内容有疑问，请联系管理员</p>

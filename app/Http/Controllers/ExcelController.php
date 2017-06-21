@@ -32,6 +32,12 @@ class ExcelController extends Controller
             return redirect()->back();
         }
 
+        if ($_FILES['myfile']['type']!='application/vnd.ms-excel' || substr($_FILES['myfile']['name'],-4)!='.xls')
+        {
+            session()->flash('warning','导入的文件格式不正确！');
+            return redirect()->back();
+        }
+
         //如果通过所有验证
         Excel::load($_FILES['myfile']['tmp_name'],function($reader) {
             dd($reader->all()->toArray());
