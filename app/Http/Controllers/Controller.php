@@ -6,6 +6,7 @@ use App\Http\Model\ConfirmTypeModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\LevelModel;
 use App\Http\Model\LogModel;
+use App\Http\Model\PhoneBelongModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SiTypeModel;
 use App\Http\Model\StaffModel;
@@ -22,6 +23,81 @@ use phpDocumentor\Reflection\Types\Array_;
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    //中文字符串包含 source源字符串target要判断的是否包含的字符串
+    public function hasstring($source,$target)
+    {
+        preg_match_all("/$target/sim", $source, $strResult, PREG_PATTERN_ORDER);
+        return !empty($strResult[0]);
+    }
+
+    //手机号码归属地查询
+    public function is_local_phone($phone)
+    {
+        //先到数据库中查
+        $res=PhoneBelongModel::where(['phone'=>$phone])->get()->toArray();
+
+        //是否找到
+        if (empty($res))
+        {
+            //没找到
+            $res_json=file_get_contents('http://apis.juhe.cn/mobile/get?phone='.$phone.'&dtype=json&key=e12158fa89c0f7a14b363d8cde0ad6c6');
+            $res_arry=json_decode($res_json,true);
+            $province=$res_arry['result']['province'];
+            $city=$res_arry['result']['city'];
+            $company=$res_arry['result']['company'];
+            PhoneBelongModel::create(['province'=>$province,'city'=>$city,'company'=>$company,'phone'=>$phone]);
+
+            //判断是否属于本地
+            if ($this->hasstring($province,Config::get('constant.province')))
+            {
+                if ($city=='')
+                {
+                    //省名和市名如果是一样的，city也许是空，比如北京，上海
+                    return ['local'=>'yes'];
+                }else
+                {
+                    if ($this->hasstring($city,Config::get('constant.city')))
+                    {
+                        return ['local'=>'yes'];
+                    }else
+                    {
+                        return ['local'=>'no'];
+                    }
+                }
+            }else
+            {
+                return ['local'=>'no'];
+            }
+        }else
+        {
+            //找到了
+            foreach ($res as $row)
+            {
+                //判断是否属于本地
+                if ($this->hasstring($row['province'],Config::get('constant.province')))
+                {
+                    if ($row['city']=='')
+                    {
+                        //省名和市名如果是一样的，city也许是空，比如北京，上海
+                        return ['local'=>'yes'];
+                    }else
+                    {
+                        if ($this->hasstring($row['city'],Config::get('constant.city')))
+                        {
+                            return ['local'=>'yes'];
+                        }else
+                        {
+                            return ['local'=>'no'];
+                        }
+                    }
+                }else
+                {
+                    return ['local'=>'no'];
+                }
+            }
+        }
+    }
 
     //curl操作
     public function mycurl($url,$data)
@@ -55,7 +131,7 @@ class Controller extends BaseController
 
         if ($mongo==null)
         {
-            $con="mongodb://localhost:27017";
+            $con="mongodb://127.0.0.1:27017";
             $option['connectTimeoutMS']='1000';
             $mongo=new \MongoClient($con,$option);
 

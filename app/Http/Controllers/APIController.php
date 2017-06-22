@@ -155,6 +155,14 @@ class APIController extends Controller
                 }
 
                 break;
+
+            case 'is_local_number':
+
+                //传入一个电话号码，如果是本地的，返回true，如果不是，返回false
+                //电话号码先到数据库中查找，如果查不到，调用接口
+                return $this->is_local_phone($_GET['cond']);
+
+                break;
         }
     }
 
@@ -751,6 +759,20 @@ class APIController extends Controller
             ]);
 
             return ['error'=>'1'];
+        }elseif ($url=='')
+        {
+            //通知mongo
+            $obj=$this->mymongo();
+            $obj->ivrlog->test1->insert([
+                'who'=>'ivr',
+                'action'=>'ivr返回用户登记结果',
+                'result'=>'1',
+                'message'=>$model->cust_name.'登记失败，呼叫失败',
+                'mysqlPID'=>'',
+                'time'=>time()
+            ]);
+
+            return ['error'=>'1'];
         }else
         {
             return ['error'=>'1','msg'=>'参数不正确'];
@@ -798,6 +820,20 @@ class APIController extends Controller
                 'result'=>'1',
                 'message'=>$model->cust_name.'验证失败，模型不匹配',
                 'mysqlPID'=>$id->vp_pid,
+                'time'=>time()
+            ]);
+
+            return ['error'=>'1'];
+        }elseif ($url=='')
+        {
+            //通知mongo
+            $obj=$this->mymongo();
+            $obj->ivrlog->test1->insert([
+                'who'=>'ivr',
+                'action'=>'ivr返回用户验证结果',
+                'result'=>'1',
+                'message'=>$model->cust_name.'验证失败，呼叫失败',
+                'mysqlPID'=>'',
                 'time'=>time()
             ]);
 
@@ -855,6 +891,20 @@ class APIController extends Controller
                 'result'=>'1',
                 'message'=>$model->cust_name.'认证失败，模型不匹配',
                 'mysqlPID'=>$id->vp_pid,
+                'time'=>time()
+            ]);
+
+            return ['error'=>'1'];
+        }elseif ($url=='')
+        {
+            //通知mongo
+            $obj=$this->mymongo();
+            $obj->ivrlog->loopreturn->insert([
+                'who'=>'ivr',
+                'action'=>'ivr返回用户轮播结果',
+                'result'=>'1',
+                'message'=>$model->cust_name.'认证失败，呼叫失败',
+                'mysqlPID'=>'',
                 'time'=>time()
             ]);
 
@@ -920,83 +970,6 @@ class APIController extends Controller
         {
             return ['error'=>'1','msg'=>'参数不正确'];
         }
-    }
-
-    //百度语音识别
-    public function baiducheck()
-    {
-        define('AUDIO_FILE', public_path('test.wav'));
-        $url = "http://vop.baidu.com/server_api";
-
-        //put your params here
-        $cuid = "9394757";
-        $apiKey = "eDQD692rXYXa3Sj1CrNHk1ZZ";
-        $secretKey = "bc6f23033ebad89a413f0fc9726fc835";
-
-        $auth_url = "https://openapi.baidu.com/oauth/2.0/token?grant_type=client_credentials&client_id=".$apiKey."&client_secret=".$secretKey;
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $auth_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,FALSE);
-        $response = curl_exec($ch);
-        if(curl_errno($ch))
-        {
-            print curl_error($ch);
-        }
-        curl_close($ch);
-        $response = json_decode($response, true);
-        $token = $response['access_token'];
-
-        $audio = file_get_contents(AUDIO_FILE);
-        $base_data = base64_encode($audio);
-        $array = array(
-            "format" => "wav",
-            "rate" => 8000,
-            "channel" => 1,
-            //"lan" => "zh",
-            "token" => $token,
-            "cuid"=> $cuid,
-            //"url" => "http://www.xxx.com/sample.pcm",
-            //"callback" => "http://www.xxx.com/audio/callback",
-            "len" => filesize(AUDIO_FILE),
-            "speech" => $base_data,
-        );
-        $json_array = json_encode($array);
-        $content_len = "Content-Length: ".strlen($json_array);
-        $header = array ($content_len, 'Content-Type: application/json; charset=utf-8');
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json_array);
-        $response = curl_exec($ch);
-        if(curl_errno($ch))
-        {
-            print curl_error($ch);
-        }
-        curl_close($ch);
-        echo $response;
-        $response = json_decode($response, true);
-        var_dump($response);
-    }
-
-    //测试用的
-    public function ceshi_test()
-    {
-
-
-
-
-
-
-
-
-
     }
 
 
