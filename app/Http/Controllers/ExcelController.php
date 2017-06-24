@@ -39,7 +39,7 @@ class ExcelController extends Controller
         }
 
         //如果通过所有验证
-        Excel::load($_FILES['myfile']['tmp_name'],function($reader) {
+        Excel::load($_FILES['myfile']['tmp_name'],function($reader){
             dd($reader->all()->toArray());
         });
 

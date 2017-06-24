@@ -1709,7 +1709,15 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         //给每个数组里插入客户相关信息
                         foreach ($res2 as &$row)
                         {
-                            $data=CustModel::find($row['confirm_pid']);
+                            try
+                            {
+                                //数据没有找到，说明用户已经删除了
+                                $data=CustModel::findOrFail($row['confirm_pid']);
+                            }catch (ModelNotFoundException $e)
+                            {
+                                continue;
+                            }
+
                             if ($data->cust_project==$condition['cust_project'] && $data->cust_si_type==$condition['cust_si_type'])
                             {
                                 //判断要查询的是A还是B用户

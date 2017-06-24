@@ -1,79 +1,33 @@
 @extends('layouts.plane')
 @section('body')
 
-<div class="login-box">
-  <div class="login-logo">
-    <a href="#"><b>中保信联(北京)科技有限公司</b></a>
-  </div>
-  <!-- /.login-logo -->
-  <div class="login-box-body">
-    <p class="login-box-msg">声纹系统</p>
+	<body>
+	<div class="login-form">
+		<div class="top-login">
+			<span><img style="width: 68px;height: 68px;" src="{{asset('public/img/guohui.jpg')}}" alt=""/></span>
+		</div>
+		<h1>社会养老保险领取资格认证平台</h1>
+		<div class="login-top">
+			{{csrf_field()}}
+			<form id="staff_login_form">
+				<div class="login-ic">
+					<i ></i>
+					<input type="text" class="form-control" name="staff_account" placeholder="登陆账号">
+					<div class="clear"> </div>
+				</div>
+				<div class="login-ic">
+					<i class="icon"></i>
+					<input type="password" class="form-control" name="staff_password" placeholder="登陆密码">
+					<div class="clear"> </div>
+				</div>
 
-    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+				<div class="log-bwn">
+					<a class="btn btn-block btn-danger btn-lg" onclick="staff_login();">登陆</a>
+				</div>
+			</form>
+		</div>
+		<p class="copy">© 2017 中保信联（北京）科技有限公司</p>
+	</div>
+	</body>
 
-    <form id="staff_login_form">
-      <div class="form-group has-feedback">
-        <input type="text" class="form-control" name="staff_account" placeholder="登陆账号">
-        <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
-      </div>
-      <div class="form-group has-feedback">
-        <input type="password" class="form-control" name="staff_password" placeholder="登陆密码">
-        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
-      </div>
-      <div class="row">
-        <div class="col-xs-8">
-          <div class="checkbox icheck">
-            <label>
-              <input type="checkbox"> 记住当前账号
-            </label>
-          </div>
-        </div>
-        <!-- /.col -->
-        <div class="col-xs-4">
-          <a class="btn btn-primary btn-block btn-flat" onclick="staff_login();">登陆</a>
-        </div>
-        <!-- /.col -->
-      </div>
-    </form>
-
-    {{--<div class="social-auth-links text-center">--}}
-      {{--<p>- OR -</p>--}}
-      {{--<a href="#" class="btn btn-block btn-social btn-facebook btn-flat"><i class="fa fa-facebook"></i> Sign in using--}}
-        {{--Facebook</a>--}}
-      {{--<a href="#" class="btn btn-block btn-social btn-google btn-flat"><i class="fa fa-google-plus"></i> Sign in using--}}
-        {{--Google+</a>--}}
-    {{--</div>--}}
-    {{--<!-- /.social-auth-links -->--}}
-
-    {{--<a href="#">I forgot my password</a><br>--}}
-    {{--<a href="#" class="text-center">Register a new membership</a>--}}
-
-  </div>
-  <!-- /.login-box-body -->
-</div>
-<!-- /.login-box -->
-
-<script>
-  $(function () {
-    $('input').iCheck({
-      checkboxClass: 'icheckbox_square-blue',
-      radioClass: 'iradio_square-blue',
-      increaseArea: '20%' // optional
-    });
-  });
-
-  //$("body").quietflow({
-  //  theme : "bouncingBalls",
-  //  specificColors : [
-  //    "rgba(255, 10, 50, .5)",
-  //    "rgba(10, 255, 50, .5)",
-  //    "rgba(10, 50, 255, .5)",
-  //    "rgba(0, 0, 0, .5)"
-  //  ]
-  //})
-
-  $("body").css('background-color',"rgb(64,142,186)");
-
-
-</script>
 @stop

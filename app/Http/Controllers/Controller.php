@@ -272,7 +272,14 @@ class Controller extends BaseController
     {
         if (preg_match('/[\xe0-\xef][\x80-\xbf]/',$word))
         {
-            return '1';
+            //检查空格
+            if (strpos($word,' ')===false)
+            {
+                return '1';
+            }else
+            {
+                return '0';
+            }
         }else
         {
             return '0';

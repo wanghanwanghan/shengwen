@@ -440,35 +440,7 @@ class WebController extends Controller
 
     public function testcontro()
     {
-        $sql='select * from zbxl_customer_confirm where created_at 
-between \'2017-05-01 00:00:00\' and \'2017-05-30 23:59:59\' 
-and confirm_res = \'Y\'
-GROUP BY confirm_pid';
-
-
-        $res=\DB::select($sql);
-        $str = '';
-        foreach ($res as $row)
-        {
-            $str .= ',' . $row->confirm_pid;
-
-        }
-
-        $aa = ltrim($str, ',');
-
-        echo $aa;
-
-
-
-        $sql='select * from zbxl_customer_confirm where created_at 
-between \'2017-05-01 00:00:00\' and \'2017-05-30 23:59:59\' 
-and confirm_res = \'N\'
-and confirm_pid NOT IN(?)
-GROUP BY confirm_pid';
-
-        dd(\DB::select($sql,[$aa]));
-
-
+        return file_get_contents('http://apis.juhe.cn/ip/ip2addr?ip='.$_SERVER['SERVER_ADDR'].'&dtype=json&key=ffb7c65113fddc659264139050eaccf2');
     }
 
 

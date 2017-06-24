@@ -172,7 +172,7 @@
             <!-- sidebar: style can be found in sidebar.less -->
             <section class="sidebar">
 
-                <!-- Sidebar user panel (optional) -->
+                {{--<!-- Sidebar user panel (optional) -->--}}
                 {{--<div class="user-panel">--}}
                     {{--<div class="pull-left image">--}}
                         {{--<img src="{{asset('public/bower_components/AdminLTE/dist/img/user2-160x160.jpg')}}" class="img-circle" alt="User Image">--}}

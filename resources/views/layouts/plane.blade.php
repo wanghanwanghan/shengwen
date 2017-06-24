@@ -33,6 +33,8 @@
 
 	<link rel="stylesheet" href="{{asset('public/css/bootstrap-slider.css')}}">
 	<script src="{{asset('public/js/bootstrap-slider.js')}}"></script>
+
+	<link href="{{asset('public/css/style.css')}}" rel="stylesheet" type="text/css" media="all"/>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 @yield('body')
