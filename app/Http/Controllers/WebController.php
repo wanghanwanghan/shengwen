@@ -9,7 +9,9 @@ use App\Http\Model\SiTypeModel;
 use App\Http\Model\StaffModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class WebController extends Controller
 {
@@ -438,9 +440,54 @@ class WebController extends Controller
         return view('source_cust_data',compact('staff_project','staff_si_type','confirm_type'));
     }
 
-    public function testcontro()
+    public function upload(Request $request)
     {
-        return file_get_contents('http://apis.juhe.cn/ip/ip2addr?ip='.$_SERVER['SERVER_ADDR'].'&dtype=json&key=ffb7c65113fddc659264139050eaccf2');
+        $file=$request->file('表单名');
+
+        //判断是否上传成功
+        if ($file->isValid())
+        {
+            //成功
+            $a=$file->getClientOriginalName();
+
+            $b=$file->getClientOriginalExtension();
+
+            $c=$file->getClientMimeType();
+
+            $d=$file->getRealPath();
+
+            $filename=date('Y-m-d',time()).'-'.uniqid().'.'.$b;
+
+            $bool=Storage::disk('upload')->put($filename,file_get_contents($d));
+
+        }else
+        {
+            //不成功
+        }
+
+
+
+
+
+    }
+
+    public function mail()
+    {
+        Mail::raw('邮件内容 测试',function ($msg){
+
+            $msg->from('minglongoc@me.com','王瀚');
+
+            $msg->subject('邮件主题 测试');
+
+            $msg->to('sb@sina.com');
+
+        });
+
+        Mail::send('视图模板名称',['name'=>'王瀚'],function ($msg){
+
+            $msg->to('sb@sina.com');
+
+        });
     }
 
 

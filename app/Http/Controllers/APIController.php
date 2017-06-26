@@ -620,7 +620,7 @@ class APIController extends Controller
                     }
                 }
 
-                //$res是给ivr发送的电话列表
+                //$res是给ivr发送的电话列表，去掉重复项
                 $res=CustModel::where($cond)->distinct()->get(['cust_review_num']);
                 $phone_array=null;
 

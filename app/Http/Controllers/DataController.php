@@ -1321,7 +1321,16 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         //给每个数组里插入客户相关信息
                         foreach ($res2 as &$row)
                         {
-                            $data=CustModel::find($row['confirm_pid']);
+                            try
+                            {
+                                $data=CustModel::findOrFail($row['confirm_pid']);
+                            }catch (ModelNotFoundException $e)
+                            {
+                                //没有查找到相应客户，说明客户被删除
+                                $row=[];
+                                continue;
+                            }
+
                             if ($data->cust_project==$condition['cust_project'] && $data->cust_si_type==$condition['cust_si_type'])
                             {
                                 //判断要查询的是A还是B用户
@@ -2256,6 +2265,31 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 break;
 
             case 'modify_cust_delete':
+
+                //明静大人老随意删数据，所以我决定加一个权限
+                $user=Session::get('user');
+                $level=explode(',',$user[0]['staff_level']);
+                $can_i_delete=false;
+                foreach ($level as $row)
+                {
+                    try
+                    {
+                        $model=LevelModel::findOrFail($row);
+                    }catch (ModelNotFoundException $e)
+                    {
+                        continue;
+                    }
+
+                    if ($model->level_name=='删除客户信息')
+                    {
+                        $can_i_delete=true;
+                    }
+                }
+
+                if (!$can_i_delete)
+                {
+                    return ['error'=>'1','msg'=>'您没有删除客户的权限'];
+                }
 
                 $pid=Input::get('pid');
 

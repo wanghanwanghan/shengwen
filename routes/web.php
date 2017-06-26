@@ -192,11 +192,7 @@ Route::get('detail_info/{id}', function ($id) {
 //得到session中的username
 Route::get('get/user/name','WebController@get_username');
 
-
-
-
-
-Route::get('/wanghan','WebController@testcontro');
+//Excel操作
 Route::post('/import','ExcelController@import');
 
 

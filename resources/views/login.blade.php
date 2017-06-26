@@ -26,7 +26,7 @@
 				</div>
 			</form>
 		</div>
-		<p class="copy">© 2017 中保信联（北京）科技有限公司</p>
+		<p class="copy">© {{date('Y',time())}} 中保信联（北京）科技有限公司</p>
 	</div>
 	</body>
 
