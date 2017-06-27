@@ -193,7 +193,10 @@ Route::get('detail_info/{id}', function ($id) {
 Route::get('get/user/name','WebController@get_username');
 
 //Excel操作
-Route::post('/import','ExcelController@import');
+Route::post('/import1','ExcelController@import_1');
+
+//Excel操作中的导入，用到的路由
+Route::get('/insert_excel_data_1','ExcelController@insert_excel_data_1');
 
 
 

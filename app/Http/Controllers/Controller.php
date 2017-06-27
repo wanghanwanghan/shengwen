@@ -441,7 +441,7 @@ class Controller extends BaseController
     //laravel的链接查询没研究会，先用原生的吧...
     public function mypdo($sql)
     {
-        $dbh=new \PDO('mysql:host=localhost;dbname=shengwen','root','root');
+        $dbh=new \PDO('mysql:host=127.0.0.1;dbname=shengwen','root','root');
 
         $res=$dbh->query($sql);
 

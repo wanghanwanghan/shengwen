@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Model\ChinaAllPositionModel;
 use App\Http\Model\ConfirmTypeModel;
 use App\Http\Model\CustConfirmModel;
 use App\Http\Model\CustDeleteModel;
@@ -2467,6 +2468,15 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
 
                 return ['error'=>'0'];
+
+                break;
+
+            case 'get_china_all_position':
+
+
+
+
+
 
                 break;
 

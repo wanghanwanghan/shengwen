@@ -895,9 +895,23 @@ class APIController extends Controller
             ]);
 
             return ['error'=>'1'];
-        }elseif ($url=='')
+        }elseif ($pid!='' && $url=='' && $res=='error_1')
         {
             //通知mongo
+            $obj=$this->mymongo();
+            $obj->ivrlog->loopreturn->insert([
+                'who'=>'ivr',
+                'action'=>'ivr返回用户轮播结果',
+                'result'=>'1',
+                'message'=>$model->cust_name.'还没有进行登记',
+                'mysqlPID'=>'',
+                'time'=>time()
+            ]);
+
+            return ['error'=>'1'];
+        }elseif ($url=='')
+        {
+            //通知mongo，这个情况是该客户还没有进行登记
             $obj=$this->mymongo();
             $obj->ivrlog->loopreturn->insert([
                 'who'=>'ivr',
