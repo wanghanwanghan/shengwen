@@ -1,5 +1,8 @@
 <?php
 
+//测试
+Route::get('/test1','TestController@test_1');
+
 //登陆
 Route::get('/', function () {
     return view('login');

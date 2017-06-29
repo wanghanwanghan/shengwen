@@ -16,6 +16,7 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
 use League\Flysystem\Exception;
 use phpDocumentor\Reflection\Types\Array_;
@@ -124,6 +125,21 @@ class Controller extends BaseController
         }
     }
 
+    //设置有存活时间的redis，参数一：键，参数二：值，参数三：存活时间，单位秒
+    public function redis_set($key,$value,$time)
+    {
+        $time=isset($time) ? $time : '';
+
+        if ($time!='')
+        {
+            Redis::set($key,$value);
+            Redis::expire($key,$time);
+        }else
+        {
+            Redis::set($key,$value);
+        }
+    }
+
     //链接mongodb
     public function mymongo()
     {
@@ -142,7 +158,7 @@ class Controller extends BaseController
         }
     }
 
-    //系统操作日志,参数一：执行了什么操作，参数二：操作细节
+    //系统操作日志，参数一：执行了什么操作，参数二：操作细节
     public function system_log($action,$detail)
     {
         $log_info=null;
@@ -159,7 +175,7 @@ class Controller extends BaseController
         LogModel::create($log_info);
     }
 
-    //修改或删除声纹文件,参数一：客户主键，参数二：操作modify、delete，参数三：条件['phone'=>'13800138000']
+    //修改或删除声纹文件，参数一：客户主键，参数二：操作modify、delete，参数三：条件['phone'=>'13800138000']
     public function voice_file_ModifyOrDelete($pid,$oper,$cond='')
     {
         $phone=CustModel::find($pid)->cust_review_num;

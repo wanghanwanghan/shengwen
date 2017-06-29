@@ -1609,6 +1609,58 @@ function set_config() {
 
 }
 
+function select_china_all_position() {
+
+    var url='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        key:$("#select_china_all_position_form").serializeArray(),
+        type:'select_china_all_position'
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            //解析res_single
+            $.each(response.res_single, function (k, v) {
+
+                $("select[name=s_"+k+"] option").remove();
+
+                $.each(v,function (key,value) {
+
+                    $("select[name=s_"+k+"]").append("<option>"+value[k]+"</option>>");
+
+                });
+
+            });
+
+            //解析res_all
+            if(response.res_all)
+            {
+                $("select[name=all_path_name] option").remove();
+
+                $.each(response.res_all, function (key, value) {
+
+                    $("select[name=all_path_name]").append("<option>"+
+                        value['province_name']+'-'+
+                        value['city_name']+'-'+
+                        value['county_name']+'-'+
+                        value['town_name']+'-'+
+                        value['village_name']+"</option>");
+
+                });
+            }
+
+            layer.msg(response.msg);
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
 
 
 

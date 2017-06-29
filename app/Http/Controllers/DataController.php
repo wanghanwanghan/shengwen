@@ -2471,15 +2471,124 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
-            case 'get_china_all_position':
+            case 'select_china_all_position':
 
+                //取得查询条件
+                $cond='';
+                foreach (Input::get('key') as $row)
+                {
+                    //取得省
+                    if ($row['name']=='province_name' && $row['value']!='')
+                    {
+                        $cond['province_name']=$row['value'];
+                    }
 
+                    //取得市
+                    if ($row['name']=='city_name' && $row['value']!='')
+                    {
+                        $cond['city_name']=$row['value'];
+                    }
 
+                    //取得县
+                    if ($row['name']=='county_name' && $row['value']!='')
+                    {
+                        $cond['county_name']=$row['value'];
+                    }
 
+                    //取得镇
+                    if ($row['name']=='town_name' && $row['value']!='')
+                    {
+                        $cond['town_name']=$row['value'];
+                    }
 
+                    //取得村
+                    if ($row['name']=='village_name' && $row['value']!='')
+                    {
+                        $cond['village_name']=$row['value'];
+                    }
+                }
+
+                if ($cond=='')
+                {
+                    return ['error'=>'1','msg'=>'查询条件不能为空'];
+                }else
+                {
+
+                }
+
+                //一条一条查询
+                $res_single='';
+                foreach ($cond as $key=>$value)
+                {
+                    $res_single[$key]=ChinaAllPositionModel::where($key,'like','%'.$value.'%')
+                        ->distinct()
+                        ->get([$key])
+                        ->toArray();
+                }
+
+                //省市县镇村
+                $tmp=0;
+                if (isset($cond['county_name']))
+                {
+                    $tmp++;
+                    $deep['name'][]='county_name';
+                    $deep['value'][]=$cond['county_name'];
+                }
+                if (isset($cond['town_name']))
+                {
+                    $tmp++;
+                    $deep['name'][]='town_name';
+                    $deep['value'][]=$cond['town_name'];
+                }
+                if (isset($cond['village_name']))
+                {
+                    $tmp++;
+                    $deep['name'][]='village_name';
+                    $deep['value'][]=$cond['village_name'];
+                }
+
+                //判断县镇村传了几个进来
+                if (!$tmp=='0')
+                {
+                    if ($tmp=='1')
+                    {
+                        //传进来一个
+                        $res_all=ChinaAllPositionModel::where($deep['name'][0],'like','%'.$deep['value'][0].'%')
+                            ->distinct()
+                            ->get([
+                                'province_name','city_name','county_name','town_name','village_name'
+                            ])
+                            ->toArray();
+                    }elseif ($tmp=='2')
+                    {
+                        //传进来两个
+                        $res_all=ChinaAllPositionModel::where($deep['name'][0],'like','%'.$deep['value'][0].'%')
+                            ->where($deep['name'][1],'like','%'.$deep['value'][1].'%')
+                            ->distinct()
+                            ->get([
+                                'province_name','city_name','county_name','town_name','village_name'
+                            ])
+                            ->toArray();
+                    }else
+                    {
+                        //传进来三个
+                        $res_all=ChinaAllPositionModel::where($deep['name'][0],'like','%'.$deep['value'][0].'%')
+                            ->where($deep['name'][1],'like','%'.$deep['value'][1].'%')
+                            ->where($deep['name'][2],'like','%'.$deep['value'][2].'%')
+                            ->distinct()
+                            ->get([
+                                'province_name','city_name','county_name','town_name','village_name'
+                            ])
+                            ->toArray();
+                    }
+                }else
+                {
+                    return ['error'=>'0','msg'=>'查询成功','res_single'=>$res_single];
+                }
+
+                return ['error'=>'0','msg'=>'查询成功','res_single'=>$res_single,'res_all'=>$res_all];
 
                 break;
-
         }
     }
 
