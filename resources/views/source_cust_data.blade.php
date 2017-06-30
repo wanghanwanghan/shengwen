@@ -8,45 +8,12 @@
             <div class="col-sm-6">
                 <div class="box box-primary">
                     <div class="box-header with-border">
-                        <h3 class="box-title">导入数据的表单</h3>
+                        <h3 class="box-title">导入社保数据的表单</h3>
                     </div>
-                @include('layouts.msg')
-                <!-- /.box-header -->
-                    <!-- form start -->
+                    @include('layouts.msg')
                     <form role="form" action="{{url('/import1')}}" method="post" enctype="multipart/form-data">
-
                         {{csrf_field()}}
                         <div class="box-body">
-                            {{--<div class="form-group">--}}
-                            {{--<div class="col-sm-12">--}}
-                            {{--<div class="row">--}}
-                            {{--<div class="col-sm-4">--}}
-                            {{--<label>选择<县></label>--}}
-                            {{--</div>--}}
-                            {{--<div class="col-sm-4">--}}
-                            {{--<label>选择<镇></label>--}}
-                            {{--</div>--}}
-                            {{--<div class="col-sm-4">--}}
-                            {{--<label>选择<村></label>--}}
-                            {{--</div>--}}
-                            {{--</div>--}}
-                            {{--<div class="row">--}}
-                            {{--<div class="col-sm-4">--}}
-                            {{--<select style="padding-left: 8px" name="county" class="form-control">--}}
-                            {{--</select>--}}
-                            {{--</div>--}}
-                            {{--<div class="col-sm-4">--}}
-                            {{--<select style="padding-left: 8px" name="town" class="form-control">--}}
-                            {{--</select>--}}
-                            {{--</div>--}}
-                            {{--<div class="col-sm-4">--}}
-                            {{--<select style="padding-left: 8px" name="village" class="form-control">--}}
-                            {{--</select>--}}
-                            {{--</div>--}}
-                            {{--</div>--}}
-                            {{--</div>--}}
-                            {{--</div>--}}
-
                             <div class="form-group">
                                 <div class="col-sm-12">
                                     <div class="row">
@@ -66,7 +33,6 @@
                                     </div>
                                 </div>
                             </div>
-
                             <div class="checkbox">
                                 <div class="col-sm-12">
                                     <div class="row">
@@ -78,14 +44,10 @@
                                     </div>
                                 </div>
                             </div>
-
                         </div>
-                        <!-- /.box-body -->
-
                         <div class="box-footer">
                             <button type="submit" class="btn btn-primary">导入</button>
                         </div>
-
                     </form>
                 </div>
             </div>
@@ -196,11 +158,64 @@
                     </form>
                 </div>
             </div>
+            <div class="col-sm-6">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">导入地区数据的表单</h3>
+                    </div>
+                    @foreach (['danger2','warning2','success2','info2'] as $msg)
+                        @if(session()->has($msg))
+                            <div class="flash-message">
+                                <p style="text-align: center" class="alert alert-{{ substr($msg,0,-1) }}">
+                                    {{ session()->get($msg) }}
+                                </p>
+                            </div>
+                        @endif
+                    @endforeach
+                    <form role="form" action="{{url('/import2')}}" method="post" enctype="multipart/form-data">
+                        {{csrf_field()}}
+                        <div class="box-body">
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <p class="help-block"><a href="{{asset('public/import_position.xls')}}" download="import_position.xls">下载模板</a>后，填写相关信息</p>
+                                            <p class="help-block">选择导入文件（文件后缀是.xls，不是手动改，而是用另存为.xls）</p>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <input type="file" name="myfile">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <p class="help-block">如果对导入文件的格式或者内容有疑问，请联系管理员</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="checkbox">
+                                <div class="col-sm-12">
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <label>
+                                                <p class="help-block"><input type="checkbox" name="check"> 是否检查没问题，确定要导入？</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-footer">
+                            <button type="submit" class="btn btn-primary">导入</button>
+                            <span style="float: right">如需查找<span style="color: red">详细</span>区域划分码，请上<a target="_blank" href="http://www.stats.gov.cn/tjsj/tjbz/">国家统计局</a>官网</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
-
-
-
 
 
     <script>

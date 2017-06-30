@@ -18,7 +18,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ExcelController extends Controller
 {
-    //导入
+    //导入社保数据
     public function import_1()
     {
         $cond=Input::all();
@@ -163,7 +163,57 @@ class ExcelController extends Controller
         return redirect()->back();
     }
 
-    //导入各个地区的客户数据
+    //导入地区数据
+    public function import_2()
+    {
+        $cond=Input::all();
+
+        $error1=isset($cond['myfile']) ? '' : '请选择要导入的文件！';
+        $error2=isset($cond['check']) ? '' : '没有勾选单选框！';
+        $msg='';
+
+        if ($error1!='')
+        {
+            $msg=$msg.$error1;
+        }
+        if ($error2!='')
+        {
+            $msg=$msg.$error2;
+        }
+        if ($msg!='')
+        {
+            return redirect()->back()->with('danger2',$msg);
+        }
+
+        if ($_FILES['myfile']['type']!='application/vnd.ms-excel' || substr($_FILES['myfile']['name'],-4)!='.xls')
+        {
+            return redirect()->back()->with('warning2','导入的文件格式不正确！');
+        }
+
+        //如果通过所有验证
+        Excel::load($_FILES['myfile']['tmp_name'],function($reader){
+            Redis::set('import_position',json_encode($reader->all()->toArray()));
+        });
+
+        //要上传的文件中的所有内容
+        $file_content=json_decode(Redis::get('import_position'),true);
+
+        //**************************************
+        // 导入文件中的内容没有验证
+        //**************************************
+
+        $redis_key='excel_'.time();
+
+        //给redis加个过期时间
+        $this->redis_set($redis_key,json_encode($file_content),300);
+
+        //插入数据，这个动作要发送给另一个程序，不然会超时
+        file_get_contents('http://zbxl.com/insert_excel_data_2?redis_key='.$redis_key);
+
+        return redirect()->back()->with('success2','开始导入，是否导入成功请查看日志');
+    }
+
+    //导入社保数据
     public function insert_excel_data_1()
     {
         $table_name=isset($_GET['table_name']) ? $_GET['table_name'] : '';
@@ -190,10 +240,14 @@ class ExcelController extends Controller
                 ]);
             }
 
+            $cond=explode('_',$position_path);
+            $position_name=ChinaAllPositionModel::where(['county_id'=>$cond[0],'town_id'=>$cond[1],'village_id'=>$cond[2]])
+                ->get(['county_name','town_name','village_name'])->toArray();
+
             LogModel::create([
                 'log_account'=>$root->staff_account,
                 'log_todo'=>'导入社保数据成功',
-                'log_detail'=>'成功',
+                'log_detail'=>'地区是：'.$position_name[0]['county_name'].'-'.$position_name[0]['town_name'].'-'.$position_name[0]['village_name'],
                 'created_at'=>date('Y-m-d H:i:s',time()),
                 'updated_at'=>date('Y-m-d H:i:s',time())
             ]);
@@ -203,7 +257,52 @@ class ExcelController extends Controller
             LogModel::create([
                 'log_account'=>$root->staff_account,
                 'log_todo'=>'导入社保数据失败',
-                'log_detail'=>'参数不正确',
+                'log_detail'=>'参数不正确或者redis没启动',
+                'created_at'=>date('Y-m-d H:i:s',time()),
+                'updated_at'=>date('Y-m-d H:i:s',time())
+            ]);
+        }
+    }
+
+    //导入地区数据
+    public function insert_excel_data_2()
+    {
+        $redis_key=isset($_GET['redis_key']) ? $_GET['redis_key'] : '';
+
+        $root=StaffModel::find(1);
+
+        if ($redis_key!='')
+        {
+            $file_content=json_decode(Redis::get($redis_key),true);
+
+            try
+            {
+                //DB::table($table_name)->insert($file_content);
+            }catch (\Exception $exception)
+            {
+                LogModel::create([
+                    'log_account'=>$root->staff_account,
+                    'log_todo'=>'导入地区数据失败',
+                    'log_detail'=>$exception,
+                    'created_at'=>date('Y-m-d H:i:s',time()),
+                    'updated_at'=>date('Y-m-d H:i:s',time())
+                ]);
+            }
+
+            LogModel::create([
+                'log_account'=>$root->staff_account,
+                'log_todo'=>'导入地区数据成功',
+                'log_detail'=>'成功',
+                'created_at'=>date('Y-m-d H:i:s',time()),
+                'updated_at'=>date('Y-m-d H:i:s',time())
+            ]);
+
+        }else
+        {
+            LogModel::create([
+                'log_account'=>$root->staff_account,
+                'log_todo'=>'导入地区数据失败',
+                'log_detail'=>'参数不正确或者redis没启动',
                 'created_at'=>date('Y-m-d H:i:s',time()),
                 'updated_at'=>date('Y-m-d H:i:s',time())
             ]);

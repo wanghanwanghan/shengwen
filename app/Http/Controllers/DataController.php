@@ -8,6 +8,7 @@ use App\Http\Model\CustConfirmModel;
 use App\Http\Model\CustDeleteModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\LevelModel;
+use App\Http\Model\LogModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SendMailModel;
 use App\Http\Model\SiTypeModel;
@@ -2587,6 +2588,61 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }
 
                 return ['error'=>'0','msg'=>'查询成功','res_single'=>$res_single,'res_all'=>$res_all];
+
+                break;
+
+            case 'get_show_system_log_data':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=18;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                //查询数据
+                $res=LogModel::orderBy('created_at','desc')->offset($offset)->limit($limit)->get([
+                    'log_account',
+                    'log_todo',
+                    'log_detail',
+                    'created_at',
+                ])->toArray();
+
+                //总页数
+                $cnt=LogModel::count();
+                $cnt_page=intval(ceil($cnt/$limit));
+
+                return ['error'=>'0','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
+
+                break;
+
+            case 'get_show_staff_list_data':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=18;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                //查询数据
+                $res=StaffModel::offset($offset)->limit($limit)->get([
+                    'staff_account',
+                    'staff_name',
+                    'staff_project',
+                    'staff_si_type',
+                    'staff_level'
+                ])->toArray();
+
+                //总页数
+                $cnt=StaffModel::count();
+                $cnt_page=intval(ceil($cnt/$limit));
+
+                return ['error'=>'0','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
 
                 break;
         }

@@ -266,6 +266,8 @@
                             <li><a href="{{url('edit/config')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改认证配置</a></li>
                             <li><a href="{{url('edit/staff')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改员工信息</a></li>
                             <li><a href="{{url('send/staffmail')}}"><i class="fa fa-fw fa-hand-o-right"></i>给员工发邮件</a></li>
+                            <li><a href="{{url('show/staff/list')}}"><i class="fa fa-fw fa-hand-o-right"></i>查看员工列表</a></li>
+                            <li><a href="{{url('show/system/log')}}"><i class="fa fa-fw fa-hand-o-right"></i>查看系统日志</a></li>
                         </ul>
                     </li>
                 </ul>

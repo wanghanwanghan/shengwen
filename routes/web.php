@@ -112,6 +112,16 @@ Route::group(['middleware'=>['LoginMiddleware','RootMiddleware']],function (){
         return view('send_staffmail');
     });
 
+    //查看员工列表
+    Route::get('show/staff/list', function () {
+        return view('show_staff_list');
+    });
+
+    //查看系统日志
+    Route::get('show/system/log', function () {
+        return view('show_system_log');
+    });
+
     //给客服分配需要电话回访的客户
     Route::get('allocation','WebController@allocation')->name('allocation');
 
@@ -197,9 +207,10 @@ Route::get('get/user/name','WebController@get_username');
 
 //Excel操作
 Route::post('/import1','ExcelController@import_1');
+Route::post('/import2','ExcelController@import_2');
 
 //Excel操作中的导入，用到的路由
 Route::get('/insert_excel_data_1','ExcelController@insert_excel_data_1');
-
+Route::get('/insert_excel_data_2','ExcelController@insert_excel_data_2');
 
 
