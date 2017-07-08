@@ -42,8 +42,19 @@
             </div>
             <!-- /.box-body -->
             <div class="box-footer">
-                <div align="center">
-                    <a onclick="add_project();" class="btn btn-info">添加新的属地</a>
+                <div class="col-sm-12">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div align="center">
+                                <a onclick="add_project();" class="btn btn-info">添加新的属地</a>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div align="center">
+                                <a href="{{url('/import/new/project')}}" class="btn btn-info">导入新的属地</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- /.box-footer -->
@@ -91,7 +102,6 @@
                 }
 
             },'json');
-
         });
 
     </script>

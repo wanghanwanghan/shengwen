@@ -16,6 +16,11 @@ Route::group(['middleware'=>['LoginMiddleware']],function (){
 
 });
 
+//select_project
+Route::get('select_project', function () {
+    return view('select_project');
+});
+
 //用户登记
 Route::group(['middleware'=>['LoginMiddleware','AddCustMiddleware']],function (){
 
@@ -72,6 +77,10 @@ Route::group(['middleware'=>['LoginMiddleware','SetSystemMiddleware']],function 
     Route::get('set/project', function () {
         return view('set_project');
     });
+    Route::get('import/new/project', function () {
+        return view('import_new_project');
+    });
+
 
     Route::get('set/si', function () {
         return view('set_si');
@@ -208,9 +217,10 @@ Route::get('get/user/name','WebController@get_username');
 //Excel操作
 Route::post('/import1','ExcelController@import_1');
 Route::post('/import2','ExcelController@import_2');
+Route::post('/import3','ExcelController@import_3');
 
 //Excel操作中的导入，用到的路由
 Route::get('/insert_excel_data_1','ExcelController@insert_excel_data_1');
 Route::get('/insert_excel_data_2','ExcelController@insert_excel_data_2');
-
+Route::get('/export','ExcelController@export');
 

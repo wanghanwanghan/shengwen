@@ -16,6 +16,26 @@ function check_id_card(value){
     }
 }
 
+
+
+function select_project() {
+
+    layer.open({
+        type: 2,
+        title: '添加地区信息',
+        maxmin:false,//是否显示最大化最小化按钮
+        resize:false,//窗口是否可以拉伸
+        shadeClose: true, //点击遮罩关闭层
+        scrollbar:false,//是否允许显示滚动条
+        fixed:true,
+        area:['850px','600px'],
+        content: '/select_project'
+    });
+
+
+
+}
+
 function staff_login() {
 
     var url ='/data/ajax';
@@ -1000,6 +1020,9 @@ function service_care_change(curr) {
         {
             layer.msg(response.msg);
 
+            //把redis_key给前台加上
+            $("#daochu").attr("name",response.redis_key);
+
             $("#data_total").html(response.count_data);
 
             //遍历返回的数据-表内容
@@ -1414,7 +1437,7 @@ function aaa() {
         if(response.error=='0')
         {
             layer.msg(response.msg);
-            location.reload(true);
+            parent.layer.closeAll();
         }else
         {
             layer.msg(response.msg);

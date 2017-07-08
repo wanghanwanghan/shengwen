@@ -109,7 +109,7 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-5">
-                        <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">一共<<span style="color: red;" id="data_total">0</span>>条记录，超级管理员开始<a href="{{url('allocation')}}">分配</a></div>
+                        <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">一共<<span style="color: red;" id="data_total">0</span>>条记录，超级管理员开始<a href="{{url('allocation')}}">分配</a>，或者<a href="javascript:void(0);" id="daochu" name="xxx" onclick="daochushuju($(this).attr('name'));">导出</a></div>
                     </div>
                     <div class="col-sm-7">
                         <div id="service_care_laypage" class="pagination pagination-sm no-margin pull-right">
@@ -123,6 +123,37 @@
 
 
     <script>
+
+        function daochushuju(redis_key) {
+
+            if (redis_key=='xxx')
+            {
+                layer.msg('还没有查询出来数据，不能导出');
+            }else
+            {
+                var url ='/data/ajax';
+                var data={
+                    _token:$("input[name=_token]").val(),
+                    type  :'daochushuju',
+                    key   :redis_key
+                };
+
+                $.post(url,data,function (response) {
+
+                    if (response.error=='0')
+                    {
+                        layer.msg(response.msg);
+                    }else
+                    {
+                        layer.msg(response.msg);
+                    }
+
+
+                },'json')
+            }
+
+
+        }
 
         $("select[name=cust_project]").change(function () {
             service_care_change();

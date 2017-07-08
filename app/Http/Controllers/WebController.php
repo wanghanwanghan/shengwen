@@ -10,6 +10,7 @@ use App\Http\Model\StaffModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
@@ -489,7 +490,6 @@ class WebController extends Controller
 
         });
     }
-
 
 
 

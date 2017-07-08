@@ -26,13 +26,10 @@
                             <input type="text" class="form-control" name="cust_review_num" placeholder="手机号码">
                         </div>
                     </td>
-                    <td>
+                    <td onclick="select_project();">
                         <div class="col-xs-8">
-                            <select style="padding-left: 8px" name="cust_project" class="form-control">
-                                @foreach($staff_project as $v)
-                                    <option>{{$v}}</option>
-                                @endforeach
-                            </select>
+                            <span id="parentIframe">loading...</span>
+                            <input type="hidden" name="cust_project">
                         </div>
                     </td>
                 </tr>
@@ -100,21 +97,7 @@
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
             <tr>
             <td height="53" colspan="8" align="center">
-                <!--<select name="cust_project" id="cust_project" style="width: 105px;height: 26px;">
-                    <option value="0">所有属地</option>
-                    @foreach($staff_project as $v)
-                        <option>{{$v}}</option>
-                    @endforeach
-                </select>
-                <select name="cust_si_type" id="cust_si_type" style="width: 105px;height: 26px;">
-                    <option value="0">所有参保</option>
-                    @foreach($staff_si_type as $v)
-                        <option>{{$v}}</option>
-                    @endforeach
-                </select>
-                <input name="cust_name" class="input" size="15" type="text" placeholder="姓名">-->
                 <input style="text-align: center" name="cust_review_num" class="input" size="15" type="text" placeholder="年审手机">
-
                 <br><br><button style="width: 100px;" type="button" onclick="select_data_A();" class="btn btn-block btn-primary btn-sm">查询</button>
             </td>
         </tr>
@@ -142,6 +125,18 @@
     <script>
 
         $(function () {
+
+            var url ='/data/ajax';
+            var data={
+                _token :$("input[name=_token]").val(),
+                type   :'get_redis'
+            };
+            $.post(url,data,function (response) {
+
+                $("#parentIframe").html(response.res);
+                $("input[name=cust_project]").val(response.res1);
+
+            },'json');
 
             //显示这个用户，今日处理过的用户，往日的不显示
             refresh_A();

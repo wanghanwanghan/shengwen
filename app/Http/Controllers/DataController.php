@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Config;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DataController extends Controller
 {
@@ -96,6 +97,41 @@ class DataController extends Controller
                         }else
                         {
                             $project_id=ProjectModel::create(['project_name'=>$proj,'project_parent'=>$row['value']]);
+
+                            //把path加上
+                            if ($row['value']=='0')
+                            {
+                                //最顶级
+                                $project_id->update(['project_path'=>'0']);
+                                $project_id->save();
+                            }else
+                            {
+                                //不是最顶级，需要遍历
+                                $project_path='';
+                                $project_path[]=$row['value'];
+
+                                while (1)
+                                {
+                                    $p=isset($p) ? $p : $row['value'];
+
+                                    $p_tmp=ProjectModel::find($p)->project_parent;
+
+                                    if ($p_tmp=='0')
+                                    {
+                                        break;
+                                    }else
+                                    {
+                                        $project_path[]=$p_tmp;
+                                        $p=$p_tmp;
+                                    }
+                                }
+
+                                //顺序要反转一下
+                                $project_path=array_reverse($project_path);
+
+                                $project_id->update(['project_path'=>implode('-',$project_path)]);
+                                $project_id->save();
+                            }
 
                             //给超级管理员加上
                             $admin=StaffModel::find(1);
@@ -311,7 +347,14 @@ class DataController extends Controller
                             return ['error'=>'1','msg'=>'请设置所属地区'];
                         }else
                         {
-                            $staff_info['staff_project']=$this->arr2str($row['value']);
+                            foreach ($row['value'] as $id)
+                            {
+                                if (!$id['id']=='0')
+                                {
+                                    $p[]=$id;
+                                }
+                            }
+                            $staff_info['staff_project']=$this->arr2str_new($p);
                         }
                     }
 
@@ -324,7 +367,14 @@ class DataController extends Controller
                             return ['error'=>'1','msg'=>'请设置参保类型'];
                         }else
                         {
-                            $staff_info['staff_si_type']=$this->arr2str($row['value']);
+                            foreach ($row['value'] as $id)
+                            {
+                                if (!$id['id']=='0')
+                                {
+                                    $s[]=$id;
+                                }
+                            }
+                            $staff_info['staff_si_type']=$this->arr2str_new($s);
                         }
                     }
 
@@ -337,7 +387,14 @@ class DataController extends Controller
                             return ['error'=>'1','msg'=>'请设置权限信息'];
                         }else
                         {
-                            $staff_info['staff_level']=$this->arr2str($row['value']);
+                            foreach ($row['value'] as $id)
+                            {
+                                if (!$id['id']=='0')
+                                {
+                                    $l[]=$id;
+                                }
+                            }
+                            $staff_info['staff_level']=$this->arr2str_new($l);
                         }
                     }
                 }
@@ -491,9 +548,15 @@ class DataController extends Controller
                     //所属区域
                     if ($row['name']=='cust_project')
                     {
-                        $res=ProjectModel::where(['project_name'=>$row['value']])->pluck('project_id')->toArray();
-
-                        $cust_info['cust_project']=$res[0];
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'所属地区已经过期，请重新选择'];
+                        }else
+                        {
+                            $cust_info['cust_project']=$row['value'];
+                        }
+                       //$res=ProjectModel::where(['project_name'=>$row['value']])->pluck('project_id')->toArray();
+                       //$cust_info['cust_project']=$res[0];
                     }
 
                     //确认方式
@@ -1368,7 +1431,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         }
 
                         unset($row);
-                        //去掉空数组后，这才是满族条件的所有数据
+                        //去掉空数组后，这才是满足条件的所有数据
                         $res2=array_filter($res2);
                         $res2=array_values($res2);
 
@@ -1396,7 +1459,15 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             $data1[]=$data2;
                         }
 
-                        return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>intval(ceil(count($res2)/$limit)),'count_data'=>count($res2)];
+                        //把所有没通过的客户的pid取出来放到redis里
+                        foreach ($res2 as $row)
+                        {
+                            $redis_value[]=$row['confirm_pid'];
+                        }
+                        $redis_key='daochu_'.time();
+                        $this->redis_set($redis_key,json_encode($redis_value),60);
+
+                        return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>intval(ceil(count($res2)/$limit)),'count_data'=>count($res2),'redis_key'=>$redis_key];
                     }else
                     {
                         //判断是不是超管
@@ -1449,6 +1520,8 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 ->count();
                             $cnt_page=intval(ceil($cnt/$limit));
                         }
+
+                        //从这里以上是导出数据的逻辑
 
                         return ['error'=>'0','msg'=>'查询成功','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
                     }
@@ -1539,6 +1612,39 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
 
                 }
+
+                break;
+
+            case 'daochushuju':
+
+                $redis_key=Input::get('key');
+
+                if (Redis::get($redis_key)=='')
+                {
+                    return ['error'=>'1','msg'=>'数据已经过期，请重新选择'];
+                }
+
+                //这里是客户的主键数组
+                $in_data=json_decode(Redis::get($redis_key),true);
+
+                //取出哪些数据
+                $get=[
+                    'cust_name','cust_id','cust_si_id'
+                ];
+
+                $res=CustModel::whereIn('cust_num',$in_data)->get($get)->toArray();
+
+                //给res的第一行
+                array_unshift($res,['客户姓名','身份证号','社保编号']);
+
+                //生成excel
+               file_get_contents('http://zbxl.com/export');
+
+
+
+
+
+                return ['error'=>'0','msg'=>'123'];
 
                 break;
 
@@ -2386,7 +2492,14 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
                     if ($row['name']=='staff_project')
                     {
-                        $staff_project=$this->arr2str(json_decode($row['value'],true));
+                        foreach (json_decode($row['value'],true) as $id)
+                        {
+                            if (!$id['id']=='0')
+                            {
+                                $p[]=$id;
+                            }
+                        }
+                        $staff_project=$this->arr2str_new($p);
                         if (empty($staff_project))
                         {
                             return ['error'=>'1','msg'=>'选择所属区域'];
@@ -2397,7 +2510,14 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
                     if ($row['name']=='staff_si_type')
                     {
-                        $staff_si_type=$this->arr2str(json_decode($row['value'],true));
+                        foreach (json_decode($row['value'],true) as $id)
+                        {
+                            if (!$id['id']=='0')
+                            {
+                                $s[]=$id;
+                            }
+                        }
+                        $staff_si_type=$this->arr2str_new($s);
                         if (empty($staff_si_type))
                         {
                             return ['error'=>'1','msg'=>'选择参保类型'];
@@ -2408,7 +2528,14 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
                     if ($row['name']=='staff_level')
                     {
-                        $staff_level=$this->arr2str(json_decode($row['value'],true));
+                        foreach (json_decode($row['value'],true) as $id)
+                        {
+                            if (!$id['id']=='0')
+                            {
+                                $l[]=$id;
+                            }
+                        }
+                        $staff_level=$this->arr2str_new($l);
                         if (empty($staff_level))
                         {
                             return ['error'=>'1','msg'=>'选择员工权限'];
@@ -2597,7 +2724,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $now_page=Input::get('page');
 
                 //每页显示几条数据
-                $limit=18;
+                $limit=15;
 
                 //从第几条开始显示
                 $offset=($now_page-1)*$limit;
@@ -2624,7 +2751,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $now_page=Input::get('page');
 
                 //每页显示几条数据
-                $limit=18;
+                $limit=15;
 
                 //从第几条开始显示
                 $offset=($now_page-1)*$limit;
@@ -2643,6 +2770,52 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $cnt_page=intval(ceil($cnt/$limit));
 
                 return ['error'=>'0','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
+
+                break;
+
+            case 'set_redis':
+
+                //拿到proj_id，遍历出父名称，然后存入redis
+                $proj_id=Input::get('proj_id');
+
+                while (1)
+                {
+                    $tmp=ProjectModel::find($proj_id);
+                    if ($tmp->project_parent=='0')
+                    {
+                        $name[$tmp->project_id]=$tmp->project_name;
+                        break;
+                    }else
+                    {
+                        $name[$tmp->project_id]=$tmp->project_name;
+                        $proj_id=$tmp->project_parent;
+                    }
+                }
+
+                $value=implode('-',array_reverse($name));
+
+                $key=Session::get('user');
+                $key=Input::get('key').'_'.$key[0]['staff_account'];
+
+                $this->redis_set($key,$value,Input::get('time'));
+                $this->redis_set($key.'_',Input::get('proj_id'),Input::get('time'));
+
+                return ['error'=>'0','value'=>$value,'id_in_mysql'=>Input::get('proj_id')];
+
+                break;
+
+            case 'get_redis':
+
+                $key=Session::get('user');
+                $key='chose_project_'.$key[0]['staff_account'];
+
+                if (Redis::get($key)=='')
+                {
+                    return ['error'=>'1','res'=>'点击选择地区'];
+                }else
+                {
+                    return ['error'=>'0','res'=>Redis::get($key),'res1'=>Redis::get($key.'_')];
+                }
 
                 break;
         }

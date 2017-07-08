@@ -219,6 +219,42 @@ class Controller extends BaseController
 
     }
 
+    //取出所有该节点的子节点
+    public function get_all_children($parent_id)
+    {
+        if (Redis::get('all_project')=='')
+        {
+            //取出所有地区放入redis
+            $all_project=ProjectModel::get(['project_id','project_name','project_parent'])->toArray();
+            $this->redis_set('all_project',json_encode($all_project),60);
+        }else
+        {
+            $all_project=json_decode(Redis::get('all_project'),true);
+        }
+
+        //查询子节点
+        return $this->get_children($all_project,$parent_id);
+    }
+
+    //无限分类函数
+    public function get_children($arrCat,$parent_id=0,$level=0)
+    {
+        static $arrTree=[];
+        if (empty($arrCat)) return FALSE;
+        $level++;
+        foreach ($arrCat as $key=>$value)
+        {
+            if ($value['project_parent']==$parent_id)
+            {
+                $value['level']=$level;
+                $arrTree[]=$value;
+                unset($arrCat[$key]); //注销当前节点数据，减少已无用的遍历
+                $this->get_children($arrCat,$value['project_id'],$level);
+            }
+        }
+        return $arrTree;
+    }
+
     //无限分类函数
     public function infinite($list,$profix,$parentid=0)
     {
@@ -449,6 +485,22 @@ class Controller extends BaseController
         foreach ($arr as $row)
         {
             $res=$res.','.$row['id'];
+        }
+
+        return $res;
+    }
+
+    public function arr2str_new($arr)
+    {
+        foreach ($arr as $row)
+        {
+            if (!isset($res))
+            {
+                $res=$row['id'];
+            }else
+            {
+                $res=$res.','.$row['id'];
+            }
         }
 
         return $res;

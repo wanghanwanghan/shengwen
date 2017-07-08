@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Model\ChinaAllPositionModel;
 use App\Http\Model\LogModel;
+use App\Http\Model\ProjectModel;
 use App\Http\Model\StaffModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Schema\Blueprint;
@@ -211,6 +212,196 @@ class ExcelController extends Controller
         file_get_contents('http://zbxl.com/insert_excel_data_2?redis_key='.$redis_key);
 
         return redirect()->back()->with('success2','开始导入，是否导入成功请查看日志');
+    }
+
+    //导入新的属地
+    public function import_3()
+    {
+        $cond=Input::all();
+
+        $error1=isset($cond['myfile']) ? '' : '请选择要导入的文件！';
+        $error2=isset($cond['check']) ? '' : '没有勾选单选框！';
+        $msg='';
+
+        if ($error1!='')
+        {
+            $msg=$msg.$error1;
+        }
+        if ($error2!='')
+        {
+            $msg=$msg.$error2;
+        }
+        if ($msg!='')
+        {
+            return redirect()->back()->with('danger',$msg);
+        }
+
+        if ($_FILES['myfile']['type']!='application/vnd.ms-excel' || substr($_FILES['myfile']['name'],-4)!='.xls')
+        {
+            return redirect()->back()->with('warning','导入的文件格式不正确！');
+        }
+
+        //如果通过所有验证
+        Excel::load($_FILES['myfile']['tmp_name'],function($reader){
+            $this->redis_set('file_content_1',json_encode($reader->all()->toArray()),300);
+        });
+
+        //要上传的文件中的所有内容
+        $file_content=json_decode(Redis::get('file_content_1'),true);
+
+        //判断每行数据是否正确，并且得到数据表名称
+        $line=1;
+        foreach ($file_content as $row)
+        {
+            //dd($row);
+
+            //判断excel每行是否存在
+            //判断第一级
+            $res1=ProjectModel::where([
+                'project_name'=>$row['province_name'],
+                'project_parent'=>'0'
+            ])->count();
+            if ($res1=='0')
+            {
+                //没有这个省（第一级）
+                $check=ChinaAllPositionModel::where(['province_name'=>$row['province_name']])->distinct()->count();
+                if ($check=='0')
+                {
+                    return redirect()->back()->with('danger','第'.++$line.'行，第1级数据未找到，请先导入');
+                }
+                $province_id=ProjectModel::create(['project_name'=>$row['province_name'],'project_parent'=>'0','project_path'=>'0']);
+                $province_id=$province_id->project_id;
+            }else
+            {
+                $province_id=ProjectModel::where(['project_name'=>$row['province_name'],'project_parent'=>'0'])->get();
+                $province_id=$province_id[0]->project_id;
+            }
+
+            if (!isset($row['city_name']))
+            {
+                continue;
+            }
+
+            //判断第二级
+            $res2=ProjectModel::where([
+                'project_name'=>$row['city_name'],
+                'project_parent'=>$province_id
+            ])->count();
+            if ($res2=='0')
+            {
+                //没有这个市（第二级）
+                $check=ChinaAllPositionModel::where([
+                    'province_name'=>$row['province_name'],
+                    'city_name'=>$row['city_name']
+                ])->distinct()->count();
+                if ($check=='0')
+                {
+                    return redirect()->back()->with('danger','第'.++$line.'行，第2级数据未找到，请先导入');
+                }
+                $city_id=ProjectModel::create(['project_name'=>$row['city_name'],'project_parent'=>$province_id,'project_path'=>$province_id]);
+                $city_id=$city_id->project_id;
+            }else
+            {
+                $city_id=ProjectModel::where(['project_name'=>$row['city_name'],'project_parent'=>$province_id])->get();
+                $city_id=$city_id[0]->project_id;
+            }
+
+            if (!isset($row['county_name']))
+            {
+                continue;
+            }
+
+            //判断第三级
+            $res3=ProjectModel::where([
+                'project_name'=>$row['county_name'],
+                'project_parent'=>$city_id
+            ])->count();
+            if ($res3=='0')
+            {
+                //没有这个县（第三级）
+                $check=ChinaAllPositionModel::where([
+                    'province_name'=>$row['province_name'],
+                    'city_name'=>$row['city_name'],
+                    'county_name'=>$row['county_name']
+                ])->distinct()->count();
+                if ($check=='0')
+                {
+                    return redirect()->back()->with('danger','第'.++$line.'行，第3级数据未找到，请先导入');
+                }
+                $county_id=ProjectModel::create(['project_name'=>$row['county_name'],'project_parent'=>$city_id,'project_path'=>$province_id.'-'.$city_id]);
+                $county_id=$county_id->project_id;
+            }else
+            {
+                $county_id=ProjectModel::where(['project_name'=>$row['county_name'],'project_parent'=>$city_id])->get();
+                $county_id=$county_id[0]->project_id;
+            }
+
+            if (!isset($row['town_name']))
+            {
+                continue;
+            }
+
+            //判断第四级
+            $res4=ProjectModel::where([
+                'project_name'=>$row['town_name'],
+                'project_parent'=>$county_id
+            ])->count();
+            if ($res4=='0')
+            {
+                //没有这个镇（第四级）
+                $check=ChinaAllPositionModel::where([
+                    'province_name'=>$row['province_name'],
+                    'city_name'=>$row['city_name'],
+                    'county_name'=>$row['county_name'],
+                    'town_name'=>$row['town_name']
+                ])->distinct()->count();
+                if ($check=='0')
+                {
+                    return redirect()->back()->with('danger','第'.++$line.'行，第4级数据未找到，请先导入');
+                }
+                $town_id=ProjectModel::create(['project_name'=>$row['town_name'],'project_parent'=>$county_id,'project_path'=>$province_id.'-'.$city_id.'-'.$county_id]);
+                $town_id=$town_id->project_id;
+            }else
+            {
+                $town_id=ProjectModel::where(['project_name'=>$row['town_name'],'project_parent'=>$county_id])->get();
+                $town_id=$town_id[0]->project_id;
+            }
+
+            if (!isset($row['village_name']))
+            {
+                continue;
+            }
+
+            //判断第五级
+            $res5=ProjectModel::where([
+                'project_name'=>$row['village_name'],
+                'project_parent'=>$town_id
+            ])->count();
+            if ($res5=='0')
+            {
+                //没有这个村（第五级）
+                $check=ChinaAllPositionModel::where([
+                    'province_name'=>$row['province_name'],
+                    'city_name'=>$row['city_name'],
+                    'county_name'=>$row['county_name'],
+                    'town_name'=>$row['town_name'],
+                    'village_name'=>$row['village_name']
+                ])->distinct()->count();
+                if ($check=='0')
+                {
+                    return redirect()->back()->with('danger','第'.++$line.'行，第5级数据未找到，请先导入');
+                }
+                $village_id=ProjectModel::create(['project_name'=>$row['village_name'],'project_parent'=>$town_id,'project_path'=>$province_id.'-'.$city_id.'-'.$county_id.'-'.$town_id]);
+                $village_id=$village_id->project_id;
+            }else
+            {
+                $village_id=ProjectModel::where(['project_name'=>$row['village_name'],'project_parent'=>$town_id])->get();
+                $village_id=$village_id[0]->project_id;
+            }
+            $line++;
+        }
+
+        return redirect()->back()->with('success','导入成功');
     }
 
     //导入社保数据
