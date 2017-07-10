@@ -75,7 +75,7 @@
                 {window.modify_proj=response.proj;window.modify_si=response.si;window.modify_confirm=response.confirm;}
             },'json');
 
-        })
+        });
 
         function modify_cust_info_click() {
 

@@ -27,12 +27,9 @@
                             <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){allocation_change();}});" name="stop_date" placeholder="结束时间"/>
                         </div>
 
-                        <div class="col-sm-2">
-                            <select class="form-control" name="cust_project" style="padding-left: 8px;">
-                                @foreach($staff_project as $k=>$v)
-                                    <option value={{$k}}>{{$v}}</option>
-                                @endforeach
-                            </select>
+                        <div class="col-sm-2" onclick="select_project();">
+                            <span id="parentIframe">redis启动失败</span>
+                            <input type="hidden" name="cust_project">
                         </div>
 
                         <div class="col-sm-2">
@@ -133,12 +130,27 @@
     <script>
 
         $(function () {
+
+            var url1 ='/data/ajax';
+            var data1={
+                _token :$("input[name=_token]").val(),
+                type   :'get_redis'
+            };
+            $.post(url1,data1,function (response) {
+
+                $("#parentIframe").html(response.res);
+                $("input[name=cust_project]").val(response.res1);
+
+            },'json');
+
+
             getMySlider1({
                 min:0,
                 max:0,
                 step:1,
                 value:0
             });
+
         });
 
         $("select[name=cust_project]").change(function () {

@@ -222,5 +222,5 @@ Route::post('/import3','ExcelController@import_3');
 //Excel操作中的导入，用到的路由
 Route::get('/insert_excel_data_1','ExcelController@insert_excel_data_1');
 Route::get('/insert_excel_data_2','ExcelController@insert_excel_data_2');
-Route::get('/export','ExcelController@export');
+Route::get('/export1/{key}','ExcelController@export1');
 

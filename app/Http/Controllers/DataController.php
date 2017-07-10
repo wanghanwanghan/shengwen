@@ -1276,6 +1276,7 @@ class DataController extends Controller
                 //查询条件
                 $condition=null;
 
+                //*******************************************第一个页面开始***********************************************
                 if (Input::get('tip')=='0')
                 {
                     //遍历出所有的查询条件
@@ -1307,6 +1308,13 @@ class DataController extends Controller
 
                         if ($row['name']=='cust_project')
                         {
+                            //判断这个地区，该用户是否有权限查看
+                            //如果用户有该地区的任意一个父节点权限，就有查看该地区的权限
+                            if (!$this->check_project_select_permission($row['value']))
+                            {
+                                return ['error'=>'1','msg'=>'没有查询该地区的权限'];
+                            }
+
                             $condition['cust_project']=$row['value'];
                         }
 
@@ -1522,10 +1530,17 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         }
 
                         //从这里以上是导出数据的逻辑
+                        foreach ($res as $myrow)
+                        {
+                            $cust_id[]=$myrow->cust_id;
+                        }
 
-                        return ['error'=>'0','msg'=>'查询成功','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
+                        $time=time();
+                        $this->redis_set('yes_pass'.$time,json_encode($cust_id),100);
+
+                        return ['error'=>'0','msg'=>'查询成功','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt,'redis_key'=>'yes_pass'.$time];
                     }
-
+                    //*****************************************第一个页面结束*********************************************
                 }else
                 {
                     $cond=null;
@@ -1624,27 +1639,51 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     return ['error'=>'1','msg'=>'数据已经过期，请重新选择'];
                 }
 
-                //这里是客户的主键数组
-                $in_data=json_decode(Redis::get($redis_key),true);
-
                 //取出哪些数据
                 $get=[
                     'cust_name','cust_id','cust_si_id'
                 ];
 
-                $res=CustModel::whereIn('cust_num',$in_data)->get($get)->toArray();
+                //这里是客户的主键数组
+                $in_data=json_decode(Redis::get($redis_key),true);
 
-                //给res的第一行
-                array_unshift($res,['客户姓名','身份证号','社保编号']);
+                if (strpos(Input::get('key'),'yes_pass')!==false)
+                {
+                    //strpos($a, $b) !== false 如果$a 中存在 $b，则为 true ，否则为 false。
+                    $res=CustModel::whereIn('cust_id',$in_data)->get($get)->toArray();
 
-                //生成excel
-               file_get_contents('http://zbxl.com/export');
+                    //给res的第一行
+                    array_unshift($res,['客户姓名','身份证号','社保编号']);
+
+                    //因为ajax触发不了Excel::里的export方法，所以用redis传过去
+                    $time=time();
+                    $this->redis_set('yes_pass'.$time,json_encode($res),100);
+
+                    //生成excel
+                    file_get_contents(env('APP_URL').'/export1/yes_pass'.$time);
+
+                    $excel_file=env('APP_URL').'/storage/exports/'.'yes_pass'.$time.'.xls';
+
+                }else
+                {
+                    $res=CustModel::whereIn('cust_num',$in_data)->get($get)->toArray();
+
+                    //给res的第一行
+                    array_unshift($res,['客户姓名','身份证号','社保编号']);
+
+                    //因为ajax触发不了Excel::里的export方法，所以用redis传过去
+                    $time=time();
+                    $this->redis_set('no_pass'.$time,json_encode($res),100);
+
+                    //生成excel
+                    file_get_contents(env('APP_URL').'/export1/no_pass'.$time);
+
+                    $excel_file=env('APP_URL').'/storage/exports/'.'no_pass'.$time.'.xls';
+                }
 
 
 
-
-
-                return ['error'=>'0','msg'=>'123'];
+                return ['error'=>'0','msg'=>'导出成功','file_name'=>$excel_file];
 
                 break;
 
@@ -1759,14 +1798,18 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                         if ($row['name']=='cust_project')
                         {
+                            if (!$this->check_project_select_permission($row['value']))
+                            {
+                                return ['error'=>'1','msg'=>'没有查看该区域的权限'];
+                            }
                             $condition['cust_project']=$row['value'];
-                            $staff_cond['staff_project']=$row['value'];
+                            //$staff_cond['staff_project']=$row['value'];
                         }
 
                         if ($row['name']=='cust_si_type')
                         {
                             $condition['cust_si_type']=$row['value'];
-                            $staff_cond['staff_si_type']=$row['value'];
+                            //$staff_cond['staff_si_type']=$row['value'];
                         }
 
                         if ($row['name']=='confirm_res')
@@ -2141,7 +2184,11 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $data['年审号码']='<a id=modify_cust_review_num>'.$res[0]['cust_review_num'].'</a>';
                     $data['备用号码']='<a id=modify_cust_phone_num>'.$res[0]['cust_phone_num'].'</a>';
                     $data['客户地址']='<a id=modify_cust_address>'.$res[0]['cust_address'].'</a>';
-                    $data['所属区域']='<a id=modify_cust_project>'.ProjectModel::find($res[0]['cust_project'])->project_name.'</a>';
+
+                    //组成一下所有父节点都有的地区名称
+                    $place=implode('-',array_reverse($this->select_allproject_parent(ProjectModel::find($res[0]['cust_project'])->project_id)));
+                    $data['所属区域']='<a id=modify_cust_project>'.$place.'</a>';
+
                     $data['参保类型']='<a id=modify_cust_si_type>'.SiTypeModel::find($res[0]['cust_si_type'])->si_name.'</a>';
                     $data['认证类型']='<a id=modify_cust_confirm_type>'.ConfirmTypeModel::find($res[0]['cust_confirm_type'])->confirm_name.'</a>';
                     $data['客户类别']='<a id=modify_cust_type>'.$res[0]['cust_type'].'类客户'.'</a>';

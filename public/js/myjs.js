@@ -16,8 +16,6 @@ function check_id_card(value){
     }
 }
 
-
-
 function select_project() {
 
     layer.open({
@@ -60,8 +58,11 @@ function staff_login() {
 }
 
 function loginout() {
+
     location.assign('/');
+
 }
+
 function SendMail() {
 
     var url ='/data/ajax';
@@ -1004,6 +1005,7 @@ function statistics_change(curr) {
 function service_care_change(curr) {
 
     $("#service_care_table tbody").children().remove();
+    $("#excel_file_download").children().remove();
 
     var url ='/data/ajax';
     var data={
@@ -1011,7 +1013,7 @@ function service_care_change(curr) {
         page  :curr||1,
         type  :'service_care_change',
         key   :$("#service_care_form").serializeArray(),
-        tip   :'0'
+        tip   :'0'//选择卡的第几个页面
     };
 
     $.post(url,data,function (response) {

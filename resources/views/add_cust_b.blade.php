@@ -26,13 +26,10 @@
                             <input type="text" class="form-control" name="cust_review_num" placeholder="手机号码">
                         </div>
                     </td>
-                    <td>
+                    <td onclick="select_project();">
                         <div class="col-xs-8">
-                            <select style="padding-left: 8px" name="cust_project" class="form-control">
-                                @foreach($staff_project as $v)
-                                    <option>{{$v}}</option>
-                                @endforeach
-                            </select>
+                            <span id="parentIframe">redis启动失败</span>
+                            <input type="hidden" name="cust_project">
                         </div>
                     </td>
                 </tr>
@@ -142,6 +139,18 @@
     <script>
 
         $(function () {
+
+            var url ='/data/ajax';
+            var data={
+                _token :$("input[name=_token]").val(),
+                type   :'get_redis'
+            };
+            $.post(url,data,function (response) {
+
+                $("#parentIframe").html(response.res);
+                $("input[name=cust_project]").val(response.res1);
+
+            },'json');
 
             //显示这个用户，今日处理过的用户，往日的不显示
             refresh_B();

@@ -219,6 +219,60 @@ class Controller extends BaseController
 
     }
 
+    //查询所有父节点
+    public function select_allproject_parent($pid)
+    {
+        while (1)
+        {
+            $tmp=ProjectModel::find($pid);
+            if ($tmp->project_parent=='0')
+            {
+                $name[$tmp->project_id]=$tmp->project_name;
+                break;
+            }else
+            {
+                $name[$tmp->project_id]=$tmp->project_name;
+                $pid=$tmp->project_parent;
+            }
+        }
+
+        return $name;
+    }
+
+    //是否有权限查看当前地区数据
+    public function check_project_select_permission($pid)
+    {
+        //得到一个主键，查看这个地区，当前登录的用户是否有
+        //如果有，返回true
+        //如果没有，则遍历出该主键的所有父节点，当前登录的用户是否含有某一个父节点
+        //如果有，返回true
+        //如果没有，返回false
+        $user=Session::get('user');
+        $user_pid=$user[0]['staff_num'];
+        $user_project=StaffModel::find($user_pid)->staff_project;
+
+        //直接判断当前用户是否含有
+        if (in_array($pid,explode(',',$user_project)))
+        {
+            return true;
+        }
+
+        //找到该节点的所有父节点
+        $name=$this->select_allproject_parent($pid);
+
+        //当前登录用户的所属地区时候含有当前这个$pid的父节点
+        foreach (explode(',',$user_project) as $row)
+        {
+            if (in_array($row,array_keys($name)))
+            {
+                return true;
+            }
+        }
+
+        //如果也不含有
+        return false;
+    }
+
     //取出所有该节点的子节点
     public function get_all_children($parent_id)
     {

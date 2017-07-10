@@ -13,12 +13,14 @@
             <form id="analysis_form">
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
 
-            <div class="col-sm-2">
-                <select class="form-control" name="project_name" style="padding-left: 8px;">
-                    @foreach($staff_project as $k=>$v)
-                        <option value={{$k}}>{{$v}}</option>
-                    @endforeach
-                </select>
+            <div class="col-sm-2" onclick="select_project();">
+                <span id="parentIframe">redis启动失败</span>
+                <input type="hidden" name="project_name">
+                {{--<select class="form-control" name="project_name" style="padding-left: 8px;">--}}
+                    {{--@foreach($staff_project as $k=>$v)--}}
+                        {{--<option value={{$k}}>{{$v}}</option>--}}
+                    {{--@endforeach--}}
+                {{--</select>--}}
             </div>
 
             <div class="col-sm-2">
@@ -47,6 +49,22 @@
     </div>
 
     <script>
+
+        $(function () {
+
+            var url ='/data/ajax';
+            var data={
+                _token :$("input[name=_token]").val(),
+                type   :'get_redis'
+            };
+            $.post(url,data,function (response) {
+
+                $("#parentIframe").html(response.res);
+                $("input[name=project_name]").val(response.res1);
+
+            },'json');
+
+        });
 
         $("select[name=project_name]").change(function () {
             analysis_change();

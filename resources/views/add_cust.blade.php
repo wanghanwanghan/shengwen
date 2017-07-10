@@ -28,7 +28,7 @@
                     </td>
                     <td onclick="select_project();">
                         <div class="col-xs-8">
-                            <span id="parentIframe">loading...</span>
+                            <span id="parentIframe">redis启动失败</span>
                             <input type="hidden" name="cust_project">
                         </div>
                     </td>

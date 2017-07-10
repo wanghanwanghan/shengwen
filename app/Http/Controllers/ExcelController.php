@@ -158,7 +158,7 @@ class ExcelController extends Controller
         $this->redis_set($redis_key,json_encode($file_content),300);
 
         //插入数据，这个动作要发送给另一个程序，不然会超时
-        file_get_contents('http://zbxl.com/insert_excel_data_1?table_name='.$table_name.'&redis_key='.$redis_key.'&position_path='.$position_path);
+        file_get_contents(env('APP_URL').'/insert_excel_data_1?table_name='.$table_name.'&redis_key='.$redis_key.'&position_path='.$position_path);
 
         session()->flash('success','开始导入，是否导入成功请查看日志');
         return redirect()->back();
@@ -209,7 +209,7 @@ class ExcelController extends Controller
         $this->redis_set($redis_key,json_encode($file_content),300);
 
         //插入数据，这个动作要发送给另一个程序，不然会超时
-        file_get_contents('http://zbxl.com/insert_excel_data_2?redis_key='.$redis_key);
+        file_get_contents(env('APP_URL').'/insert_excel_data_2?redis_key='.$redis_key);
 
         return redirect()->back()->with('success2','开始导入，是否导入成功请查看日志');
     }
@@ -500,21 +500,20 @@ class ExcelController extends Controller
         }
     }
 
-    //导出
-    public function export()
+    //导出未通过认证的客户
+    public function export1($key)
     {
-        $cellData = [
-            ['学号','姓名','成绩'],
-            ['10001','AAAAA','99'],
-            ['10002','BBBBB','92'],
-            ['10003','CCCCC','95'],
-            ['10004','DDDDD','89'],
-            ['10005','EEEEE','96'],
-        ];
-        Excel::create('学生成绩',function($excel) use ($cellData){
-            $excel->sheet('score', function($sheet) use ($cellData){
-                $sheet->rows($cellData);
+        $data=json_decode(Redis::get($key),true);
+
+        foreach ($data as &$row)
+        {
+            $row=array_values($row);
+        }
+
+        Excel::create($key,function($excel) use ($data){
+            $excel->sheet('score', function($sheet) use ($data){
+                $sheet->rows($data);
             });
-        })->export('xls');
+        })->store('xls')->export('xls');
     }
 }

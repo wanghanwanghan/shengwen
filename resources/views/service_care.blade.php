@@ -27,13 +27,17 @@
                             <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){service_care_change();}});" name="stop_date" placeholder="结束时间"/>
                         </div>
 
-                        <div class="col-sm-2">
-                            <select class="form-control" name="cust_project" style="padding-left: 8px;">
-                                @foreach($staff_project as $k=>$v)
-                                    <option value={{$k}}>{{$v}}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        {{--<div class="col-sm-2">--}}
+                            {{--<select class="form-control" name="cust_project" style="padding-left: 8px;">--}}
+                                {{--@foreach($staff_project as $k=>$v)--}}
+                                    {{--<option value={{$k}}>{{$v}}</option>--}}
+                                {{--@endforeach--}}
+                            {{--</select>--}}
+                        {{--</div>--}}
+                         <div class="col-sm-2" onclick="select_project();">
+                             <span id="parentIframe">redis启动失败</span>
+                             <input type="hidden" name="cust_project">
+                         </div>
 
                         <div class="col-sm-2">
                             <select class="form-control" name="cust_si_type" style="padding-left: 8px;">
@@ -109,7 +113,9 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-5">
-                        <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">一共<<span style="color: red;" id="data_total">0</span>>条记录，超级管理员开始<a href="{{url('allocation')}}">分配</a>，或者<a href="javascript:void(0);" id="daochu" name="xxx" onclick="daochushuju($(this).attr('name'));">导出</a></div>
+                        <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">一共<<span style="color: red;" id="data_total">0</span>>条记录，超级管理员开始<a href="{{url('allocation')}}">分配</a>，或者<a href="javascript:void(0);" id="daochu" name="xxx" onclick="daochushuju($(this).attr('name'));">导出&nbsp&nbsp&nbsp</a>
+                            <span id="excel_file_download"></span>
+                        </div>
                     </div>
                     <div class="col-sm-7">
                         <div id="service_care_laypage" class="pagination pagination-sm no-margin pull-right">
@@ -123,6 +129,23 @@
 
 
     <script>
+
+        $(function () {
+
+            var url1 ='/data/ajax';
+            var data1={
+                _token :$("input[name=_token]").val(),
+                type   :'get_redis'
+            };
+            $.post(url1,data1,function (response) {
+
+                $("#parentIframe").html(response.res);
+                $("input[name=cust_project]").val(response.res1);
+
+            },'json');
+
+
+        });
 
         function daochushuju(redis_key) {
 
@@ -140,9 +163,13 @@
 
                 $.post(url,data,function (response) {
 
+                    $("#excel_file_download").children().remove();
+
                     if (response.error=='0')
                     {
                         layer.msg(response.msg);
+                        var lable_a=$("<a href="+response.file_name+" download='导出的数据.xls'>可以下载了</a>");
+                        $("#excel_file_download").append(lable_a);
                     }else
                     {
                         layer.msg(response.msg);
@@ -151,8 +178,6 @@
 
                 },'json')
             }
-
-
         }
 
         $("select[name=cust_project]").change(function () {
@@ -174,6 +199,7 @@
         $("select[name=cust_type]").change(function () {
             service_care_change();
         });
+
 
     </script>
 
