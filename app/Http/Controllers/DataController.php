@@ -1308,6 +1308,10 @@ class DataController extends Controller
 
                         if ($row['name']=='cust_project')
                         {
+                            if ($row['value']=='')
+                            {
+                                return ['error'=>'1','msg'=>'请选择地区'];
+                            }
                             //判断这个地区，该用户是否有权限查看
                             //如果用户有该地区的任意一个父节点权限，就有查看该地区的权限
                             if (!$this->check_project_select_permission($row['value']))
