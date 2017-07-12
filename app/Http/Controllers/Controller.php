@@ -316,6 +316,49 @@ class Controller extends BaseController
         return false;
     }
 
+    //判断当前用户是不是有权限添加到当前选择的区域，参数是要插入地区的主键
+    public function before_insert_check_projectlevel($id,$type=0)
+    {
+        //把当前用户的所有区域都遍历出来，然后查看是不是含有传进来的区域，如果没有就返回无权限添加
+        $user_project=Session::get('user');
+        $user_project=explode(',',$user_project[0]['staff_project']);
+
+        //一个一个遍历出所有的子节点
+        foreach ($user_project as $one)
+        {
+            $res_one=$this->get_all_children($one);
+
+            if (empty($res_one))
+            {
+                //是空就说明当前节点没有子节点
+            }else
+            {
+                foreach ($res_one as $myv)
+                {
+                    $res_all[]=$myv['project_id'];
+                }
+            }
+
+            $res_all[]=$one;
+        }
+
+        $res_all=array_unique($res_all);
+
+        if ($type=='1')
+        {
+            return $res_all;
+        }
+
+        //检查子节点
+        if (in_array($id,$res_all))
+        {
+            return true;
+        }else
+        {
+            return false;
+        }
+    }
+
     //取出所有该节点的子节点
     public function get_all_children($parent_id)
     {

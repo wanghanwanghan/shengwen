@@ -11,9 +11,9 @@ class TestController extends Controller
 {
     public function test_1()
     {
-        $phone='13800138000';
-        $res=$this->insert_something($phone,[3,7]);
-        dd($res);//返回"138-0013-8000"
+        $a1=array("red","green");
+        $a2=array("blue","red");
+        dd(array_unique(array_merge($a1,$a2)));
     }
 
 

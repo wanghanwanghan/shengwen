@@ -553,6 +553,11 @@ class DataController extends Controller
                             return ['error'=>'1','msg'=>'所属地区已经过期，请重新选择'];
                         }else
                         {
+                            if (!$this->before_insert_check_projectlevel($row['value']))
+                            {
+                                return ['error'=>'1','msg'=>'您没有该地区的采集权限'];
+                            }
+
                             $cust_info['cust_project']=$row['value'];
                         }
                        //$res=ProjectModel::where(['project_name'=>$row['value']])->pluck('project_id')->toArray();
@@ -651,9 +656,13 @@ class DataController extends Controller
                 //得到这个用户可以看见的地区和参保类型
                 foreach (Session::get('user') as $row)
                 {
-                    $proj=explode(',',$row['staff_project']);
+                    //$proj=explode(',',$row['staff_project']);
                     $type=explode(',',$row['staff_si_type']);
                 }
+
+                //得到当前用户的所有地区，因为数据库中只存了一部分
+                $my_tmp=$this->before_insert_check_projectlevel(0,1);
+                $proj=$my_tmp;
 
                 //总页数
                 $cnt_page=intval(ceil(CustModel::where('created_at','like',$time.'%')
@@ -736,9 +745,12 @@ class DataController extends Controller
                 //得到这个用户可以看见的地区和参保类型
                 foreach (Session::get('user') as $row)
                 {
-                    $proj=explode(',',$row['staff_project']);
+                    //$proj=explode(',',$row['staff_project']);
                     $type=explode(',',$row['staff_si_type']);
                 }
+
+                $my_tmp=$this->before_insert_check_projectlevel(0,1);
+                $proj=$my_tmp;
 
                 //总页数
                 $cnt_page=intval(ceil(CustModel::where('created_at','like',$time.'%')
