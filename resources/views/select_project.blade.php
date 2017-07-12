@@ -29,6 +29,8 @@
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <a href="javascript:;" id="transmit" class="btn btn-primary">选择这个地区</a>
+                                        <a href="javascript:;" onclick="select_node($('#select_str').val());" class="btn btn-primary">查找一个地区</a>
+                                        <input style="text-align: center" id="select_str" class="input" size="15" type="text" placeholder="输入要查找的地区">
                                     </div>
                                 </div>
                             </div>
@@ -41,6 +43,30 @@
 
 
     <script>
+
+        function select_node(str) {
+
+            if (str=='')
+            {
+                layer.msg('没有输入要查询的地区');
+                return;
+            }
+
+            //得到ztree对象
+            var myztree=$.fn.zTree.getZTreeObj("ztree_project");
+
+            var mynodes=myztree.getNodesByParamFuzzy("name",str,null);
+
+            $.each(mynodes,function(key,value)
+            {
+                myztree.selectNode(value);
+                //myztree.checkNode(value,true,true);
+
+                value.checked=true;
+                myztree.updateNode(value);
+            });
+
+        }
 
         $(function () {
 
