@@ -16,6 +16,39 @@ function check_id_card(value){
     }
 }
 
+function daochudiqu() {
+
+    if ($("#daochudiqu_lable").val()=='xxx')
+    {
+        layer.msg('还没有查询到可导出的地区');
+
+    }else
+    {
+
+        var url ='/data/ajax';
+        var data={
+            _token :$("input[name=_token]").val(),
+            type   :'project_for_redis'
+        };
+
+        $.post(url,data,function (response) {
+
+            if(response.error=='0')
+            {
+                var lable_a=$("<a href="+response.file_name+" download='导出的地区数据.xls'>可以下载了</a>");
+                $("#excel_file_download").append(lable_a);
+                layer.msg(response.msg);
+            }else
+            {
+                layer.msg(response.msg);
+            }
+
+        },'json');
+
+    }
+
+}
+
 function select_project() {
 
     layer.open({
@@ -1740,6 +1773,8 @@ function set_config() {
 
 function select_china_all_position() {
 
+    $("#daochudiqu_lable").val('xxx');
+
     var url='/data/ajax';
     var data={
         _token:$("input[name=_token]").val(),
@@ -1767,6 +1802,8 @@ function select_china_all_position() {
             //解析res_all
             if(response.res_all)
             {
+                $("#daochudiqu_lable").val('project_for_redis');
+
                 $("select[name=all_path_name] option").remove();
 
                 $.each(response.res_all, function (key, value) {
@@ -1777,7 +1814,6 @@ function select_china_all_position() {
                         value['county_name']+'-'+
                         value['town_name']+'-'+
                         value['village_name']+"</option>");
-
                 });
             }
 

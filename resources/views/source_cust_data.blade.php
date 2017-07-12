@@ -18,6 +18,7 @@
                                 <div class="col-sm-12">
                                     <div class="row">
                                         <div class="col-sm-12">
+                                            <p class="help-block"><a href="{{asset('public/import_customer.xls')}}" download="import_customer.xls">下载模板</a>后，填写相关信息</p>
                                             <p class="help-block">选择导入文件（文件后缀是.xls，不是手动改，而是用另存为.xls）</p>
                                         </div>
                                     </div>
@@ -153,6 +154,9 @@
 
                         <div class="box-footer">
                             <a onclick="select_china_all_position();" class="btn btn-primary">查询</a>
+                            <a onclick="daochudiqu();" class="btn btn-primary">导出地区</a>
+                            <span id="excel_file_download"></span>
+                            <input type="hidden" id="daochudiqu_lable" value="xxx">
                         </div>
 
                     </form>

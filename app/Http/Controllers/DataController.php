@@ -1685,8 +1685,6 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $excel_file=env('APP_URL').'/storage/exports/'.'no_pass'.$time.'.xls';
                 }
 
-
-
                 return ['error'=>'0','msg'=>'导出成功','file_name'=>$excel_file];
 
                 break;
@@ -2765,6 +2763,16 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     return ['error'=>'0','msg'=>'查询成功','res_single'=>$res_single];
                 }
 
+                //以下是用来导出地区的
+                $for_redis[]=['province_name','city_name','county_name','town_name','village_name'];
+
+                foreach ($res_all as $myrow)
+                {
+                    $for_redis[]=array_values($myrow);
+                }
+
+                $this->redis_set('project_for_redis',json_encode($for_redis),100);
+
                 return ['error'=>'0','msg'=>'查询成功','res_single'=>$res_single,'res_all'=>$res_all];
 
                 break;
@@ -2867,6 +2875,16 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 {
                     return ['error'=>'0','res'=>Redis::get($key),'res1'=>Redis::get($key.'_')];
                 }
+
+                break;
+
+            case 'project_for_redis':
+
+                file_get_contents(env('APP_URL').'/export1/project_for_redis');
+
+                $excel_file=env('APP_URL').'/storage/exports/project_for_redis.xls';
+
+                return ['error'=>'0','msg'=>'导出完成','file_name'=>$excel_file];
 
                 break;
         }
