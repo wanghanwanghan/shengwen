@@ -169,10 +169,8 @@ class Controller extends BaseController
     }
 
     //设置有存活时间的redis，参数一：键，参数二：值，参数三：存活时间，单位秒
-    public function redis_set($key,$value,$time)
+    public function redis_set($key,$value,$time='')
     {
-        $time=isset($time) ? $time : '';
-
         if ($time!='')
         {
             Redis::set($key,$value);

@@ -190,8 +190,8 @@
                     <!-- Optionally, you can add icons to the links -->
                     <!--<li class="active"><a href="#"><i class="fa fa-link"></i> <span>Link</span></a></li>-->
                     <!--<li><a href="#"><i class="fa fa-link"></i> <span>Another Link</span></a></li>-->
-                    <li class="active treeview">
-                        <a href="#"><i class="fa fa-link"></i> <span>用户登记</span>
+                    <li class="treeview">
+                        <a id="yong_hu_deng_ji" href="#"><i class="fa fa-link"></i> <span>用户登记</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
@@ -202,8 +202,8 @@
                         </ul>
                     </li>
 
-                    <li class="active treeview">
-                        <a href="#"><i class="fa fa-link"></i> <span>客服功能</span>
+                    <li class="treeview">
+                        <a id="ke_fu_gong_neng" href="#"><i class="fa fa-link"></i> <span>客服功能</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
@@ -213,8 +213,8 @@
                         </ul>
                     </li>
 
-                    <li class="active treeview">
-                        <a href="#"><i class="fa fa-link"></i> <span>客户管理</span>
+                    <li class="treeview">
+                        <a id="ke_hu_guan_li" href="#"><i class="fa fa-link"></i> <span>客户管理</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
@@ -225,8 +225,8 @@
                         </ul>
                     </li>
 
-                    <li class="active treeview">
-                        <a href="#"><i class="fa fa-link"></i> <span>声纹管理</span>
+                    <li class="treeview">
+                        <a id="sheng_wen_guan_li" href="#"><i class="fa fa-link"></i> <span>声纹管理</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
@@ -240,8 +240,8 @@
                         </ul>
                     </li>
 
-                    <li class="active treeview">
-                        <a href="#"><i class="fa fa-link"></i> <span>系统设置</span>
+                    <li class="treeview">
+                        <a id="xi_tong_she_zhi" href="#"><i class="fa fa-link"></i> <span>系统设置</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
@@ -256,7 +256,7 @@
                     </li>
 
                     <li class="treeview">
-                        <a href="#"><i class="fa fa-link"></i> <span>超级管理员功能</span>
+                        <a id="chao_ji_guan_li_yuan_gong_neng" href="#"><i class="fa fa-link"></i> <span>超级管理员功能</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
@@ -339,18 +339,13 @@
                 <!-- /.tab-pane -->
                 <!-- Settings tab content -->
                 <div class="tab-pane" id="control-sidebar-settings-tab">
-                        <h3 class="control-sidebar-heading">wanghan</h3>
-
-                        <div class="form-group">
-                            <label class="control-sidebar-subheading">
-                                wanghan
-                            </label>
-
-                            <p>
-                                wanghan
-                            </p>
-                        </div>
-                        <!-- /.form-group -->
+                    <h3 class="control-sidebar-heading"></h3>
+                    <div class="form-group">
+                        <label class="control-sidebar-subheading">
+                        </label>
+                        <p>
+                        </p>
+                    </div>
                 </div>
                 <!-- /.tab-pane -->
             </div>
@@ -362,11 +357,47 @@
     </div>
 
     <script>
-//        $(function () {
-//            $.get('get/user/name', function(result)
-//            {
-//                $("p[name=username]").html(result);
-//            });
-//        })
+
+        $(function () {
+
+            get_treeview_active();
+
+            $("#yong_hu_deng_ji").on('click',function () {
+                set_treeview_active($(this).attr('id'));
+            });
+
+            $("#ke_fu_gong_neng").on('click',function () {
+                set_treeview_active($(this).attr('id'));
+            });
+
+            $("#ke_hu_guan_li").on('click',function () {
+                set_treeview_active($(this).attr('id'));
+            });
+
+            $("#sheng_wen_guan_li").on('click',function () {
+                set_treeview_active($(this).attr('id'));
+            });
+
+            $("#xi_tong_she_zhi").on('click',function () {
+                set_treeview_active($(this).attr('id'));
+            });
+
+            $("#chao_ji_guan_li_yuan_gong_neng").on('click',function () {
+                set_treeview_active($(this).attr('id'));
+            });
+
+        });
+
+
+
+
+
+
+
+
+
+
+
+
     </script>
 @stop

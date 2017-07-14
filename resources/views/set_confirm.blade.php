@@ -20,8 +20,13 @@
                         <input style="padding-left: 16px;" type="text" class="form-control" id="inputEmail3" name="confirm_name" placeholder="认证类型">
                     </div>
                 </div>
-                <div class="form-group">
 
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">已经有的认证类型</label>
+
+                    <div id="add_confirm_page_confirm_type" class="col-sm-10">
+
+                    </div>
                 </div>
                 <div class="form-group">
                     <div class="col-sm-offset-2 col-sm-10">
@@ -42,5 +47,33 @@
             <!-- /.box-footer -->
         </form>
     </div>
+
+    <script>
+
+        $(function () {
+
+            var url='/data/ajax';
+            var dat={
+                _token :$("input[name=_token]").val(),
+                type   :'get_my_confirm_type'
+            };
+
+            $.post(url,dat,function (response) {
+
+                if (response.error=='0')
+                {
+                    $.each(response.data,function (k,v) {
+                        $("#add_confirm_page_confirm_type").append('<label class="col-sm-1 control-label"><span style="color: red">'+v+'</span></label>');
+                    });
+                }else
+                {
+                    layer.msg(response.msg);
+                }
+
+            },'json');
+
+        });
+
+    </script>
 
 @stop

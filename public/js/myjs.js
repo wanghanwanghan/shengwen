@@ -16,6 +16,57 @@ function check_id_card(value){
     }
 }
 
+function set_treeview_active(id) {
+
+    var url='/data/ajax';
+    var dat={
+        _token :$("input[name=_token]").val(),
+        type   :'set_treeview_active',
+        key    :id
+    };
+
+    $.post(url,dat,function (response) {
+
+        if (response.error=='0')
+        {
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
+
+function get_treeview_active() {
+
+    var url='/data/ajax';
+    var dat={
+        _token :$("input[name=_token]").val(),
+        type   :'get_treeview_active'
+    };
+
+    $.post(url,dat,function (response) {
+
+        if (response.error=='0')
+        {
+            $.each(response.res,function (k,v) {
+
+                if (v!='')
+                {
+                    $("#"+k).parent().addClass("active");
+                }
+
+            });
+
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+}
+
 function daochudiqu() {
 
     if ($("#daochudiqu_lable").val()=='xxx')
@@ -1826,6 +1877,15 @@ function select_china_all_position() {
     },'json');
 
 }
+
+
+
+
+
+
+
+
+
 
 
 

@@ -40,6 +40,30 @@ class DataController extends Controller
 
                 break;
 
+            case 'get_my_si_type':
+
+            //添加新的参保类型页面用的
+
+            $model=SiTypeModel::get(['si_name'])->toArray();
+
+            $model=array_flatten($model);
+
+            return ['error'=>'0','msg'=>'成功','data'=>$model];
+
+            break;
+
+            case 'get_my_confirm_type':
+
+                //添加新的认证类型页面用的
+
+                $model=ConfirmTypeModel::get(['confirm_name'])->toArray();
+
+                $model=array_flatten($model);
+
+                return ['error'=>'0','msg'=>'成功','data'=>$model];
+
+                break;
+
             case 'get_project':
 
                 $model=ProjectModel::get(['project_id','project_name','project_parent'])->toArray();
@@ -1488,6 +1512,12 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         {
                             $redis_value[]=$row['confirm_pid'];
                         }
+
+                        if (!isset($redis_value))
+                        {
+                            return ['error'=>'0','msg'=>'没有匹配的数据'];
+                        }
+
                         $redis_key='daochu_'.time();
                         $this->redis_set($redis_key,json_encode($redis_value),60);
 
@@ -1549,6 +1579,11 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         foreach ($res as $myrow)
                         {
                             $cust_id[]=$myrow->cust_id;
+                        }
+
+                        if (!isset($cust_id))
+                        {
+                            return ['error'=>'0','msg'=>'没有匹配的数据'];
                         }
 
                         $time=time();
@@ -2897,6 +2932,58 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $excel_file=env('APP_URL').'/storage/exports/project_for_redis.xls';
 
                 return ['error'=>'0','msg'=>'导出完成','file_name'=>$excel_file];
+
+                break;
+
+            case 'set_treeview_active':
+
+                $id_in_html=Input::get('key');
+
+                $user=Session::get('user');
+                $user_id=$user[0]['staff_num'];
+
+                //一开始进来时候是空，说明菜单是未选中状态
+                if (Redis::get($id_in_html.'_'.$user_id)=='')
+                {
+                    //给菜单添加成选中状态
+                    $this->redis_set($id_in_html.'_'.$user_id,'active');
+                }else
+                {
+                    //当是选中时候再次点击，移除选中状态
+                    $this->redis_set($id_in_html.'_'.$user_id,'');
+                }
+
+                return ['error'=>'0'];
+
+                break;
+
+            case 'get_treeview_active':
+
+                //选择菜单中的id
+                $now_we_get=[
+                    'yong_hu_deng_ji',
+                    'ke_fu_gong_neng',
+                    'ke_hu_guan_li',
+                    'sheng_wen_guan_li',
+                    'xi_tong_she_zhi',
+                    'chao_ji_guan_li_yuan_gong_neng'
+                ];
+
+                $user=Session::get('user');
+                $user_id=$user[0]['staff_num'];
+
+                foreach ($now_we_get as $one)
+                {
+                    if (Redis::get($one.'_'.$user_id)=='')
+                    {
+                        $active[$one]='';
+                    }else
+                    {
+                        $active[$one]=Redis::get($one.'_'.$user_id);
+                    }
+                }
+
+                return ['error'=>'0','res'=>$active];
 
                 break;
         }
