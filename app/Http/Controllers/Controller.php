@@ -97,7 +97,7 @@ class Controller extends BaseController
             {
                 if ($city=='')
                 {
-                    //省名和市名如果是一样的，city也许是空，比如北京，上海
+                    //省名和市名如果是一样的，city也许是空，比如北京，上海，天津，重庆
                     return ['local'=>'yes'];
                 }else
                 {
@@ -140,6 +140,20 @@ class Controller extends BaseController
                     return ['local'=>'no'];
                 }
             }
+        }
+    }
+
+    //ip地址查询
+    public function is_local_IP_address($ip)
+    {
+        $res_json=file_get_contents('http://apis.juhe.cn/ip/ip2addr?ip='.$ip.'&dtype=json&key=ffb7c65113fddc659264139050eaccf2');
+        $res_arry=json_decode($res_json,true);
+        if ($res_arry['error_code']!='0' || $res_arry['resultcode']!='200')
+        {
+            return ['error'=>'1','msg'=>'查询错误'];
+        }else
+        {
+            return $res_arry['result'];
         }
     }
 

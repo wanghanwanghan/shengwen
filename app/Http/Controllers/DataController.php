@@ -2986,6 +2986,14 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 return ['error'=>'0','res'=>$active];
 
                 break;
+
+            case 'get_ip_address':
+
+                $res=$this->is_local_IP_address($_SERVER['SERVER_ADDR']);
+
+                return ['error'=>'0','data'=>$res];
+
+                break;
         }
     }
 

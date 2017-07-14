@@ -16,6 +16,29 @@ function check_id_card(value){
     }
 }
 
+function get_ip_address() {
+
+    var url='/data/ajax';
+    var dat={
+        _token :$("input[name=_token]").val(),
+        type   :'get_ip_address'
+    };
+
+    $.post(url,dat,function (response) {
+
+        if (response.error=='0')
+        {
+            $("#ip_address").html(response.data['area']);
+            $("#ip_network").html(response.data['location']);
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
+
 function set_treeview_active(id) {
 
     var url='/data/ajax';
