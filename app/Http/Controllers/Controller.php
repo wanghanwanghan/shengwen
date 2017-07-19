@@ -68,6 +68,7 @@ class Controller extends BaseController
         }
         return $str;
     }
+
     //中文字符串包含 source源字符串target要判断的是否包含的字符串
     public function hasstring($source,$target)
     {
@@ -146,13 +147,20 @@ class Controller extends BaseController
     //ip地址查询
     public function is_local_IP_address($ip)
     {
+        if (Redis::get('is_local_IP_address')!='')
+        {
+            $res_arry=json_decode(Redis::get('is_local_IP_address'),true);
+            return $res_arry['result'];
+        }
+
         $res_json=file_get_contents('http://apis.juhe.cn/ip/ip2addr?ip='.$ip.'&dtype=json&key=ffb7c65113fddc659264139050eaccf2');
         $res_arry=json_decode($res_json,true);
         if ($res_arry['error_code']!='0' || $res_arry['resultcode']!='200')
         {
-            return ['error'=>'1','msg'=>'查询错误'];
+            return ['area'=>'查询失败','location'=>'loading...'];
         }else
         {
+            $this->redis_set('is_local_IP_address',$res_json,3600);
             return $res_arry['result'];
         }
     }

@@ -41,6 +41,9 @@ Route::group(['middleware'=>['LoginMiddleware','ServiceCareMiddleware']],functio
     //维护现有客户
     Route::get('service/care','WebController@service_care');
 
+    //导出认证结果
+    Route::get('import/confirm/result','WebController@import_confirm_result');
+
 });
 
 //客户管理
@@ -223,4 +226,13 @@ Route::post('/import3','ExcelController@import_3');
 Route::get('/insert_excel_data_1','ExcelController@insert_excel_data_1');
 Route::get('/insert_excel_data_2','ExcelController@insert_excel_data_2');
 Route::get('/export1/{key}','ExcelController@export1');
+Route::get('/export2/{key}','ExcelController@export2');
+
+
+
+
+
+
+
+
 

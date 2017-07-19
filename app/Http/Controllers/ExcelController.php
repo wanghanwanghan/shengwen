@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Model\ChinaAllPositionModel;
 use App\Http\Model\LogModel;
 use App\Http\Model\ProjectModel;
+use App\Http\Model\SiTypeModel;
 use App\Http\Model\StaffModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Schema\Blueprint;
@@ -64,6 +65,7 @@ class ExcelController extends Controller
                 $this_county=$row['county'];
                 $this_town=$row['town'];
                 $this_village=$row['village'];
+                $this_sitype=SiTypeModel::pluck('si_name')->toArray();
 
                 //这个info打算建立path用
                 $id_info=ChinaAllPositionModel::where(['county_name'=>$this_county,'town_name'=>$this_town,'village_name'=>$this_village])
@@ -88,6 +90,10 @@ class ExcelController extends Controller
             {
                 return redirect()->back()->with('warning','第'.++$line.'行village列里的'.$row['village'].'不属于'.$this_village);
             }
+            if (!in_array($row['sitype'],$this_sitype))
+            {
+                return redirect()->back()->with('warning','第'.++$line.'行sitype列里的'.$row['sitype'].'不正确');
+            }
 
             $line++;
         }
@@ -104,10 +110,13 @@ class ExcelController extends Controller
                 $table->string('county','20');
                 $table->string('town','20');
                 $table->string('village','20');
+                $table->string('county_id','20')->index();;
+                $table->string('town_id','20')->index();;
+                $table->string('village_id','20')->index();;
                 $table->string('name','6');
                 $table->string('idcard','18')->unique();
+                $table->string('sitype','20')->index();
                 $table->string('sicard','20')->index();
-                $table->string('status','6');
                 $table->string('position_path','100')->index();
                 $table->engine='innodb';
             });
@@ -148,6 +157,9 @@ class ExcelController extends Controller
         //最后，给内容中插入position_path
         foreach ($file_content as &$row)
         {
+            $row['county_id']=$id_info[0]['county_id'];
+            $row['town_id']=$id_info[0]['town_id'];
+            $row['village_id']=$id_info[0]['village_id'];
             $row['position_path']=$position_path;
         }
         unset($row);
@@ -516,6 +528,62 @@ class ExcelController extends Controller
             });
         })->store('xls')->export('xls');
     }
+
+    //导出未登记或者已登记的客户
+    //导出未认证或者已认证的客户
+    public function export2($key)
+    {
+        //这个key是个队列
+        while (1)
+        {
+            $one=Redis::rpop($key);
+            if ($one!='')
+            {
+                $data[]=json_decode($one,true);
+            }else
+            {
+                break;
+            }
+        }
+
+        foreach ($data as &$row)
+        {
+            $row=array_values($row);
+        }
+
+        if (strpos($key,'confirm')!==false)
+        {
+            //strpos($a, $b) !== false 如果$a 中存在 $b，则为 true ，否则为 false。
+            array_unshift($data,[
+                '姓名',
+                '身份证号码',
+                '参保类型',
+                '社保编号',
+                '认证电话',
+                '状态'
+            ]);
+
+        }else
+        {
+            array_unshift($data,[
+                '县',
+                '镇',
+                '村',
+                '姓名',
+                '身份证号码',
+                '参保类型',
+                '社保编号',
+                '状态'
+            ]);
+        }
+
+        Excel::create($key,function($excel) use ($data){
+            $excel->sheet('score', function($sheet) use ($data){
+                $sheet->rows($data);
+            });
+        })->store('xls')->export('xls');
+    }
+
 
 
 

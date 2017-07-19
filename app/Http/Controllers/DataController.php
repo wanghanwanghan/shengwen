@@ -12,6 +12,7 @@ use App\Http\Model\LogModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SendMailModel;
 use App\Http\Model\SiTypeModel;
+use App\Http\Model\SocialInsuranceModel;
 use App\Http\Model\StaffModel;
 use App\Http\Model\VocalPrintModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -2992,6 +2993,304 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $res=$this->is_local_IP_address($_SERVER['SERVER_ADDR']);
 
                 return ['error'=>'0','data'=>$res];
+
+                break;
+
+            case 'import_confirm_result':
+
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='cust_project')
+                    {
+                        $cust_project=$row['value'];
+                    }
+
+                    if ($row['name']=='cust_si_type')
+                    {
+                        $cust_si_type=$row['value'];
+                    }
+
+                    if ($row['name']=='cust_type')
+                    {
+                        $cust_type=$row['value'];
+                    }
+
+                    if ($row['name']=='import_type')
+                    {
+                        $import_type=$row['value'];
+                    }
+
+                    if ($row['name']=='star_date')
+                    {
+                        $star_date=$row['value'];
+                    }
+
+                    if ($row['name']=='stop_date')
+                    {
+                        $stop_date=$row['value'];
+                    }
+                }
+
+                //得到当前结点的所有子节点
+                foreach ($this->get_all_children($cust_project) as $row)
+                {
+                    $proj[]=$row['project_id'];
+                }
+
+                //得到了所有节点
+                $proj[]=$cust_project;
+
+                //根据条件查询所有客户
+                if ($cust_type=='0')
+                {
+                    //选择为全部客户
+                    $res_in_mysql=CustModel::whereIn('cust_project',$proj)->where('cust_si_type',$cust_si_type)->get()->toArray();
+                }else
+                {
+                    //选择为A或者B
+                    $res_in_mysql=CustModel::whereIn('cust_project',$proj)->where(['cust_si_type'=>$cust_si_type,'cust_type'=>$cust_type])->get()->toArray();
+                }
+
+                if (empty($res_in_mysql))
+                {
+                    return ['error'=>'1','msg'=>'没有匹配的数据，导出终止'];
+                }
+
+                //查询出社保提供导入客户信息
+                //自动判断是第几级区域
+                $check_project_level=ProjectModel::find($cust_project);
+                $check_project_level=explode('-',$check_project_level->project_path);
+
+                if (count($check_project_level)=='4')
+                {
+                    //第五级区域，对应village
+
+                }elseif (count($check_project_level)=='3')
+                {
+                    //第四级区域，对应town
+
+                }elseif (count($check_project_level)=='2')
+                {
+                    //第三级区域，对应county
+
+                }else
+                {
+                    //第二级，第一级，参数错误
+                    return ['error'=>'1','msg'=>'只支持包括第三级及其以下区域，导出终止'];
+                }
+
+                //判断是登记，还是认证
+                if ($import_type=='1')
+                {
+                    //说明要导出的是认证，就需要开始时间和结束时间
+                    if ($star_date=='' || $stop_date=='')
+                    {
+                        return ['error'=>'1','msg'=>'请设置时间'];
+                    }
+                    $star_date=$star_date.' 00:00:00';
+                    $stop_date=$stop_date.' 23:59:59';
+
+                    //认证是自己的mysql数据间对比，登记是和社保导入数据对比
+                    //**************************************************************************************************
+                    //$res_in_mysql是当前区域下所有的客户信息，通过客户主键，在认证表里找到是否认证成功或者失败的信息
+                    foreach ($res_in_mysql as $row)
+                    {
+                        //先拿到所有的客户主键
+                        $cust_pid[]=$row['cust_num'];
+                    }
+                    $cust_pid=array_flatten($cust_pid);
+                    $res_in_confirm_table=CustConfirmModel::whereIn('confirm_pid',$cust_pid)
+                        ->wherebetween('created_at',[$star_date,$stop_date])
+                        ->where('confirm_res','Y')->get(['confirm_pid'])->toArray();
+
+                    $si_table=SiTypeModel::all();
+                    foreach ($si_table as $key=>$obj)
+                    {
+                        $si_array[$obj->si_id]=$obj->si_name;
+                    }
+
+                    //得到了所有通过认证的客户id了
+                    $is_pass_id=array_unique(array_flatten($res_in_confirm_table));
+
+                    foreach ($cust_pid as $row1)
+                    {
+                        if (in_array($row1,$is_pass_id))
+                        {
+                            //通过了认证
+                            foreach ($res_in_mysql as $row2)
+                            {
+                                if ($row2['cust_num']==$row1)
+                                {
+                                    $my_tmp_1['cust_name']=$row2['cust_name'];
+                                    $my_tmp_1['cust_id']=$row2['cust_id'];
+                                    $my_tmp_1['cust_si_type']=$si_array[$row2['cust_si_type']];
+                                    $my_tmp_1['cust_si_id']=$row2['cust_si_id'];
+                                    $my_tmp_1['cust_review_num']=$row2['cust_review_num'];
+                                    $my_tmp_1['status']='通过认证';
+
+                                    $my_dat_1[]=$my_tmp_1;
+                                }
+                            }
+                        }else
+                        {
+                            //没通过认证
+                            foreach ($res_in_mysql as $row3)
+                            {
+                                if ($row3['cust_num']==$row1)
+                                {
+                                    $my_tmp_1['cust_name']=$row3['cust_name'];
+                                    $my_tmp_1['cust_id']=$row3['cust_id'];
+                                    $my_tmp_1['cust_si_type']=$si_array[$row3['cust_si_type']];
+                                    $my_tmp_1['cust_si_id']=$row3['cust_si_id'];
+                                    $my_tmp_1['cust_review_num']=$row3['cust_review_num'];
+                                    $my_tmp_1['status']='没有通过';
+
+                                    $my_dat_1[]=$my_tmp_1;
+                                }
+                            }
+                        }
+                    }
+
+                    //把数据放到redis集合
+                    $time=time();
+                    foreach ($my_dat_1 as $myrow)
+                    {
+                        Redis::lpush('import_confirm_YorN'.$time,json_encode($myrow));
+                    }
+                    Redis::expire('import_confirm_YorN'.$time,600);
+
+                    file_get_contents(env('APP_URL').'/export2/'.'import_confirm_YorN'.$time);
+
+                    $excel_file=env('APP_URL').'/storage/exports/'.'import_confirm_YorN'.$time.'.xls';
+
+                    //以上是制作excel的代码，下面是分页代码
+                    //用户传入的页
+                    $now_page=Input::get('page');
+
+                    //每页显示几条数据
+                    $limit=12;
+
+                    //从第几条开始显示
+                    $offset=($now_page-1)*$limit;
+
+                    //自制分页
+                    $data='';
+                    for ($i=$offset;$i<=$limit*$now_page-1;$i++)
+                    {
+                        if (!isset($my_dat_1[$i]))
+                        {
+                            break;
+                        }
+
+                        //为了符合前台页面显示，数组里的数据顺序需要改一下
+                        $tmp['name']=$my_dat_1[$i]['cust_name'];
+                        $tmp['idcard']=$my_dat_1[$i]['cust_id'];
+                        $tmp['sitype']=$my_dat_1[$i]['cust_si_type'];
+                        $tmp['sicard']=$my_dat_1[$i]['cust_si_id'];
+                        $tmp['phone']=$my_dat_1[$i]['cust_review_num'];
+                        $tmp['status']=$my_dat_1[$i]['status'];
+                        $data[]=$tmp;
+                    }
+
+                    $cnt_page=intval(ceil(count($my_dat_1)/$limit));
+
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$data,'pages'=>$cnt_page,'count_data'=>count($my_dat_1),'filename'=>$excel_file];
+
+                    //**************************************************************************************************
+                }
+
+
+
+                //随机产生一个人，拿到他的身份证，然后在导入的表格中找到对应的区域id
+                $cond=$res_in_mysql[array_rand($res_in_mysql,1)];
+                $cond=$cond['cust_id'];
+
+                //区域代码
+                $proj_id=SocialInsuranceModel::where('idcard',$cond)
+                    ->get(['county_id','town_id','village_id'])
+                    ->toArray();
+
+                //查出这个区域，这个参保类型的，所有社保导入数据中的数据
+                $sitype=SiTypeModel::find($cust_si_type);
+                $res_in_import=SocialInsuranceModel::where($proj_id[0])
+                    ->where('sitype',$sitype->si_name)
+                    ->get([
+                        'county',
+                        'town',
+                        'village',
+                        'name',
+                        'idcard',
+                        'sitype',
+                        'sicard'
+                    ])
+                    ->toArray();
+
+                //两边的数据都查询出来，现在开始对比
+                foreach ($res_in_mysql as $row)
+                {
+                    //拿出所有身份证号
+                    $idcard_in_mysql[]=$row['cust_id'];
+                }
+
+                //生成要导出的excel数据数组
+                foreach ($res_in_import as &$row)
+                {
+                    if (in_array($row['idcard'],$idcard_in_mysql))
+                    {
+                        //说明参加采集了
+                        $row['status']='已采集';
+                    }else
+                    {
+                        //说明没参加采集
+                        $row['status']='未采集';
+                    }
+                }
+                unset($row);
+
+                //把数据放到redis集合
+                $time=time();
+                foreach ($res_in_import as $myrow)
+                {
+                    Redis::lpush('import_register_YorN'.$time,json_encode($myrow));
+                }
+                Redis::expire('import_register_YorN'.$time,600);
+
+                file_get_contents(env('APP_URL').'/export2/'.'import_register_YorN'.$time);
+
+                $excel_file=env('APP_URL').'/storage/exports/'.'import_register_YorN'.$time.'.xls';
+
+                //以上是制作excel的代码，下面是分页代码
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=12;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                //自制分页
+                $data='';
+                for ($i=$offset;$i<=$limit*$now_page-1;$i++)
+                {
+                    if (!isset($res_in_import[$i]))
+                    {
+                        break;
+                    }
+
+                    //为了符合前台页面显示，数组里的数据顺序需要改一下
+                    $tmp['name']=$res_in_import[$i]['name'];
+                    $tmp['idcard']=$res_in_import[$i]['idcard'];
+                    $tmp['sitype']=$res_in_import[$i]['sitype'];
+                    $tmp['sicard']=$res_in_import[$i]['sicard'];
+                    $tmp['phone']=CustModel::where('cust_id',$res_in_import[$i]['idcard'])->get()[0]->cust_review_num;
+                    $tmp['status']=$res_in_import[$i]['status'];
+                    $data[]=$tmp;
+                }
+
+                $cnt_page=intval(ceil(count($res_in_import)/$limit));
+
+                return ['error'=>'0','msg'=>'查询成功','data'=>$data,'pages'=>$cnt_page,'count_data'=>count($res_in_import),'filename'=>$excel_file];
 
                 break;
         }
