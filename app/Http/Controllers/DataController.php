@@ -3064,14 +3064,17 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 if (count($check_project_level)=='4')
                 {
                     //第五级区域，对应village
+                    $get_cond=['county_id','town_id','village_id'];
 
                 }elseif (count($check_project_level)=='3')
                 {
                     //第四级区域，对应town
+                    $get_cond=['county_id','town_id'];
 
                 }elseif (count($check_project_level)=='2')
                 {
                     //第三级区域，对应county
+                    $get_cond=['county_id'];
 
                 }else
                 {
@@ -3199,15 +3202,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     //**************************************************************************************************
                 }
 
-
-
                 //随机产生一个人，拿到他的身份证，然后在导入的表格中找到对应的区域id
                 $cond=$res_in_mysql[array_rand($res_in_mysql,1)];
                 $cond=$cond['cust_id'];
 
                 //区域代码
                 $proj_id=SocialInsuranceModel::where('idcard',$cond)
-                    ->get(['county_id','town_id','village_id'])
+                    ->get($get_cond)
                     ->toArray();
 
                 //查出这个区域，这个参保类型的，所有社保导入数据中的数据
