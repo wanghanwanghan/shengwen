@@ -25,8 +25,90 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+    //二维数组按照某一列排序
+    public function dyadic_array_sort(Array $array,Array $cond)
+    {
+        //$array=[
+        //    ['name'=>'张1','age'=>'23'],
+        //    ['name'=>'李2','age'=>'64'],
+        //    ['name'=>'王3','age'=>'55'],
+        //    ['name'=>'赵4','age'=>'66'],
+        //    ['name'=>'孙5','age'=>'17']
+        //];
+        //SORT_DESC降序，SORT_ASC升序，age排序字段
+        //$sort=['D'=>'SORT_ASC','F'=>'age'];
+
+        if ($cond[0]=='asc')
+        {
+            $cond[0]='SORT_ASC';
+        }elseif ($cond[0]=='desc')
+        {
+            $cond[0]='SORT_DESC';
+        }else
+        {
+            return 'error';
+        }
+
+        $sort=['D'=>$cond[0],'F'=>$cond[1]];
+        $arrSort=[];
+        foreach($array as $uniqid=>$row)
+        {
+            foreach($row as $key=>$value)
+            {
+                $arrSort[$key][$uniqid]=$value;
+            }
+        }
+
+        array_multisort($arrSort[$sort['F']],constant($sort['D']),$array);
+
+        return $array;
+    }
+
+    //冒泡排序
+    public function bubble_sort($array)
+    {
+        $count=count($array);
+        if ($count<=0) return false;
+        for ($i=0;$i<$count;$i++)
+        {
+            for($j=$i;$j<=$count-1;$j++)
+            {
+                if ($array[$i]>$array[$j])
+                {
+                    $tmp=$array[$i];
+                    $array[$i]=$array[$j];
+                    $array[$j]=$tmp;
+                }
+            }
+        }
+        return $array;
+    }
+
+    //快速排序
+    public function quick_sort($array)
+    {
+        if (count($array)<=1) return $array;
+        $key=$array[0];
+        $left_arr=[];
+        $right_arr=[];
+        for ($i=1;$i<count($array);$i++)
+        {
+            if ($array[$i]<=$key)
+            {
+                $left_arr[]=$array[$i];
+            }
+            else
+            {
+                $right_arr[]=$array[$i];
+            }
+        }
+        $left_arr=$this->quick_sort($left_arr);
+        $right_arr=$this->quick_sort($right_arr);
+        return array_merge($left_arr,[$key],$right_arr);
+    }
+
     //为字符串的指定位置添加指定字符中的调用函数
-    public function mb_substr_replace($string, $replacement, $start, $length=NULL) {
+    public function mb_substr_replace($string, $replacement,$start,$length=NULL) {
         if (is_array($string)) {
             $num = count($string);
             // $replacement
@@ -702,11 +784,32 @@ class Controller extends BaseController
     //产生不重复的随机数
     public function myrand()
     {
+        $rand_num=[];
+        $min='1';
+        $max='9';
+
+        //每组有多少个数字
+        for ($j=1;$j<Config::get('confirm_type.count');$j++)
+        {
+            $min.='0';
+            $max.='9';
+        }
+
+        //产生多少组数字
         for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
         {
-            $new=rand(100000,999999);
-            $rand_num[]=rand(100000,999999);
+            $new=rand($min,$max);
+
+            if (in_array($new,$rand_num))
+            {
+                $i--;
+            }else
+            {
+                $rand_num[]=$new;
+            }
         }
+
+        return $rand_num;
     }
 
 

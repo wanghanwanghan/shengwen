@@ -395,9 +395,6 @@ class APIController extends Controller
                 break;
 
         }
-
-
-
     }
 
     //web到ivr的接口
@@ -431,10 +428,7 @@ class APIController extends Controller
 
                     case '动态口令':
 
-                        for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
-                        {
-                            $confirm_text[]=rand(100000,999999);
-                        }
+                        $confirm_text=$this->myrand();
 
                         break;
                 }
@@ -508,10 +502,7 @@ class APIController extends Controller
 
                     case '动态口令':
 
-                        for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
-                        {
-                            $confirm_text[]=rand(100000,999999);
-                        }
+                        $confirm_text=$this->myrand();
 
                         break;
                 }
@@ -632,10 +623,7 @@ class APIController extends Controller
                     $phone_array[]=$row->cust_review_num;
                 }
 
-                for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
-                {
-                    $rand_num[]=rand(100000,999999);
-                }
+                $rand_num=$this->myrand();
 
                 $data=[
                     'phone_array'=>$phone_array,//电话数组
