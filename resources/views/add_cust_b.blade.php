@@ -140,6 +140,49 @@
 
         $(function () {
 
+            //给身份证输入框绑定change事件
+            $("input[name=cust_id]").on('change',function () {
+
+                var url ='/data/ajax';
+                var data={
+                    _token :$("input[name=_token]").val(),
+                    type   :'get_wait_register_customer_info',
+                    key    :$("input[name=cust_id]").val()
+                };
+                $.post(url,data,function (response) {
+
+                    if (response.error=='0')
+                    {
+                        $.each(response.data,function (k,v) {
+
+                            if (k=='name')
+                            {
+                                $("input[name=cust_name]").val(v);
+                            }
+
+                            if (k=='sicard')
+                            {
+                                $("input[name=cust_si_id]").val(v);
+                            }
+
+                            if (k=='sitype')
+                            {
+                                $("select[name=cust_si_type]").val(v);
+                            }
+
+                        });
+
+                        layer.msg(response.msg);
+
+                    }else
+                    {
+                        layer.msg(response.msg);
+                    }
+
+                },'json');
+
+            });
+
             var url ='/data/ajax';
             var data={
                 _token :$("input[name=_token]").val(),

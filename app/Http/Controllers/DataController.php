@@ -3294,6 +3294,26 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 return ['error'=>'0','msg'=>'查询成功','data'=>$data,'pages'=>$cnt_page,'count_data'=>count($res_in_import),'filename'=>$excel_file];
 
                 break;
+
+            case 'get_wait_register_customer_info':
+
+                if (!$this->is_idcard(Input::get('key')))
+                {
+                    return ['error'=>'1','msg'=>'不是一个有效的身份证'];
+                }
+
+                //查询是否有这个人的信息
+                $res=SocialInsuranceModel::where('idcard',Input::get('key'))->get()->toArray();
+
+                if (empty($res))
+                {
+                    return ['error'=>'1','msg'=>'系统中不含此人信息'];
+                }else
+                {
+                    return ['error'=>'0','data'=>$res[0],'msg'=>'查询成功'];
+                }
+
+                break;
         }
     }
 
