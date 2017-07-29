@@ -2163,6 +2163,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $data=CustConfirmModel::find($pid);
 
                     $data->confirm_btw=$cond;
+                    $data->save();
 
                     //判断是否需要改成通过认证
                     if ($YorN=='Y')
@@ -2170,7 +2171,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         $data->confirm_res='Y';
                         $data->save();
 
-                        $this->system_log('修改认证表的认证结果','把主键是'.$pid.'的认证结果改成了<Y>');
+                        $this->system_log('修改认证表的认证结果','把主键是'.$pid.'的认证结果改成了<通过认证>');
                     }else
                     {
                         $data->save();

@@ -885,6 +885,9 @@ class APIController extends Controller
             return ['error'=>'1'];
         }elseif ($pid!='' && $url=='' && $res=='error_1')
         {
+            //加入认证表中
+            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>'N','confirm_btw'=>'没有登记','belong_to'=>'0']);
+
             //通知mongo
             $obj=$this->mymongo();
             $obj->ivrlog->loopreturn->insert([
@@ -899,6 +902,9 @@ class APIController extends Controller
             return ['error'=>'1'];
         }elseif ($url=='')
         {
+            //加入认证表中
+            CustConfirmModel::create(['confirm_pid'=>$pid,'confirm_res'=>'N','confirm_btw'=>'呼叫失败','belong_to'=>'0']);
+
             //通知mongo，这个情况是该客户还没有进行登记
             $obj=$this->mymongo();
             $obj->ivrlog->loopreturn->insert([
