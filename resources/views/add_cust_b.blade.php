@@ -17,17 +17,17 @@
                 <tbody>
                 <tr>
                     <td>
-                        <div class="col-xs-8">
+                        <div>
                             <input type="text" class="form-control" name="cust_name" placeholder="姓名">
                         </div>
                     </td>
                     <td>
-                        <div class="col-xs-8">
+                        <div>
                             <input type="text" class="form-control" name="cust_review_num" placeholder="手机号码">
                         </div>
                     </td>
                     <td onclick="select_project();">
-                        <div class="col-xs-8">
+                        <div>
                             <span id="parentIframe">redis启动失败</span>
                             <input type="hidden" name="cust_project">
                         </div>
@@ -36,17 +36,17 @@
 
                 <tr>
                     <td>
-                        <div class="col-xs-8">
+                        <div>
                             <input type="text" class="form-control" name="cust_id" placeholder="身份证号">
                         </div>
                     </td>
                     <td>
-                        <div class="col-xs-8">
+                        <div>
                             <input type="text" class="form-control" name="cust_phone_num" placeholder="备用手机">
                         </div>
                     </td>
                     <td>
-                        <div class="col-xs-8">
+                        <div>
                             <select style="padding-left: 8px" name="cust_confirm_type" class="form-control">
                                 @foreach($confirm_type as $v)
                                     <option>{{$v}}</option>
@@ -58,17 +58,17 @@
 
                 <tr>
                     <td>
-                        <div class="col-xs-8">
+                        <div>
                             <input type="text" class="form-control" name="cust_si_id" placeholder="社保编号">
                         </div>
                     </td>
                     <td>
-                        <div class="col-xs-8">
+                        <div>
                             <input type="text" class="form-control" name="cust_address" placeholder="地址信息">
                         </div>
                     </td>
                     <td>
-                        <div class="col-xs-8">
+                        <div>
                             <select style="padding-left: 8px" name="cust_si_type" class="form-control">
                                 @foreach($staff_si_type as $v)
                                     <option>{{$v}}</option>

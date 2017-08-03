@@ -157,7 +157,7 @@ function staff_login() {
             location.assign('/index');
         }else
         {
-            layer.alert(response.msg);
+            layer.msg(response.msg);
         }
 
     },'json');
@@ -1053,6 +1053,12 @@ function select_data_B(curr) {
 
 }
 
+function tell_ivr_make_phone_call(id,phone) {
+
+    location.assign('/add/cust');
+
+}
+
 function statistics_change(curr) {
 
     $("#statistics_table tbody").children().remove();
@@ -1157,6 +1163,11 @@ function service_care_change(curr) {
                             //有备注的情况
                             tabletr.append('<td onclick=change_btw($(this).attr("id")); id='+id+' align="center">'+v+'</td>');
                         }
+
+                    }else if(k=='cust_review_num' || k=='cust_phone_num')
+                    {
+                        //给年审号和备用号码添加js方法，用来传递给ivr外呼
+                        tabletr.append('<td ondblclick=tell_ivr_make_phone_call($(this).attr("id"),$(this).html()); id='+id+' align="center">'+v+'</td>');
 
                     }else
                     {
@@ -1390,7 +1401,7 @@ function analysis_change() {
     var data={
         _token:$("input[name=_token]").val(),
         type  :'analysis_change',
-        key   :$("#analysis_form").serializeArray(),
+        key   :$("#analysis_form").serializeArray()
     };
 
     $.post(url,data,function (response) {

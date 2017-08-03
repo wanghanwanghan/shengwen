@@ -13,7 +13,8 @@ class TestController extends Controller
     {
         $arr=$this->myrand();
 
-        dd($arr);
+        dd(__FILE__.'---'.__LINE__);
+
 
     }
 

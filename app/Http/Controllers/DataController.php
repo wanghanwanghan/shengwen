@@ -67,9 +67,53 @@ class DataController extends Controller
 
             case 'get_project':
 
-                $model=ProjectModel::get(['project_id','project_name','project_parent'])->toArray();
+                //从session中找到登陆用户的主键，查询地区id
+                $login_user=Session::get('user');
+                $login_user_id=$login_user[0]['staff_num'];
+                $login_user_project_id_string=StaffModel::find($login_user_id)->staff_project;
+                $id_array=explode(',',$login_user_project_id_string);
 
-                $model=$this->infinite($model,'project');
+                $projArray=[];
+                for ($i=0;$i<count($id_array);$i++)
+                {
+                    //这里面是登陆用户的所有属地节点id
+                    //找到每个节点的父和子节点，放到一个数组中，最后整理该数组给前台显示
+                    //如果有父子节点重复，就不添加到数组了
+
+                    //该节点的一级一级往上的父节点数组
+                    //查询出所有父节点的project_id，project_name，project_parent
+                    $father_id_array=$this->select_allproject_parent($id_array[0]);
+                    foreach ($father_id_array as $key=>$value)
+                    {
+                        $projArray_tmp=ProjectModel::where('project_id',$key)
+                            ->get(['project_id','project_name','project_parent'])
+                            ->toArray();
+
+                        //如果这个节点已经添加过，就不添加了
+                        if (!in_array($projArray_tmp[0],$projArray))
+                        {
+                            $projArray[]=$projArray_tmp[0];
+                        }
+                    }
+
+                    //下面查找所有子节点，同样的加入$projArray数组
+                    $son_id_array=$this->get_all_children($id_array[0]);
+                    //有可能是空，因为最后一个节点没有子节点
+                    if (!empty($son_id_array))
+                    {
+                        //把每个数组添加到$projArray
+                        foreach ($son_id_array as &$row)
+                        {
+                            unset($row['level']);
+                            if (!in_array($row,$projArray))
+                            {
+                                $projArray[]=$row;
+                            }
+                        }
+                    }
+                }
+
+                $model=$this->infinite($projArray,'project');
 
                 $model=$this->change_arr_key($model,['project_id'=>'id','project_name'=>'name']);
 
@@ -578,6 +622,12 @@ class DataController extends Controller
                             return ['error'=>'1','msg'=>'所属地区已经过期，请重新选择'];
                         }else
                         {
+                            //当添加第二年审人的时候，地区传过来的数据是中文，所以需要改成对应的主键
+                            if ($this->check_chinese_word($row['value']))
+                            {
+                                $row['value']=ProjectModel::where('project_name',$row['value'])->first()->project_id;
+                            }
+
                             if (!$this->before_insert_check_projectlevel($row['value']))
                             {
                                 return ['error'=>'1','msg'=>'您没有该地区的采集权限'];
@@ -1121,7 +1171,7 @@ class DataController extends Controller
 
                 foreach (Input::get('key') as $row)
                 {
-                    if ($row['name']=='project_name')
+                    if ($row['name']=='cust_project')
                     {
                         $proj=$row['value'];
                     }
@@ -1495,6 +1545,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             $data2=null;
 
                             //为了符合前台页面显示，数组里的数据顺序需要改一下
+                            $data2['confirm_num']=$res2[$i]['confirm_num'];
                             $data2['cust_name']=$res2[$i]['cust_name'];
                             $data2['cust_id']=$res2[$i]['cust_id'];
                             $data2['cust_review_num']=$res2[$i]['cust_review_num'];
@@ -1502,7 +1553,6 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             $data2['cust_type']=$res2[$i]['cust_type'];
                             $data2['created_at']=$res2[$i]['created_at'];
                             $data2['confirm_res']=$res2[$i]['confirm_res'];
-                            $data2['confirm_num']=$res2[$i]['confirm_num'];
                             $data2['confirm_btw']=$res2[$i]['confirm_btw'];
 
                             $data1[]=$data2;

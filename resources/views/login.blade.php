@@ -30,4 +30,17 @@
 	</div>
 	</body>
 
+	<script>
+
+		$(document).keyup(function (event) {
+
+		    if (event.keyCode=='13')
+			{
+                staff_login();
+			}
+
+        });
+
+	</script>
+
 @stop

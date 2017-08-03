@@ -15,7 +15,7 @@
 
             <div class="col-sm-2" onclick="select_project();">
                 <span id="parentIframe">redis启动失败</span>
-                <input type="hidden" name="project_name">
+                <input type="hidden" name="cust_project">
                 {{--<select class="form-control" name="project_name" style="padding-left: 8px;">--}}
                     {{--@foreach($staff_project as $k=>$v)--}}
                         {{--<option value={{$k}}>{{$v}}</option>--}}

@@ -49,7 +49,7 @@
 
                         <div class="col-sm-2">
                             <select class="form-control" name="confirm_res" style="padding-left: 8px;">
-                                <option value="0">认证结果-默认全部</option>
+                                <option value="0">请选择认证结果</option>
                                 <option value="Y">已通过</option>
                                 <option value="N">未通过</option>
                             </select>

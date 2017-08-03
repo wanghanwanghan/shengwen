@@ -18,8 +18,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
-use League\Flysystem\Exception;
-use phpDocumentor\Reflection\Types\Array_;
+
 
 class Controller extends BaseController
 {
