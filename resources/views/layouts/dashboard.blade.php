@@ -186,7 +186,7 @@
 
                 <!-- Sidebar Menu -->
                 <ul class="sidebar-menu">
-                    <li class="header">功能菜单</li>
+                    <li class="header" style="color: white;text-align: center" id="login_user_name">loading...</li>
                     <!-- Optionally, you can add icons to the links -->
                     <!--<li class="active"><a href="#"><i class="fa fa-link"></i> <span>Link</span></a></li>-->
                     <!--<li><a href="#"><i class="fa fa-link"></i> <span>Another Link</span></a></li>-->
@@ -364,6 +364,8 @@
             get_treeview_active();
 
             get_ip_address();
+
+            get_login_user_name();
 
             $("#yong_hu_deng_ji").on('click',function () {
                 set_treeview_active($(this).attr('id'));

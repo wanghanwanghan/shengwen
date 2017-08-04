@@ -1171,9 +1171,12 @@ class DataController extends Controller
 
                 foreach (Input::get('key') as $row)
                 {
-                    if ($row['name']=='cust_project')
+                    if ($row['name']=='cust_project' && $row['value']!='')
                     {
                         $proj=$row['value'];
+                    }else
+                    {
+                        return ['error'=>'1','msg'=>'请重新选择以下地区'];
                     }
 
                     //判断一下是否已经选择了日期
@@ -3362,6 +3365,22 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }else
                 {
                     return ['error'=>'0','data'=>$res[0],'msg'=>'查询成功'];
+                }
+
+                break;
+
+            case 'get_login_user_name':
+
+                if (Session::get('user')==null)
+                {
+                    return ['error'=>'1','msg'=>'您的登陆已经过期'];
+                }else
+                {
+                    $data=Session::get('user');
+
+                    $data=$data[0]['staff_name'];
+
+                    return ['error'=>'0','data'=>$data,'msg'=>'取得成功'];
                 }
 
                 break;

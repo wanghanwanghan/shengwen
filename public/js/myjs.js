@@ -39,6 +39,28 @@ function get_ip_address() {
 
 }
 
+function get_login_user_name() {
+
+    var url='/data/ajax';
+    var dat={
+        _token :$("input[name=_token]").val(),
+        type   :'get_login_user_name'
+    };
+
+    $.post(url,dat,function (response) {
+
+        if (response.error=='0')
+        {
+            $("#login_user_name").html('欢迎登陆！当前登陆者：'+response.data);
+        }else
+        {
+            $("#login_user_name").html(response.msg);
+        }
+
+    },'json');
+
+}
+
 function set_treeview_active(id) {
 
     var url='/data/ajax';
@@ -1055,7 +1077,7 @@ function select_data_B(curr) {
 
 function tell_ivr_make_phone_call(id,phone) {
 
-    location.assign('/add/cust');
+    //location.assign('/add/cust');
 
 }
 
