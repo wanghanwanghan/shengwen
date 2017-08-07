@@ -1714,10 +1714,28 @@ function show_staff_list(curr) {
             for(var i=0;i<response.data.length;i++) {
 
                 var tabletr = $("<tr></tr>");
+                var staff_account=null;
 
                 $.each(response.data[i], function (k, v) {
 
-                    tabletr.append('<td align="center">' + v + '</td>');
+                    if (k=='staff_account')
+                    {
+                        staff_account=v;
+                    }
+
+                    if (k=='allow_login')
+                    {
+                        if (v=='0')
+                        {
+                            tabletr.append('<td align="center">'+'<a onclick=change_allow_login($(this).attr("login_type"),$(this).attr("staff_account")); staff_account='+staff_account+' login_type="0">可以登陆</a>'+'</td>');
+                        }else
+                        {
+                            tabletr.append('<td align="center">'+'<a onclick=change_allow_login($(this).attr("login_type"),$(this).attr("staff_account")); staff_account='+staff_account+' login_type="1"><font color="red">已经禁止</font></a>'+'</td>');
+                        }
+                    }else
+                    {
+                        tabletr.append('<td align="center">' + v + '</td>');
+                    }
 
                 });
 
@@ -1740,6 +1758,33 @@ function show_staff_list(curr) {
         {
             layer.msg(response.msg);
         }
+
+    },'json');
+
+}
+
+function change_allow_login(type_id,staff_account) {
+
+    //type_id等于0，代表当前可登陆，要修改成不可登陆
+    var url='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        type:'change_allow_login',
+        type_id:type_id,
+        staff_account:staff_account
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.msg(response.msg);
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+        location.reload();
 
     },'json');
 

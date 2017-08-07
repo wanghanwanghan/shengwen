@@ -19,12 +19,14 @@
                 <div class="row">
                     <div class="col-sm-12">
                         <table id="show_staff_list_table" class="table table-bordered table-hover dataTable" role="grid" aria-describedby="example2_info">
+                            {{csrf_field()}}
                             <thead>
                             <th style="text-align: center">员工账号</th>
                             <th style="text-align: center">员工姓名</th>
                             <th style="text-align: center">所属区域</th>
                             <th style="text-align: center">参保类型</th>
                             <th style="text-align: center">员工权限</th>
+                            <th style="text-align: center">登陆权限</th>
                             </thead>
                             <tbody>
 

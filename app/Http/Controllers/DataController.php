@@ -70,6 +70,19 @@ class DataController extends Controller
                 //从session中找到登陆用户的主键，查询地区id
                 $login_user=Session::get('user');
                 $login_user_id=$login_user[0]['staff_num'];
+                //如果是超级管理员
+                if ($login_user_id=='1')
+                {
+                    $model=ProjectModel::get(['project_id','project_name','project_parent'])->toArray();
+
+                    $model=$this->infinite($model,'project');
+
+                    $model=$this->change_arr_key($model,['project_id'=>'id','project_name'=>'name']);
+
+                    array_unshift($model,['id'=>'0','name'=>'设置为最顶级地区']);
+
+                    return ['error'=>'0','msg'=>'成功','data'=>$model];
+                }
                 $login_user_project_id_string=StaffModel::find($login_user_id)->staff_project;
                 $id_array=explode(',',$login_user_project_id_string);
 
@@ -82,7 +95,7 @@ class DataController extends Controller
 
                     //该节点的一级一级往上的父节点数组
                     //查询出所有父节点的project_id，project_name，project_parent
-                    $father_id_array=$this->select_allproject_parent($id_array[0]);
+                    $father_id_array=$this->select_allproject_parent($id_array[$i]);
                     foreach ($father_id_array as $key=>$value)
                     {
                         $projArray_tmp=ProjectModel::where('project_id',$key)
@@ -97,7 +110,7 @@ class DataController extends Controller
                     }
 
                     //下面查找所有子节点，同样的加入$projArray数组
-                    $son_id_array=$this->get_all_children($id_array[0]);
+                    $son_id_array=$this->get_all_children($id_array[$i]);
                     //有可能是空，因为最后一个节点没有子节点
                     if (!empty($son_id_array))
                     {
@@ -476,6 +489,8 @@ class DataController extends Controller
                     $staff_info['staff_password']=substr(md5($staff_password),0,24);
                 }
 
+                $staff_info['allow_login']='0';
+
                 StaffModel::create($staff_info);
 
                 $this->system_log('添加新员工',$staff_info['staff_account']);
@@ -504,6 +519,10 @@ class DataController extends Controller
 
                 if (count($user_info))
                 {
+                    if ($user_info[0]['allow_login']!='0')
+                    {
+                        return ['error'=>'1','msg'=>'您已被禁止登陆'];
+                    }
                     Session::put('user',$user_info);
                     return ['error'=>'0','msg'=>'成功'];
                 }else
@@ -2923,7 +2942,8 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     'staff_name',
                     'staff_project',
                     'staff_si_type',
-                    'staff_level'
+                    'staff_level',
+                    'allow_login'
                 ])->toArray();
 
                 //总页数
@@ -3382,6 +3402,31 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     return ['error'=>'0','data'=>$data,'msg'=>'取得成功'];
                 }
+
+                break;
+
+            case 'change_allow_login':
+
+                $type_id=Input::get("type_id");
+                $staff_account=Input::get("staff_account");
+
+                $staff=StaffModel::where("staff_account",$staff_account)->get();
+
+                //type_id等于0，代表当前可登陆，要修改成不可登陆
+                if ($type_id=='0')
+                {
+                    $staff[0]->update(['allow_login'=>'1']);
+                    $staff[0]->save();
+                }else if ($type_id=='1')
+                {
+                    $staff[0]->update(['allow_login'=>'0']);
+                    $staff[0]->save();
+                }else
+                {
+
+                }
+
+                return ["error"=>"0","msg"=>"修改完成"];
 
                 break;
         }
