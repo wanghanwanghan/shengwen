@@ -1,5 +1,5 @@
 @extends('layouts.dashboard')
-@section('page_heading','声纹管理')
+@section('page_heading','客户管理')
 @section('page_heading_small','客户登记、验证是否成功的信息')
 @section('section')
 

@@ -11,13 +11,98 @@ class TestController extends Controller
 {
     public function test_1()
     {
-        $arr=$this->myrand();
+        $array=[
+            ['name'=>'张1','age'=>'23','totle'=>'1'],
+            ['name'=>'李2','age'=>'64','totle'=>'11'],
+            ['name'=>'王3','age'=>'55','totle'=>'111'],
+            ['name'=>'赵4','age'=>'66','totle'=>'1111'],
+            ['name'=>'孙5','age'=>'17','totle'=>'11111']
+        ];
 
-        dd(__FILE__.'---'.__LINE__);
+        $array=[
+            '9','5','2','7'
+        ];
+
+        //1.需要加载php扩展 dl("php_w32api.dll");
+        //2.从你的dll里面导出函数，假定该函数在dll里面被声明为FuncDll,并且返回值是int类型
+        //  w32api_register_function("函数所在的dll","FuncDll","int");
+        //3.现在你可以调用它了 $result=FuncDll();
+
+
+
+
+
 
 
     }
 
+    public function sort1(Array $array,Array $cond)
+    {
+        $mysort=null;
+        foreach ($array as $k=>$v)
+        {
+            foreach ($v as $key=>$value)
+            {
+                $mysort[$key][$k]=$value;
+            }
+        }
+
+        array_multisort($mysort[$cond[1]],constant($cond[0]),$array);
+
+        return $array;
+
+    }
+
+    public function sort2(Array $array)
+    {
+        if (count($array)<=1)
+        {
+            return $array;
+        }
+
+        for ($i=0;$i<count($array);$i++)
+        {
+            for ($j=$i;$j<=count($array)-1;$j++)
+            {
+                if ($array[$i]>$array{$j})
+                {
+                    $tmp=$array[$i];
+                    $array[$i]=$array[$j];
+                    $array[$j]=$tmp;
+                }
+            }
+        }
+
+        return $array;
+    }
+
+    public function sort3(Array $array)
+    {
+        if (count($array)<=1)
+        {
+            return $array;
+        }
+
+        $key=$array[0];
+        $left=[];
+        $righ=[];
+
+        for ($i=1;$i<count($array);$i++)
+        {
+            if ($array[$i]<=$key)
+            {
+                $left[]=$array[$i];
+            }else
+            {
+                $righ[]=$array[$i];
+            }
+        }
+
+        $left=$this->sort3($left);
+        $righ=$this->sort3($righ);
+
+        array_merge($left,$key,$righ);
+    }
 
 
 

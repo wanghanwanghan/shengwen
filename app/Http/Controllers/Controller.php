@@ -35,7 +35,7 @@ class Controller extends BaseController
         //    ['name'=>'孙5','age'=>'17']
         //];
         //SORT_DESC降序，SORT_ASC升序，age排序字段
-        //$sort=['D'=>'SORT_ASC','F'=>'age'];
+        //$sort=['asc/desc','age'];
 
         if ($cond[0]=='asc')
         {
@@ -67,7 +67,7 @@ class Controller extends BaseController
     public function bubble_sort($array)
     {
         $count=count($array);
-        if ($count<=0) return false;
+        if ($count<=1) return $array;
         for ($i=0;$i<$count;$i++)
         {
             for($j=$i;$j<=$count-1;$j++)
@@ -160,41 +160,13 @@ class Controller extends BaseController
     //手机号码归属地查询
     public function is_local_phone($phone)
     {
-        //先到数据库中查
-        $res=PhoneBelongModel::where(['phone'=>$phone])->get()->toArray();
+        //到数据库中查
+        $res=PhoneBelongModel::where(['phone'=>substr(trim($phone),0,7)])->get()->toArray();
 
         //是否找到
         if (empty($res))
         {
-            //没找到
-            $res_json=file_get_contents('http://apis.juhe.cn/mobile/get?phone='.$phone.'&dtype=json&key=e12158fa89c0f7a14b363d8cde0ad6c6');
-            $res_arry=json_decode($res_json,true);
-            $province=$res_arry['result']['province'];
-            $city=$res_arry['result']['city'];
-            $company=$res_arry['result']['company'];
-            PhoneBelongModel::create(['province'=>$province,'city'=>$city,'company'=>$company,'phone'=>$phone]);
-
-            //判断是否属于本地
-            if ($this->hasstring($province,Config::get('constant.province')))
-            {
-                if ($city=='')
-                {
-                    //省名和市名如果是一样的，city也许是空，比如北京，上海，天津，重庆
-                    return ['local'=>'yes'];
-                }else
-                {
-                    if ($this->hasstring($city,Config::get('constant.city')))
-                    {
-                        return ['local'=>'yes'];
-                    }else
-                    {
-                        return ['local'=>'no'];
-                    }
-                }
-            }else
-            {
-                return ['local'=>'no'];
-            }
+            return ['local'=>'数据库中没有这个号段，请先添加'];
         }else
         {
             //找到了
@@ -203,19 +175,12 @@ class Controller extends BaseController
                 //判断是否属于本地
                 if ($this->hasstring($row['province'],Config::get('constant.province')))
                 {
-                    if ($row['city']=='')
+                    if ($this->hasstring($row['city'],Config::get('constant.city')))
                     {
-                        //省名和市名如果是一样的，city也许是空，比如北京，上海
                         return ['local'=>'yes'];
                     }else
                     {
-                        if ($this->hasstring($row['city'],Config::get('constant.city')))
-                        {
-                            return ['local'=>'yes'];
-                        }else
-                        {
-                            return ['local'=>'no'];
-                        }
+                        return ['local'=>'no'];
                     }
                 }else
                 {

@@ -197,8 +197,9 @@
                             </span>
                         </a>
                         <ul class="treeview-menu">
-                            <li><a href="{{url('add/cust')}}"><i class="fa fa-fw fa-hand-o-right"></i>登记用户信息（A类）</a></li>
-                            <li><a href="{{url('add/cust/b')}}"><i class="fa fa-fw fa-hand-o-right"></i>登记用户信息（B类）</a></li>
+                            <li><a href="{{url('add/cust')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹登记（A类）</a></li>
+                            <li><a href="{{url('add/cust/b')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹登记（B类）</a></li>
+                            <li><a href="{{url('add/cust/vena')}}"><i class="fa fa-fw fa-hand-o-right"></i>指静脉登记</a></li>
                         </ul>
                     </li>
 

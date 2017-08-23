@@ -36,6 +36,19 @@
 	<script src="{{asset('public/js/bootstrap-slider.js')}}"></script>
 
 	<link href="{{asset('public/css/style.css')}}" rel="stylesheet" type="text/css" media="all"/>
+
+	{{--身份证读卡器--}}
+	<script type="text/javascript" src="{{asset('public/js/baseISSObject.js')}}"></script>
+	<script type="text/javascript" src="{{asset('public/js/baseISSOnline.js')}}"></script>
+	<script type="text/javascript" src="{{asset('public/js/common.js')}}"></script>
+
+	{{--指静脉--}}
+	<link rel="stylesheet" href="{{asset('public/css/zhijingmai.css')}}">
+	<script type="text/javascript" src="{{asset('public/js/main.js')}}"></script>
+	<script type="text/javascript" src="{{asset('public/js/fingerprint.js')}}"></script>
+	<script type="text/javascript" src="{{asset('public/js/baseMoth.js')}}"></script>
+	<script type="text/javascript" src="{{asset('public/js/dhtmlxCommon.js')}}"></script>
+
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 @yield('body')

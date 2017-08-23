@@ -1,5 +1,5 @@
 @extends('layouts.dashboard')
-@section('page_heading','声纹管理')
+@section('page_heading','客户管理')
 @section('page_heading_small','修改客户信息')
 @section('section')
 
@@ -433,6 +433,8 @@
 
             $.post(url,data,function (response) {
 
+                var line=1;
+
                 if(response.error=='0')
                 {
                     layer.msg(response.msg);
@@ -447,6 +449,13 @@
 
                         table_tr.append("<td align='center' width='20%'>"+k+"</td>");
                         table_tr.append("<td>"+v+"</td>");
+
+                        //显示客户的身份证照片
+                        if (line==1)
+                        {
+                            table_tr.append("<td rowspan='7' width='240px' height='280px'>"+"<img width='240px' height='280px' src="+response.idcard_picture+">"+"</td>");
+                            line++;
+                        }
 
                         $("#modify_cust_info").append(table_tr);
 

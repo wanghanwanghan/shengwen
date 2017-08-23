@@ -48,6 +48,11 @@ return [
             'root' => storage_path('app'),
         ],
 
+        'IDcard' => [
+            'driver' => 'local',
+            'root' => storage_path('app/IDcard_picture'),
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

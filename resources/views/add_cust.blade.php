@@ -3,11 +3,14 @@
 @section('page_heading_small','用户登记页')
 @section('section')
 
+    <p id="cert_message" style="display: none;"></p>
+    <p id="cert_message_type" style="display: none;"></p>
+
     <form id="add_cust_form">
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <div class="box">
         <div class="box-header with-border">
-            <h3 class="box-title">用户登记&nbsp&nbsp<span style="color: red;border: solid red 1px;">A类</span></h3>
+            <h3 class="box-title">声纹用户登记&nbsp&nbsp<span style="color: red;border: solid red 1px;">A类</span></h3>
             <button type="button" class="btn btn-box-tool" data-widget="collapse" style="float: right">
                 <i class="fa fa-minus"></i>
             </button>
@@ -15,10 +18,10 @@
         <div class="box-body">
             <table class="table table-bordered">
                 <tbody>
-                <tr>
+                <tr height="60px">
                     <td>
                         <div>
-                            <input type="text" class="form-control" name="cust_name" placeholder="姓名">
+                            <input type="text" class="form-control" id="personName" name="cust_name" placeholder="姓名">
                         </div>
                     </td>
                     <td>
@@ -26,18 +29,22 @@
                             <input type="text" class="form-control" name="cust_review_num" placeholder="手机号码">
                         </div>
                     </td>
-                    <td onclick="select_project();">
+                    <td width="25%" onclick="select_project();">
                         <div>
                             <span id="parentIframe">redis启动失败</span>
                             <input type="hidden" name="cust_project">
                         </div>
                     </td>
+                    <td rowspan="4" width="240px">
+                        <div id="localImag">
+                            <img width="240px" height="240px" name="cust_photo" id="id_img_pers" src="{{asset('public/img/userImage.png')}}" onerror="{{asset('public/img/userImage.png')}}">
+                        </div>
+                    </td>
                 </tr>
-
-                <tr>
+                <tr height="60px">
                     <td>
                         <div>
-                            <input type="text" class="form-control" name="cust_id" placeholder="身份证号">
+                            <input type="text" class="form-control" id="certNumber" name="cust_id" placeholder="身份证号">
                         </div>
                     </td>
                     <td>
@@ -55,8 +62,7 @@
                         </div>
                     </td>
                 </tr>
-
-                <tr>
+                <tr height="60px">
                     <td>
                         <div>
                             <input type="text" class="form-control" name="cust_si_id" placeholder="社保编号">
@@ -64,7 +70,7 @@
                     </td>
                     <td>
                         <div>
-                            <input type="text" class="form-control" name="cust_address" placeholder="地址信息">
+                            <input type="text" class="form-control" id="address" name="cust_address" placeholder="地址信息">
                         </div>
                     </td>
                     <td>
@@ -77,9 +83,14 @@
                         </div>
                     </td>
                 </tr>
-                <tr>
-                    <td align="center" colspan="3">
+                <tr height="1px">
+                    <td align="center">
+                        <a style="width: 100px;" id="button_readID" onclick="new Device().startFun();" class="btn btn-block btn-primary btn-sm">读取身份证</a>
+                    </td>
+                    <td align="center">
                         <a style="width: 100px;" onclick="add_cust_A();" class="btn btn-block btn-primary btn-sm">登记</a>
+                    </td>
+                    <td align="center">
                     </td>
                 </tr>
                 </tbody>

@@ -30,6 +30,9 @@ Route::group(['middleware'=>['LoginMiddleware','AddCustMiddleware']],function ()
     //添加客户信息B
     Route::get('add/cust/b','WebController@add_cust_b');
 
+    //添加指静脉
+    Route::get('add/cust/vena','WebController@add_cust_vena');
+
     //添加第二年审人
     Route::get('add/second','WebController@add_second');
 

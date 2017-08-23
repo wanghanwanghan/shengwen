@@ -7,7 +7,7 @@
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <div class="box">
         <div class="box-header with-border">
-            <h3 class="box-title">用户登记&nbsp&nbsp<span style="color: red;border: solid red 1px;">B类</span></h3>
+            <h3 class="box-title">声纹用户登记&nbsp&nbsp<span style="color: red;border: solid red 1px;">B类</span></h3>
             <button type="button" class="btn btn-box-tool" data-widget="collapse" style="float: right">
                 <i class="fa fa-minus"></i>
             </button>

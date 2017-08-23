@@ -569,7 +569,8 @@ function add_cust_A() {
         cust_type:'A',
         cust_review_flag:'1',
         cust_register_flag:'0',
-        cust_relation_flag:'0'
+        cust_relation_flag:'0',
+        cust_photo:$("img[name=cust_photo]").attr("src")
     };
 
     $.post(url,data,function (response) {
@@ -685,7 +686,7 @@ function refresh_A(curr) {
                         }else
                         {
                             //验证，删除按钮
-                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
+                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice_confirm($(this).attr("id")); id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
                         }
                     }else if (k=='cust_relation_flag')
                     {
@@ -713,7 +714,7 @@ function refresh_A(curr) {
                                     }else
                                     {
                                         //验证，删除按钮
-                                        tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+v[0]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+v[0]['cust_num']+'>删除</a>'+'</td>');
+                                        tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+v[0]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice_confirm($(this).attr("id")); id='+v[0]['cust_num']+'>删除</a>'+'</td>');
                                     }
                                 }
                             });
@@ -788,7 +789,7 @@ function refresh_B(curr) {
                         }else
                         {
                             //验证，删除按钮
-                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
+                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice_confirm($(this).attr("id")); id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
                         }
                     }else if (k=='cust_relation_flag')
                     {
@@ -816,7 +817,7 @@ function refresh_B(curr) {
                                     }else
                                     {
                                         //验证，删除按钮
-                                        tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+v[0]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+v[0]['cust_num']+'>删除</a>'+'</td>');
+                                        tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+v[0]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice_confirm($(this).attr("id")); id='+v[0]['cust_num']+'>删除</a>'+'</td>');
                                     }
                                 }
                             });
@@ -850,6 +851,21 @@ function refresh_B(curr) {
         }
 
     },'json');
+
+}
+
+function delete_cust_voice_confirm(id) {
+
+    layer.confirm('确认要删除吗？', {
+        btn: ['确认','取消'], //按钮
+        shade: false //不显示遮罩
+    }, function(index){
+
+        delete_cust_voice(id);
+
+        layer.close(index);
+    });
+
 
 }
 
@@ -907,7 +923,7 @@ function select_data_A(curr) {
                         }else
                         {
                             //验证，删除按钮
-                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
+                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice_confirm($(this).attr("id")); id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
                         }
                     }else if (k=='cust_relation_flag')
                     {
@@ -935,7 +951,7 @@ function select_data_A(curr) {
                                     }else
                                     {
                                         //验证，删除按钮
-                                        tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+v[0]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+v[0]['cust_num']+'>删除</a>'+'</td>');
+                                        tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+v[0]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice_confirm($(this).attr("id")); id='+v[0]['cust_num']+'>删除</a>'+'</td>');
                                     }
                                 }
                             });
@@ -1010,7 +1026,7 @@ function select_data_B(curr) {
                         }else
                         {
                             //验证，删除按钮
-                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
+                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice_confirm($(this).attr("id")); id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
                         }
                     }else if (k=='cust_relation_flag')
                     {
@@ -1038,7 +1054,7 @@ function select_data_B(curr) {
                                     }else
                                     {
                                         //验证，删除按钮
-                                        tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+v[0]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice($(this).attr("id")); id='+v[0]['cust_num']+'>删除</a>'+'</td>');
+                                        tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+v[0]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice_confirm($(this).attr("id")); id='+v[0]['cust_num']+'>删除</a>'+'</td>');
                                     }
                                 }
                             });

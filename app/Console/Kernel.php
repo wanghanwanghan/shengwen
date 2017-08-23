@@ -35,17 +35,6 @@ class Kernel extends ConsoleKernel
         //第4列表示月份1～12
         //第5列标识号星期0～6（0表示星期天）
 
-
-
-
-
-
-
-
-
-
-
-
     }
 
     /**

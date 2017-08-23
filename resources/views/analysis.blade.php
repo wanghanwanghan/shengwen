@@ -60,14 +60,10 @@
             $.post(url,data,function (response) {
 
                 $("#parentIframe").html(response.res);
-                $("input[name=project_name]").val(response.res1);
+                $("input[name=cust_project]").val(response.res1);
 
             },'json');
 
-        });
-
-        $("select[name=project_name]").change(function () {
-            analysis_change();
         });
 
     </script>

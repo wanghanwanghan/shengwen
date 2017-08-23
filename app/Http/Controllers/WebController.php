@@ -115,6 +115,29 @@ class WebController extends Controller
         return view('add_cust_b',compact('staff_project','staff_si_type','confirm_type'));
     }
 
+    public function add_cust_vena()
+    {
+        foreach (Session::get('user') as $row)
+        {
+            $staff_project=$row['staff_project'];
+            $staff_si_type=$row['staff_si_type'];
+            $staff_level=$row['staff_level'];
+        }
+
+        $staff_project=explode(',',$staff_project);
+        $staff_project=ProjectModel::whereIn('project_id',$staff_project)->get(['project_name'])->toArray();
+        $staff_project=array_flatten($staff_project);
+
+        $staff_si_type=explode(',',$staff_si_type);
+        $staff_si_type=SiTypeModel::whereIn('si_id',$staff_si_type)->get(['si_name'])->toArray();
+        $staff_si_type=array_flatten($staff_si_type);
+
+        $confirm_type=ConfirmTypeModel::get(['confirm_name'])->toArray();
+        $confirm_type=array_flatten($confirm_type);
+
+        return view('add_cust_vena',compact('staff_project','staff_si_type','confirm_type'));
+    }
+
     public function service_care()
     {
         foreach (Session::get('user') as $row)

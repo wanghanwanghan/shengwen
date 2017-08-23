@@ -13,6 +13,7 @@ use App\Http\Model\ProjectModel;
 use App\Http\Model\SendMailModel;
 use App\Http\Model\SiTypeModel;
 use App\Http\Model\SocialInsuranceModel;
+use App\Http\Model\StaffLoginPlaceModel;
 use App\Http\Model\StaffModel;
 use App\Http\Model\VocalPrintModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -21,11 +22,12 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 class DataController extends Controller
 {
-    public function ajax()
+    public function ajax(Request $request)
     {
         switch (Input::get('type'))
         {
@@ -523,7 +525,33 @@ class DataController extends Controller
                     {
                         return ['error'=>'1','msg'=>'您已被禁止登陆'];
                     }
+
                     Session::put('user',$user_info);
+
+                    //记录一下员工是从哪个ip登陆的
+                    $res=StaffLoginPlaceModel::where('account',$user_info[0]['staff_account'])
+                        ->where('ip',$request->getClientIps())
+                        ->get();
+
+                    if (!empty($res->toArray()))
+                    {
+                        //存在这个账号
+                        //修改最后登录时间
+                        $model=$res[0];
+                        $model->last_time=date('Y-m-d H:i:s',time());
+                        $model->save();
+                    }else
+                    {
+                        //不存在这个账号
+                        //新建一条数据
+                        $create=[
+                            'account'=>$user_info[0]['staff_account'],
+                            'ip'=>$request->ip(),
+                            'last_time'=>date('Y-m-d H:i:s',time())
+                        ];
+                        StaffLoginPlaceModel::create($create);
+                    }
+
                     return ['error'=>'0','msg'=>'成功'];
                 }else
                 {
@@ -710,9 +738,11 @@ class DataController extends Controller
 
                 }else
                 {
-                    CustModel::create($cust_info);
+                    $model=CustModel::create($cust_info);
                 }
 
+                //储存用户的身份证头像
+                Storage::disk('IDcard')->put($model->cust_id,Input::get('cust_photo'));
 
                 $this->system_log('添加新用户','姓名:'.$cust_info['cust_name'].'年审号:'.$cust_info['cust_review_num']);
 
@@ -1190,12 +1220,15 @@ class DataController extends Controller
 
                 foreach (Input::get('key') as $row)
                 {
-                    if ($row['name']=='cust_project' && $row['value']!='')
+                    if ($row['name']=='cust_project')
                     {
-                        $proj=$row['value'];
-                    }else
-                    {
-                        return ['error'=>'1','msg'=>'请重新选择以下地区'];
+                        if ($row['value']!='')
+                        {
+                            $proj=$row['value'];
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'请重新选择地区'];
+                        }
                     }
 
                     //判断一下是否已经选择了日期
@@ -2326,7 +2359,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-warning" id=cust_death_btn>设成去世状态</a>';
                     }
 
-                    return ['error'=>'0','msg'=>'查询成功','data'=>$data];
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$data,'idcard_picture'=>file_get_contents(storage_path('app/IDcard_picture/'.$res[0]['cust_id']))];
                 }
 
                 break;
