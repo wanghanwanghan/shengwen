@@ -6,6 +6,7 @@ use App\Http\Model\ChinaAllPositionModel;
 use App\Http\Model\ConfirmTypeModel;
 use App\Http\Model\CustConfirmModel;
 use App\Http\Model\CustDeleteModel;
+use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\LevelModel;
 use App\Http\Model\LogModel;
@@ -16,6 +17,7 @@ use App\Http\Model\SocialInsuranceModel;
 use App\Http\Model\StaffLoginPlaceModel;
 use App\Http\Model\StaffModel;
 use App\Http\Model\VocalPrintModel;
+use App\Http\Myclass\FingerRegister;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
@@ -973,6 +975,21 @@ class DataController extends Controller
                     $proj=explode(',',$row['staff_project']);
                     $type=explode(',',$row['staff_si_type']);
                 }
+
+                //取出左右节点的子节点
+                foreach ($proj as $row1)
+                {
+                    $proj_all[]=$row1;
+
+                    //取出project_id
+                    foreach ($this->get_all_children($row1) as $row2)
+                    {
+                        $proj_all[]=$row2['project_id'];
+                    }
+                }
+
+                $proj=$proj_all;
+
                 $model=CustModel::where($select_info)->whereIn('cust_project',$proj)
                     ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')->offset($offset)->limit($limit)
                     ->get($get)->toArray();
@@ -3460,6 +3477,208 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }
 
                 return ["error"=>"0","msg"=>"修改完成"];
+
+                break;
+
+            case 'add_fv_cust':
+
+                $info=Input::get('key');
+                $cust_photo=Input::get('cust_photo');
+
+                //取出指静脉信息
+                foreach ($info['fv_info'] as $row)
+                {
+                    if ($row['name']=='my_fvID')
+                    {
+                        $id=$row['value'];
+                    }
+
+                    if ($row['name']=='my_fvTemplate')
+                    {
+                        $template=$row['value'];
+                    }
+                }
+
+                //如果数据是空
+                if (trim($id)=='' || trim($template==''))
+                {
+                    return ['error'=>'1','msg'=>'未取得指静脉数据'];
+                }
+
+                $template=trim($template);
+                $template=str_replace(["\r\n","\n"],'',$template);
+
+                $myfv=FingerRegister::getSingleton();
+                $myfv->Register(explode(',',$id),explode(',',$template));
+
+                //创建变量，储存指静脉模板
+                foreach ($myfv->whichAttrHasData() as $key=>$value)
+                {
+                    $attr='Finger_'.$value;
+                    $$attr=implode(',',$myfv->$attr);
+                }
+
+                //取出要添加的用户信息
+                foreach ($info['cust_info'] as $row)
+                {
+                    //用户姓名
+                    if ($row['name']=='cust_name')
+                    {
+                        if (!$this->check_chinese_word($row['value']))
+                        {
+                            return ['error'=>'1','msg'=>'姓名必须是中文'];
+                        }
+
+                        $cust_info['cust_name']=$row['value'];
+                    }
+
+                    //身份证号
+                    if ($row['name']=='cust_id')
+                    {
+                        if (!$this->is_idcard($row['value']))
+                        {
+                            return ['error'=>'1','msg'=>'身份证输入不正确'];
+                        }
+
+                        //转换成大写
+                        $row['value']=strtoupper($row['value']);
+
+                        //验证一下数据库中是否有相同的项
+                        if (count(CustFVModel::where(['cust_id'=>$row['value']])->get()->toArray())!='0')
+                        {
+                            return ['error'=>'1','msg'=>'此身份证号已经存在，不能添加了'];
+                        }
+
+                        $cust_info['cust_id']=$row['value'];
+                    }
+
+                    //社保编号
+                    if ($row['name']=='cust_si_id')
+                    {
+                        //不验证了
+
+                        $cust_info['cust_si_id']=trim($row['value']);
+                    }
+
+                    //手机号码
+                    if ($row['name']=='cust_phone_num')
+                    {
+                        if (!$this->check_something($row['value'],'phonenumber',null))
+                        {
+                            return ['error'=>'1','msg'=>'手机号码输入不正确'];
+                        }
+
+                        $cust_info['cust_phone_num']=$row['value'];
+                    }
+
+                    //备用手机号
+                    if ($row['name']=='cust_phone_bku')
+                    {
+                        //不验证了
+
+                        $cust_info['cust_phone_bku']=trim($row['value']);
+                    }
+
+                    //地址
+                    if ($row['name']=='cust_address')
+                    {
+                        //不验证了
+
+                        $cust_info['cust_address']=trim($row['value']);
+                    }
+
+                    //所属区域
+                    if ($row['name']=='cust_project')
+                    {
+                        if ($row['value']=='')
+                        {
+                            return ['error'=>'1','msg'=>'所属地区已经过期，请重新选择'];
+                        }else
+                        {
+                            if (!$this->before_insert_check_projectlevel($row['value']))
+                            {
+                                return ['error'=>'1','msg'=>'您没有该地区的采集权限'];
+                            }
+
+                            $cust_info['cust_project']=$row['value'];
+                        }
+                    }
+
+                    //参保类型
+                    if ($row['name']=='cust_si_type')
+                    {
+                        $res=SiTypeModel::where(['si_name'=>$row['value']])->pluck('si_id')->toArray();
+
+                        $cust_info['cust_si_type']=$res[0];
+                    }
+                }
+
+                //设置成为为死亡
+                $cust_info['cust_death_flag']='0';
+
+                //设置最后一次认证成功时间
+                $cust_info['cust_last_confirm_date']=date('Y-m-d',time());
+
+                $model=CustFVModel::create($cust_info);
+
+                //储存用户的身份证头像
+                Storage::disk('IDcard')->put($model->cust_id,$cust_photo);
+
+                //指静脉信息
+                //$id是fv的id
+                //$template是模板
+
+                //把指静脉信息存储到mongo里
+                $obj=$this->mymongo();
+                $obj->Finger->CustTemplate->insert([
+                    '_id'=>$model->cust_num,
+                    'Finger_0'=>isset($Finger_0)?$Finger_0:'',
+                    'Finger_1'=>isset($Finger_1)?$Finger_1:'',
+                    'Finger_2'=>isset($Finger_2)?$Finger_2:'',
+                    'Finger_3'=>isset($Finger_3)?$Finger_3:'',
+                    'Finger_4'=>isset($Finger_4)?$Finger_4:'',
+                    'Finger_5'=>isset($Finger_5)?$Finger_5:'',
+                    'Finger_6'=>isset($Finger_6)?$Finger_6:'',
+                    'Finger_7'=>isset($Finger_7)?$Finger_7:'',
+                    'Finger_8'=>isset($Finger_8)?$Finger_8:'',
+                    'Finger_9'=>isset($Finger_9)?$Finger_9:'',
+                    'time'=>time()
+                ]);
+
+                return ['error'=>'0','msg'=>'登记成功'];
+
+                break;
+
+            case 'modify_fv_class_attr':
+
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='my_fvID')
+                    {
+                        $id=$row['value'];
+                    }
+
+                    if ($row['name']=='my_fvTemplate')
+                    {
+                        $template=$row['value'];
+                    }
+                }
+
+                //如果数据是空
+                if (trim($id)=='' || trim($template==''))
+                {
+                    return ['error'=>'1','msg'=>'等待指静脉数据'];
+                }
+
+                $template=trim($template);
+
+                $template=str_replace(["\r\n","\n"],'',$template);
+
+                //实时更新前台采集的数据
+                $obj_for_fv=FingerRegister::getSingleton();
+                $obj_for_fv->Register(explode(',',$id),explode(',',$template));
+
+                return ['error'=>'0','data'=>$obj_for_fv->attrToChinese($obj_for_fv)];
 
                 break;
         }

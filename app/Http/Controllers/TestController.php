@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Model\ProjectModel;
+use App\Http\Myclass\FingerRegister;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Redis;
@@ -27,6 +28,12 @@ class TestController extends Controller
         //2.从你的dll里面导出函数，假定该函数在dll里面被声明为FuncDll,并且返回值是int类型
         //  w32api_register_function("函数所在的dll","FuncDll","int");
         //3.现在你可以调用它了 $result=FuncDll();
+
+
+        $fv=FingerRegister::getSingleton();
+
+
+
 
 
 

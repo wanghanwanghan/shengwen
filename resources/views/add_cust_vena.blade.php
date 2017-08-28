@@ -26,7 +26,7 @@
                         </td>
                         <td>
                             <div>
-                                <input type="text" class="form-control" name="cust_review_num" placeholder="手机号码">
+                                <input type="text" class="form-control" name="cust_phone_num" placeholder="手机号码">
                             </div>
                         </td>
                         <td width="25%" onclick="select_project();">
@@ -49,15 +49,13 @@
                         </td>
                         <td>
                             <div>
-                                <input type="text" class="form-control" name="cust_phone_num" placeholder="备用手机">
+                                <input type="text" class="form-control" name="cust_phone_bku" placeholder="备用手机">
                             </div>
                         </td>
                         <td>
                             <div>
                                 <select style="padding-left: 8px" name="cust_confirm_type" class="form-control">
-                                    @foreach($confirm_type as $v)
-                                        <option>{{$v}}</option>
-                                    @endforeach
+                                    <option>指静脉</option>
                                 </select>
                             </div>
                         </td>
@@ -91,7 +89,7 @@
                             <a style="width: 100px;" onclick='$("#fvRegister").click();' class="btn btn-block btn-primary btn-sm">采集指静脉</a>
                         </td>
                         <td align="center">
-                            <a style="width: 100px;" onclick="" class="btn btn-block btn-primary btn-sm">提交信息</a>
+                            <a style="width: 100px;" onclick="add_fv_cust();" class="btn btn-block btn-success btn-sm">提交信息</a>
                         </td>
                     </tr>
                     </tbody>
@@ -109,25 +107,6 @@
         </div>
         <div class="box-body">
 
-            {{--<form method="post" id="fpVerifyForm" name="fpVerifyForm" action="authLoginAction!login.do?fpLogin=fpLogin" enctype="multipart/form-data" style="display: none">--}}
-                {{--<input type="hidden" id="verifyModel" name="verifyModel" />--}}
-                {{--<input type="hidden" id="verifyTemplate" name="verifyTemplate" />--}}
-            {{--</form>--}}
-
-            {{--<div id="fvDriverDownload" style="display: inline; margin: 0 0 0 5px;">--}}
-                {{--<a id='fvDownloadDriver' href='middleware/zkbioonline.exe' title='驱动下载'>驱动下载</a>--}}
-            {{--</div>--}}
-
-            {{--<div id="comparison" style="display: none" onclick='fpVerification("指纹比对","请安装指纹驱动或启动服务",true,globalContext)'>比对</div>--}}
-
-            {{--<div id="comparisonDiv" class="zhijingmai_box" style="display: none">--}}
-                {{--<h2>指纹比对</h2>--}}
-                {{--<div class="list">--}}
-                    {{--<canvas id="canvasComp" width="430" height="320" style="background: {{asset('public/img/base_fpVerify.jpg')}} rgb(243, 245, 240);"></canvas>--}}
-                    {{--<input type="button" value="关闭" onclick='closeCompa()' />--}}
-                {{--</div>--}}
-            {{--</div>--}}
-
             <div id="fvRegisterDiv" style="display: none;">
                 <a id="fvRegister" onclick='submitFVRegister("指静脉","指静脉数:","确认保存当前修改吗？","驱动下载", false)' title="请安装指静脉驱动或启动该服务" class="showGray" onmouseover="this.className='showGray'">注册</a>
             </div>
@@ -142,28 +121,40 @@
 
                     <div style="position: absolute; left: 310px; top: 325px; width: 70px; height: 28px;">
                         <button type="button" id="submitButtonId" name="makeSureName" onclick="submitEvent()" class="button-form">确定</button>
-                        <!-- ${common_edit_ok}:确定 -->
                     </div>
                     <div style="position: absolute; left: 310px; top: 365px; width: 70px; height: 28px;">
                         <button class="button-form" type="button" id="closeButton" name="closeButton" onclick='cancelEvent("确认保存当前修改吗?", "指静脉数:");'>取消</button>
-                        <!-- ${common_edit_cancel}:取消 -->
                     </div>
                 </div>
             </div>
 
             <div>
-                <fieldset style="width:130px" id="t">
-                    <legend>三枚指静脉的id</legend>
-                    <textarea rows="1" cols="70" id="fvId"></textarea>
-                </fieldset>
-                <fieldset style="width:530px" id="te">
-                    <legend>三枚指静脉模板数据</legend>
-                    <textarea rows="1" cols="70" id="fvTemplate10"></textarea>
-                </fieldset>
+                <table class="table table-bordered">
+                    <tbody>
+                    <tr>
+                        <td width="15%">
+                            已经采集：
+                        </td>
+                        <td id="coldata">
+
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
 
-
-
+            <div hidden>
+                <form id="fvId_or_fvTemplate">
+                    <fieldset style="width:130px" id="t">
+                        <legend>三枚指静脉的id</legend>
+                        <textarea rows="1" cols="70" id="fvId" name="my_fvID"></textarea>
+                    </fieldset>
+                    <fieldset style="width:530px" id="te">
+                        <legend>三枚指静脉模板数据</legend>
+                        <textarea rows="1" cols="70" id="fvTemplate10" name="my_fvTemplate"></textarea>
+                    </fieldset>
+                </form>
+            </div>
 
         </div>
     </div>
@@ -173,6 +164,38 @@
         $(function () {
 
             myfunction();
+
+            setInterval(function () {
+
+                //修改指静脉登记类中的属性
+                var url ='/data/ajax';
+                var data={
+                    _token :$("input[name=_token]").val(),
+                    type   :'modify_fv_class_attr',
+                    key    :$("#fvId_or_fvTemplate").serializeArray()
+                };
+                $.post(url,data,function (response) {
+
+                    if (response.error=='0')
+                    {
+                        $("#coldata").children().remove();
+
+                        $.each(response.data,function (k,v) {
+
+                            var myspan=$("<span style='width: 100px;margin-left: 2px;' class='btn btn-success btn-sm'></span>");
+                            myspan.html(v);
+                            $("#coldata").append(myspan);
+
+                        });
+
+                    }else
+                    {
+
+                    }
+
+                },'json');
+
+            },1500);
 
             //给身份证输入框绑定change事件
             $("input[name=cust_id]").on('change',function () {
@@ -217,6 +240,7 @@
 
             });
 
+            //取得redis中的地区信息
             var url ='/data/ajax';
             var data={
                 _token :$("input[name=_token]").val(),
@@ -228,6 +252,7 @@
                 $("input[name=cust_project]").val(response.res1);
 
             },'json');
+
         });
 
     </script>

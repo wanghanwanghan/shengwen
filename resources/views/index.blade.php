@@ -33,6 +33,11 @@
                     下载身份证读卡器驱动
                 </a>
             </div>
+            <div class="col-sm-2">
+                <a target="_blank" href="{{asset('public/FV_Reader/zkbioonline.zip')}}">
+                    下载指静脉驱动
+                </a>
+            </div>
         </div>
     </div>
 

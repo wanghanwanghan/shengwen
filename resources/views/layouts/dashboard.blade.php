@@ -210,6 +210,7 @@
                             </span>
                         </a>
                         <ul class="treeview-menu">
+                            <li><a href="{{url('fv/match')}}"><i class="fa fa-fw fa-hand-o-right"></i>指静脉认证</a></li>
                             <li><a href="{{url('service/care')}}"><i class="fa fa-fw fa-hand-o-right"></i>维护现有客户</a></li>
                             <li><a href="{{url('import/confirm/result')}}"><i class="fa fa-fw fa-hand-o-right"></i>导出认证结果</a></li>
                         </ul>

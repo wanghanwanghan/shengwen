@@ -41,6 +41,9 @@ Route::group(['middleware'=>['LoginMiddleware','AddCustMiddleware']],function ()
 //客服功能
 Route::group(['middleware'=>['LoginMiddleware','ServiceCareMiddleware']],function (){
 
+    //指静脉认证
+    Route::get('fv/match','WebController@service_care');
+
     //维护现有客户
     Route::get('service/care','WebController@service_care');
 

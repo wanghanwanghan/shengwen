@@ -1995,6 +1995,31 @@ function select_china_all_position() {
 
 }
 
+function add_fv_cust() {
+
+    var url ='/data/ajax';
+    var data={
+        _token :$("input[name=_token]").val(),
+        type   :'add_fv_cust',
+        key    :{cust_info:$("#add_cust_form").serializeArray(),fv_info:$("#fvId_or_fvTemplate").serializeArray()},
+        cust_photo:$("img[name=cust_photo]").attr("src")
+    };
+    $.post(url,data,function (response) {
+
+        if (response.error=='0')
+        {
+            layer.msg(response.msg);
+            location.reload();
+        }else
+        {
+            layer.msg(response.msg)
+        }
+
+
+
+    },'json');
+
+}
 
 
 
