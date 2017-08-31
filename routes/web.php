@@ -42,7 +42,7 @@ Route::group(['middleware'=>['LoginMiddleware','AddCustMiddleware']],function ()
 Route::group(['middleware'=>['LoginMiddleware','ServiceCareMiddleware']],function (){
 
     //指静脉认证
-    Route::get('fv/match','WebController@service_care');
+    Route::get('fv/match','WebController@fv_match');
 
     //维护现有客户
     Route::get('service/care','WebController@service_care');
@@ -187,6 +187,12 @@ Route::get('change_btw/{id}', function ($id) {
     return view('change_btw',compact('id'));
 });
 
+//change_btw_fv打开的iframe
+Route::get('change_btw_fv/{id}', function ($id) {
+    $id=$id;
+    return view('change_btw_fv',compact('id'));
+});
+
 //轮播页面的详细信息超链接路由
 Route::get('detail_info/{id}', function ($id) {
     $id=$id;
@@ -229,11 +235,13 @@ Route::post('/import2','ExcelController@import_2');
 Route::post('/import3','ExcelController@import_3');
 
 //Excel操作中的导入，用到的路由
+//声纹
 Route::get('/insert_excel_data_1','ExcelController@insert_excel_data_1');
 Route::get('/insert_excel_data_2','ExcelController@insert_excel_data_2');
 Route::get('/export1/{key}','ExcelController@export1');
 Route::get('/export2/{key}','ExcelController@export2');
-
+//指静脉
+Route::get('/export3/{key}','ExcelController@export3');
 
 
 

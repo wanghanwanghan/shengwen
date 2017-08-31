@@ -1178,44 +1178,88 @@ function service_care_change(curr) {
 
             $("#data_total").html(response.count_data);
 
-            //遍历返回的数据-表内容
-            for(var i=0;i<response.data.length;i++){
+            //遍历返回的指静脉数据-表内容
+            if ($("select[name=vv_or_fv]").val()=='fingervena')
+            {
+                for(var i=0;i<response.data.length;i++){
 
-                var tabletr=$("<tr></tr>");
-                var id='0';
+                    var tabletr=$("<tr></tr>");
+                    var id='0';
 
-                $.each(response.data[i],function (k,v) {
+                    $.each(response.data[i],function (k,v) {
 
-                    if(k=='confirm_num')
-                    {
-                        tabletr.attr('id',v);
-                        id=v;
-                    }else if(k=='confirm_btw')
-                    {
-                        if(v=='')
+                        if(k=='cust_num')
                         {
-                            //没有备注的情况
-                            tabletr.append('<td align=center><i onclick=change_btw($(this).attr("id")); id='+id+' class="fa fa-edit"></i></td>');
+                            tabletr.attr('id',v);
+                            id=v;
+                        }else if(k=='cust_btw')
+                        {
+                            if(v=='')
+                            {
+                                //没有备注的情况
+                                tabletr.append('<td align=center><i onclick=change_btw_fv($(this).attr("id")); id='+id+' class="fa fa-edit"></i></td>');
+                            }else
+                            {
+                                //有备注的情况
+                                tabletr.append('<td onclick=change_btw_fv($(this).attr("id")); id='+id+' align="center">'+v+'</td>');
+                            }
+
+                        }else if(k=='cust_phone_num' || k=='cust_phone_bku')
+                        {
+                            //给年审号和备用号码添加js方法，用来传递给ivr外呼
+                            tabletr.append('<td ondblclick=tell_ivr_make_phone_call($(this).attr("id"),$(this).html()); id='+id+' align="center">'+v+'</td>');
+
                         }else
                         {
-                            //有备注的情况
-                            tabletr.append('<td onclick=change_btw($(this).attr("id")); id='+id+' align="center">'+v+'</td>');
+                            tabletr.append('<td align="center">'+v+'</td>');
                         }
 
-                    }else if(k=='cust_review_num' || k=='cust_phone_num')
-                    {
-                        //给年审号和备用号码添加js方法，用来传递给ivr外呼
-                        tabletr.append('<td ondblclick=tell_ivr_make_phone_call($(this).attr("id"),$(this).html()); id='+id+' align="center">'+v+'</td>');
+                    });
 
-                    }else
-                    {
-                        tabletr.append('<td align="center">'+v+'</td>');
-                    }
+                    $("#service_care_table tbody").append(tabletr);
 
-                });
+                }
+            }else
+            {
+                //遍历返回的声纹数据-表内容
+                for(var i=0;i<response.data.length;i++){
 
-                $("#service_care_table tbody").append(tabletr);
+                    var tabletr=$("<tr></tr>");
+                    var id='0';
 
+                    $.each(response.data[i],function (k,v) {
+
+                        if(k=='confirm_num')
+                        {
+                            tabletr.attr('id',v);
+                            id=v;
+                        }else if(k=='confirm_btw')
+                        {
+                            if(v=='')
+                            {
+                                //没有备注的情况
+                                tabletr.append('<td align=center><i onclick=change_btw($(this).attr("id")); id='+id+' class="fa fa-edit"></i></td>');
+                            }else
+                            {
+                                //有备注的情况
+                                tabletr.append('<td onclick=change_btw($(this).attr("id")); id='+id+' align="center">'+v+'</td>');
+                            }
+
+                        }else if(k=='cust_review_num' || k=='cust_phone_num')
+                        {
+                            //给年审号和备用号码添加js方法，用来传递给ivr外呼
+                            tabletr.append('<td ondblclick=tell_ivr_make_phone_call($(this).attr("id"),$(this).html()); id='+id+' align="center">'+v+'</td>');
+
+                        }else
+                        {
+                            tabletr.append('<td align="center">'+v+'</td>');
+                        }
+
+                    });
+
+                    $("#service_care_table tbody").append(tabletr);
+
+                }
             }
 
             //显示分页
@@ -1581,12 +1625,51 @@ function change_btw(id) {
 
 }
 
+function change_btw_fv(id) {
+
+    //传入的是customer_confirm的主键
+    layer.open({
+        type: 2,
+        title: '修改备注信息',
+        shadeClose: true,
+        shade: 0.8,
+        area: ['400px', '300px'],
+        resize:false,
+        content: ['/change_btw_fv/'+id,'no'] //iframe的url
+    });
+
+}
+
 function aaa() {
 
     var url ='/data/ajax';
     var data={
         _token:$("input[name=_token]").val(),
         type  :'modify_btw',
+        key   :$("#change_btw_form").serializeArray()
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.msg(response.msg);
+            parent.layer.closeAll();
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
+
+function aaa_fv() {
+
+    var url ='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        type  :'modify_btw_fv',
         key   :$("#change_btw_form").serializeArray()
     };
 

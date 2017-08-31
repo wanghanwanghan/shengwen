@@ -18,52 +18,49 @@
                             <div class="tab-pane active" id="service_care_1" style="height: 40px;">
                                 <span id="service_care_1_span">
                                     <form id="service_care_form">
+                                        <div class="col-sm-1">
+                                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){service_care_change();}});" name="star_date" placeholder="开始时间"/>
+                                        </div>
+                                        <div class="col-sm-1">
+                                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){service_care_change();}});" name="stop_date" placeholder="结束时间"/>
+                                        </div>
 
-                        <div class="col-sm-2">
-                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){service_care_change();}});" name="star_date" placeholder="开始时间"/>
-                        </div>
+                                        <div class="col-sm-2" onclick="select_project();">
+                                            <span id="parentIframe">redis启动失败</span>
+                                            <input type="hidden" name="cust_project">
+                                        </div>
 
-                        <div class="col-sm-2">
-                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){service_care_change();}});" name="stop_date" placeholder="结束时间"/>
-                        </div>
+                                        <div class="col-sm-2">
+                                            <select class="form-control" name="cust_si_type" style="padding-left: 8px;">
+                                                @foreach($staff_si_type as $k=>$v)
+                                                    <option value={{$k}}>{{$v}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
 
-                        {{--<div class="col-sm-2">--}}
-                            {{--<select class="form-control" name="cust_project" style="padding-left: 8px;">--}}
-                                {{--@foreach($staff_project as $k=>$v)--}}
-                                    {{--<option value={{$k}}>{{$v}}</option>--}}
-                                {{--@endforeach--}}
-                            {{--</select>--}}
-                        {{--</div>--}}
-                         <div class="col-sm-2" onclick="select_project();">
-                             <span id="parentIframe">redis启动失败</span>
-                             <input type="hidden" name="cust_project">
-                         </div>
+                                        <div class="col-sm-2">
+                                            <select class="form-control" name="confirm_res" style="padding-left: 8px;">
+                                                <option value="0">请选择认证结果</option>
+                                                <option value="Y">已通过</option>
+                                                <option value="N">未通过</option>
+                                            </select>
+                                        </div>
 
-                        <div class="col-sm-2">
-                            <select class="form-control" name="cust_si_type" style="padding-left: 8px;">
-                                @foreach($staff_si_type as $k=>$v)
-                                    <option value={{$k}}>{{$v}}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                                        <div class="col-sm-2">
+                                            <select class="form-control" name="cust_type" style="padding-left: 8px;">
+                                                <option value="0">客户类型-默认全部</option>
+                                                <option value="A">A类</option>
+                                                <option value="B">B类</option>
+                                            </select>
+                                        </div>
 
-                        <div class="col-sm-2">
-                            <select class="form-control" name="confirm_res" style="padding-left: 8px;">
-                                <option value="0">请选择认证结果</option>
-                                <option value="Y">已通过</option>
-                                <option value="N">未通过</option>
-                            </select>
-                        </div>
-
-                        <div class="col-sm-2">
-                            <select class="form-control" name="cust_type" style="padding-left: 8px;">
-                                <option value="0">客户类型-默认全部</option>
-                                <option value="A">A类</option>
-                                <option value="B">B类</option>
-                            </select>
-                        </div>
-
-                    </form>
+                                        <div class="col-sm-2">
+                                            <select class="form-control" name="vv_or_fv" style="padding-left: 8px;">
+                                                <option value="vocalvena">声纹</option>
+                                                <option value="fingervena">指静脉</option>
+                                            </select>
+                                        </div>
+                                    </form>
                                 </span>
                             </div>
                             <div class="tab-pane" id="service_care_2" style="height: 40px;">
@@ -197,6 +194,10 @@
         });
 
         $("select[name=cust_type]").change(function () {
+            service_care_change();
+        });
+
+        $("select[name=vv_or_fv]").change(function () {
             service_care_change();
         });
 

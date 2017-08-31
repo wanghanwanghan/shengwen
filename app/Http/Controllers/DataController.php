@@ -1507,6 +1507,115 @@ class DataController extends Controller
                                 $AorB=[$row['value']];
                             }
                         }
+
+                        //如果请求的是指静脉数据
+                        if ($row['name']=='vv_or_fv')
+                        {
+                            if ($row['value']=='vocalvena')
+                            {
+                            }
+                            if ($row['value']=='fingervena')
+                            {
+                                //开始结束时间 $start $stop
+                                //地区和参保类型 $condition
+                                //已通过未通过 $YorN
+
+                                //把时间后面的时分秒去掉
+                                $start_tmp=substr($start,0,10);
+                                $stop_tmp=substr($stop,0,10);
+
+                                //查询通过的，未通过的，还是全部的
+                                if (count($YorN)=='2')
+                                {
+                                    //查询全部的
+                                    $res=CustFVModel::where($condition)
+                                        ->wherebetween('created_at',[$start,$stop])
+                                        ->get([
+                                            'cust_num',
+                                            'cust_name',
+                                            'cust_id',
+                                            'cust_phone_num',
+                                            'cust_phone_bku',
+                                            'cust_last_confirm_date',
+                                            'cust_btw'
+                                        ])->toArray();
+
+                                }elseif (count($YorN)=='1')
+                                {
+                                    //查询通过，或者未通过的
+                                    if ($YorN[0]=='Y')
+                                    {
+                                        //通过
+                                        $res=CustFVModel::where($condition)
+                                            ->where('cust_last_confirm_date','>',$start_tmp)
+                                            ->get([
+                                                'cust_num',
+                                                'cust_name',
+                                                'cust_id',
+                                                'cust_phone_num',
+                                                'cust_phone_bku',
+                                                'cust_last_confirm_date',
+                                                'cust_btw'
+                                            ])->toArray();
+
+                                    }elseif ($YorN[0]=='N')
+                                    {
+                                        //没通过
+                                        $res=CustFVModel::where($condition)
+                                            ->where('cust_last_confirm_date','<',$start_tmp)
+                                            ->get([
+                                                'cust_num',
+                                                'cust_name',
+                                                'cust_id',
+                                                'cust_phone_num',
+                                                'cust_phone_bku',
+                                                'cust_last_confirm_date',
+                                                'cust_btw'
+                                            ])->toArray();
+
+                                    }else
+                                    {
+
+                                    }
+
+                                }else
+                                {
+
+                                }
+
+                                //给数组添加几个元素
+                                foreach ($res as $row)
+                                {
+                                    $res2['cust_num']=$row['cust_num'];
+                                    $res2['cust_name']=$row['cust_name'];
+                                    $res2['cust_id']=$row['cust_id'];
+                                    $res2['cust_phone_num']=$row['cust_phone_num'];
+                                    $res2['cust_phone_bku']=$row['cust_phone_bku'];
+                                    $res2['this_is_fv_cust']='指静脉';
+                                    $res2['cust_last_confirm_date']=$row['cust_last_confirm_date'];
+                                    $res2['pass_the_confirm']='通过认证';
+                                    $res2['cust_btw']=$row['cust_btw'];
+
+                                    $res3[]=$res2;
+
+                                    //导出用的
+                                    $redis_content[]=$res2['cust_id'];
+                                }
+
+                                if (empty($res))
+                                {
+                                    return ['error'=>'1','msg'=>'没有匹配的数据'];
+                                }
+
+                                //总条数
+                                $cnt=count($res);
+
+                                $time=time();
+                                $this->redis_set('fv_yes_pass'.$time,json_encode($redis_content),100);
+
+                                return ['error'=>'0','msg'=>'查询成功','data'=>$res3,'pages'=>intval(ceil(count($res)/$limit)),'count_data'=>$cnt,'redis_key'=>'fv_yes_pass'.$time];
+                            }
+                        }
                     }
 
                     //查询想要的数据
@@ -1820,6 +1929,28 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 //这里是客户的主键数组
                 $in_data=json_decode(Redis::get($redis_key),true);
+
+                //如果要导出的是指静脉数据
+                if (strpos(Input::get('key'),'fv_yes_pass')!==false)
+                {
+                    //strpos($a, $b) !== false 如果$a 中存在 $b，则为 true ，否则为 false。
+                    $res=CustFVModel::whereIn('cust_id',$in_data)->get($get)->toArray();
+
+                    //给res的第一行
+                    array_unshift($res,['客户姓名','身份证号','社保编号']);
+
+                    //因为ajax触发不了Excel::里的export方法，所以用redis传过去
+                    $time=time();
+                    $this->redis_set('fv_yes_pass'.$time,json_encode($res),100);
+
+                    //生成excel
+                    file_get_contents(env('APP_URL').'/export3/fv_yes_pass'.$time);
+
+                    $excel_file=env('APP_URL').'/storage/exports/'.'fv_yes_pass'.$time.'.xls';
+
+                    return ['error'=>'0','msg'=>'导出成功','file_name'=>$excel_file];
+
+                }
 
                 if (strpos(Input::get('key'),'yes_pass')!==false)
                 {
@@ -2300,6 +2431,61 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
 
                     $this->system_log('修改认证表备注','把主键是'.$pid.'的备注改成了<'.$cond.'>');
+
+                    return ['error'=>'0','msg'=>'修改成功'];
+
+                }else
+                {
+                    return ['error'=>'1','msg'=>'查询数据失败'];
+                }
+
+                break;
+
+            case 'modify_btw_fv':
+
+                $pid=null;
+                $cond=null;
+                $YorN=null;
+
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='btw')
+                    {
+                        $cond=trim($row['value']);
+                    }
+
+                    if ($row['name']=='btw_id')
+                    {
+                        $pid=$row['value'];
+                    }
+
+                    if ($row['name']=='mycheck')
+                    {
+                        $YorN='Y';
+                    }
+                }
+
+                if (!$pid==null)
+                {
+                    $data=CustFVModel::find($pid);
+
+                    $data->cust_btw=$cond;
+                    $data->save();
+
+                    //判断是否需要改成通过认证
+                    if ($YorN=='Y')
+                    {
+                        $data->cust_last_confirm_date=date('Y-m-d',time());
+                        $today=date('Y-m-d',time());
+                        $data->save();
+
+                        $this->system_log('修改指静脉认证结果','把主键是'.$pid.'的最后认证通过时间修改了'.$today);
+                    }else
+                    {
+                        $data->save();
+                    }
+
+                    $this->system_log('修改指静脉认证备注','把主键是'.$pid.'的备注改成了<'.$cond.'>');
 
                     return ['error'=>'0','msg'=>'修改成功'];
 
@@ -3665,7 +3851,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }
 
                 //如果数据是空
-                if (trim($id)=='' || trim($template==''))
+                if (trim($id)=='' || trim($template)=='')
                 {
                     return ['error'=>'1','msg'=>'等待指静脉数据'];
                 }
@@ -3679,6 +3865,74 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $obj_for_fv->Register(explode(',',$id),explode(',',$template));
 
                 return ['error'=>'0','data'=>$obj_for_fv->attrToChinese($obj_for_fv)];
+
+                break;
+
+            case 'fv_match':
+
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='my_fvID')
+                    {
+                        $id=$row['value'];
+                    }
+
+                    if ($row['name']=='my_fvTemplate')
+                    {
+                        $template=$row['value'];
+                    }
+                }
+
+                //如果数据是空
+                if (trim($id)=='' || trim($template)=='' || trim(Input::get('cust_id'))=='')
+                {
+                    return ['error'=>'1','msg'=>'等待数据'];
+                }
+
+                $id=substr($id,0,1);
+
+                //从mongo中得到客户模板数据
+                $cust_pid=CustFVModel::where('cust_id',trim(Input::get('cust_id')))->first();
+                $mongo_obj=$this->mymongo();
+                $data=$mongo_obj->Finger->CustTemplate->find(['_id'=>$cust_pid->cust_num]);
+
+                foreach ($data as $row)
+                {
+                    $res=$row;
+                }
+
+                $template=trim($template);
+                $template=str_replace(["\r\n","\n"],'',$template);
+                $template=explode(',',$template);
+                $mongotemplate=$res['Finger_'.$id];
+                $mongotemplate=explode(',',$mongotemplate);
+                $data=[
+                    'pid'=>$cust_pid->cust_num,//用户的主键号
+                    'fv1'=>base64_decode($template[0]),//当前采集的用户指静脉
+                    'fv2'=>base64_decode($template[1]),//当前采集的用户指静脉
+                    'fv3'=>base64_decode($template[2]),//当前采集的用户指静脉
+                    'fv4'=>base64_decode($mongotemplate[0]),//mongo里的模板
+                    'fv5'=>base64_decode($mongotemplate[1]),//mongo里的模板
+                    'fv6'=>base64_decode($mongotemplate[2]),//mongo里的模板
+                ];
+
+                $curl_res=$this->mycurl('http://127.0.0.1:7510/fingervena_confirm',$data);
+                $curl_res=json_decode($curl_res,true);
+                if ($curl_res['result']=='true')
+                {
+                    return ['error'=>'0','msg'=>'成功'];
+                }elseif ($curl_res['result']=='false')
+                {
+                    return ['error'=>'0','msg'=>'失败'];
+                }elseif ($curl_res['result']=='error')
+                {
+                    return ['error'=>'0','msg'=>'错误'];
+                }else
+                {
+
+                }
+
+                return ['error'=>'0'];
 
                 break;
         }

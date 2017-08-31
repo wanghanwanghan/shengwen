@@ -584,6 +584,22 @@ class ExcelController extends Controller
         })->store('xls')->export('xls');
     }
 
+    //导出指静脉
+    public function export3($key)
+    {
+        $data=json_decode(Redis::get($key),true);
+
+        foreach ($data as &$row)
+        {
+            $row=array_values($row);
+        }
+
+        Excel::create($key,function($excel) use ($data){
+            $excel->sheet('score', function($sheet) use ($data){
+                $sheet->rows($data);
+            });
+        })->store('xls')->export('xls');
+    }
 
 
 
