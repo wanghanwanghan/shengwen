@@ -164,7 +164,7 @@
 
             myfunction();
 
-            setInterval(function () {
+            var mytimer=setInterval(function () {
 
                 //修改指静脉登记类中的属性
                 var url ='/data/ajax';
@@ -179,6 +179,7 @@
                     if (response.error=='0')
                     {
                         layer.msg(response.msg);
+                        clearInterval(mytimer);
                     }else
                     {
 

@@ -3907,17 +3907,17 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $mongotemplate=$res['Finger_'.$id];
                 $mongotemplate=explode(',',$mongotemplate);
                 $data=[
-                    'pid'=>$cust_pid->cust_num,//用户的主键号
-                    'fv1'=>base64_decode($template[0]),//当前采集的用户指静脉
-                    'fv2'=>base64_decode($template[1]),//当前采集的用户指静脉
-                    'fv3'=>base64_decode($template[2]),//当前采集的用户指静脉
-                    'fv4'=>base64_decode($mongotemplate[0]),//mongo里的模板
-                    'fv5'=>base64_decode($mongotemplate[1]),//mongo里的模板
-                    'fv6'=>base64_decode($mongotemplate[2]),//mongo里的模板
+                    'pid'=>(string)$cust_pid->cust_num,//用户的主键号
+                    'fv1'=>$template[0],//当前采集的用户指静脉
+                    'fv2'=>$template[1],//当前采集的用户指静脉
+                    'fv3'=>$template[2],//当前采集的用户指静脉
+                    'fv4'=>$mongotemplate[0],//mongo里的模板
+                    'fv5'=>$mongotemplate[1],//mongo里的模板
+                    'fv6'=>$mongotemplate[2],//mongo里的模板
                 ];
 
-                $curl_res=$this->mycurl('http://127.0.0.1:7510/fingervena_confirm',$data);
-                $curl_res=json_decode($curl_res,true);
+                $curl_res=$this->mycurl('http://58.19.253.212:7510/fingervena',$data);
+                $curl_res=json_decode($curl_res['msg'],true);
                 if ($curl_res['result']=='true')
                 {
                     return ['error'=>'0','msg'=>'成功'];
