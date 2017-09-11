@@ -128,18 +128,29 @@
             </div>
 
             <div>
-                <table class="table table-bordered">
+                <table class="table table-bordered" id="fv_match_table">
+                    <thead>
+                    <th style="text-align: center">姓名</th>
+                    <th style="text-align: center">身份证</th>
+                    <th style="text-align: center">指静脉</th>
+                    <th style="text-align: center">指纹</th>
+                    <th style="text-align: center">手指</th>
+                    <th style="text-align: center">手机号码</th>
+                    <th style="text-align: center">备用电话</th>
+                    </thead>
                     <tbody>
-                    <tr>
-                        <td width="15%">
-                            已经采集：
-                        </td>
-                        <td id="coldata">
 
-                        </td>
-                    </tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="row">
+                <div class="col-sm-5">
+                    <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">一共<<span style="color: red;" id="data_total">0</span>>条记录</div>
+                </div>
+                <div class="col-sm-7">
+                    <div id="fv_match_laypage" class="pagination pagination-sm no-margin pull-right">
+                    </div>
+                </div>
             </div>
 
             <div hidden>
@@ -152,6 +163,15 @@
                         <legend>三枚指静脉模板数据</legend>
                         <textarea rows="1" cols="70" id="fvTemplate10" name="my_fvTemplate"></textarea>
                     </fieldset>
+
+                    <fieldset style="width:130px" id="t">
+                        <legend>指纹的id</legend>
+                        <textarea rows="1" cols="70" id="fingerId" name="my_fpID"></textarea>
+                    </fieldset>
+                    <fieldset style="width:530px" id="te">
+                        <legend>指纹模板数据</legend>
+                        <textarea rows="1" cols="70" id="fingerTemplate10" name="my_fpTemplate"></textarea>
+                    </fieldset>
                 </form>
             </div>
 
@@ -163,6 +183,7 @@
         $(function () {
 
             myfunction();
+            fv_match_refresh();
 
             var mytimer=setInterval(function () {
 
@@ -176,10 +197,13 @@
                 };
                 $.post(url,data,function (response) {
 
-                    if (response.error=='0')
+                    if (response.error=='0' || response.error=='1')
                     {
-                        layer.msg(response.msg);
+                        layer.alert(response.msg);
                         clearInterval(mytimer);
+                        setTimeout(function () {
+                            location.reload();
+                        },3000);
                     }else
                     {
 

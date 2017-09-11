@@ -24,6 +24,60 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+    //取得session中的数据
+    public function get_data_in_session($myinput)
+    {
+        $data=Session::get('user');
+        return $data[0][$myinput];
+    }
+
+    //手指编号对应的手指中文
+    public function get_finger_name($id)
+    {
+        if ($id=='0')
+        {
+            return '左手小拇指';
+        }
+        if ($id=='1')
+        {
+            return '左手无名指';
+        }
+        if ($id=='2')
+        {
+            return '左手中指';
+        }
+        if ($id=='3')
+        {
+            return '左手食指';
+        }
+        if ($id=='4')
+        {
+            return '左手大拇指';
+        }
+        if ($id=='5')
+        {
+            return '右手大拇指';
+        }
+        if ($id=='6')
+        {
+            return '右手食指';
+        }
+        if ($id=='7')
+        {
+            return '右手中指';
+        }
+        if ($id=='8')
+        {
+            return '右手无名指';
+        }
+        if ($id=='9')
+        {
+            return '右手小拇指';
+        }
+
+        return '参数错误';
+    }
+
     //二维数组按照某一列排序
     public function dyadic_array_sort(Array $array,Array $cond)
     {

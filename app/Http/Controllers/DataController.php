@@ -2500,6 +2500,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 $cond=trim(Input::get('cond1'));
                 $cust_review_flag=Input::get('cond2');
+                $vv_or_fv=Input::get('cond3');
 
                 if ($cond=='')
                 {
@@ -2520,21 +2521,43 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }
 
                 //判断到底拿到了哪个值
-                if (isset($phone))
+                if ($vv_or_fv=='1')
                 {
-                    $where=['cust_review_num'=>$phone,'cust_review_flag'=>$cust_review_flag];
+                    //要查询的是声纹
+                    if (isset($phone))
+                    {
+                        $where=['cust_review_num'=>$phone,'cust_review_flag'=>$cust_review_flag];
+                    }else
+                    {
+                        $where=['cust_id'=>$id,'cust_review_flag'=>$cust_review_flag];
+                    }
+
+                    //开始查询
+                    $res=CustModel::where($where)->get()->toArray();
+
+                }elseif ($vv_or_fv=='2')
+                {
+                    //要查询的是指静脉
+                    if (isset($phone))
+                    {
+                        return ['error'=>'1','msg'=>'查询指静脉客户必须用身份证号码'];
+                    }else
+                    {
+                        $where=['cust_id'=>$id];
+                    }
+
+                    //开始查询
+                    $res=CustFVModel::where($where)->get()->toArray();
+
                 }else
                 {
-                    $where=['cust_id'=>$id,'cust_review_flag'=>$cust_review_flag];
-                }
 
-                //开始查询
-                $res=CustModel::where($where)->get()->toArray();
+                }
 
                 if (empty($res))
                 {
                     return ['error'=>'1','msg'=>'查无结果'];
-                }else
+                }elseif ($vv_or_fv=='1')
                 {
                     $nbsp='&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp';
                     $data['客户姓名']='<a id=modify_cust_name>'.$res[0]['cust_name'].'</a>';
@@ -2563,6 +2586,37 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
 
                     return ['error'=>'0','msg'=>'查询成功','data'=>$data,'idcard_picture'=>file_get_contents(storage_path('app/IDcard_picture/'.$res[0]['cust_id']))];
+
+                }elseif ($vv_or_fv=='2')
+                {
+                    $nbsp='&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp';
+                    $data['客户姓名']='<a id=modify_cust_name>'.$res[0]['cust_name'].'</a>';
+                    $data['身份证号']='<a id=modify_cust_id>'.$res[0]['cust_id'].'</a>';
+                    $data['社保编号']='<a id=modify_cust_si_id>'.$res[0]['cust_si_id'].'</a>';
+                    $data['手机号码']='<a id=modify_cust_phone_num>'.$res[0]['cust_phone_num'].'</a>';
+                    $data['备用号码']='<a id=modify_cust_phone_bku>'.$res[0]['cust_phone_bku'].'</a>';
+                    $data['客户地址']='<a id=modify_cust_address>'.$res[0]['cust_address'].'</a>';
+
+                    //组成一下所有父节点都有的地区名称
+                    $place=implode('-',array_reverse($this->select_allproject_parent(ProjectModel::find($res[0]['cust_project'])->project_id)));
+                    $data['所属区域']='<a id=modify_cust_project>'.$place.'</a>';
+
+                    $data['参保类型']='<a id=modify_cust_si_type>'.SiTypeModel::find($res[0]['cust_si_type'])->si_name.'</a>';
+                    $data['创建时间']='<a id=modify_created_at>'.$res[0]['created_at'].'</a>';
+                    $data['唯一主键']='<a id=modify_pid value='.$res[0]['cust_num'].'>'.$res[0]['cust_num'].'</a>';
+                    if ($res[0]['cust_death_flag']=='1')
+                    {
+                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-info" id=cust_restore_btn>恢复认证状态</a>';
+                    }else
+                    {
+                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-warning" id=cust_death_btn>设成去世状态</a>';
+                    }
+
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$data,'idcard_picture'=>file_get_contents(storage_path('app/IDcard_picture/'.$res[0]['cust_id']))];
+
+                }else
+                {
+
                 }
 
                 break;
@@ -2572,12 +2626,40 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $name=Input::get('key');
                 $pid=Input::get('pid');
 
-                $res=CustModel::find($pid);
-                $this->system_log('修改客户姓名','主键:'.$pid.'修改内容:'.$res->cust_name.'=>'.$name);
-                $res->cust_name=$name;
-                $res->save();
+                if (Input::get('stype')!='')
+                {
+                    if (Input::get('stype')=='1')
+                    {
+                        //声纹
+                        $res=CustModel::find($pid);
 
-                return ['error'=>'0','msg'=>'修改成功'];
+                        $res->cust_name=$name;
+                        $res->save();
+
+                        $this->system_log('修改声纹客户姓名','主键:'.$pid.'修改内容:'.$res->cust_name.'=>'.$name);
+
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }elseif (Input::get('stype')=='2')
+                    {
+                        //指静脉
+                        $res=CustFVModel::find($pid);
+
+                        $res->cust_name=$name;
+                        $res->save();
+
+                        $this->system_log('修改指静脉客户姓名','主键:'.$pid.'修改内容:'.$res->cust_name.'=>'.$name);
+
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }else
+                    {
+
+                    }
+                }else
+                {
+                    return ['error'=>'1','msg'=>'请重新选一下声纹还是指静脉'];
+                }
 
                 break;
 
@@ -2591,19 +2673,50 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     return ['error'=>'1','msg'=>'身份证输入不正确'];
                 }
 
-                $res=CustModel::where(['cust_id'=>$id])->get()->toArray();
-
-                if (!empty($res))
+                if (Input::get('stype')!='')
                 {
-                    return ['error'=>'1','msg'=>'身份证已存在，修改失败'];
+                    if (Input::get('stype')=='1')
+                    {
+                        //声纹
+                        $res=CustModel::where(['cust_id'=>$id])->get()->toArray();
+
+                        if (!empty($res))
+                        {
+                            return ['error'=>'1','msg'=>'身份证已存在，修改失败'];
+                        }
+
+                        $res=CustModel::find($pid);
+                        $this->system_log('修改声纹客户身份证','主键:'.$pid.'修改内容:'.$res->cust_id.'=>'.$id);
+                        $res->cust_id=$id;
+                        $res->save();
+
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }elseif (Input::get('stype')=='2')
+                    {
+                        //指静脉
+                        $res=CustFVModel::where(['cust_id'=>$id])->get()->toArray();
+
+                        if (!empty($res))
+                        {
+                            return ['error'=>'1','msg'=>'身份证已存在，修改失败'];
+                        }
+
+                        $res=CustFVModel::find($pid);
+                        $this->system_log('修改指静脉客户身份证','主键:'.$pid.'修改内容:'.$res->cust_id.'=>'.$id);
+                        $res->cust_id=$id;
+                        $res->save();
+
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }else
+                    {
+
+                    }
+                }else
+                {
+                    return ['error'=>'1','msg'=>'请重新选一下声纹还是指静脉'];
                 }
-
-                $res=CustModel::find($pid);
-                $this->system_log('修改身份证','主键:'.$pid.'修改内容:'.$res->cust_id.'=>'.$id);
-                $res->cust_id=$id;
-                $res->save();
-
-                return ['error'=>'0','msg'=>'修改成功'];
 
                 break;
 
@@ -2612,29 +2725,71 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $id=Input::get('key');
                 $pid=Input::get('pid');
 
-                if ($id=='')
+                if (Input::get('stype')!='')
                 {
-                    $res=CustModel::find($pid);
-                    $this->system_log('修改社保编号','主键:'.$pid.'修改内容:'.$res->cust_si_id.'=>'.$id);
-                    $res->cust_si_id=$id;
-                    $res->save();
+                    if (Input::get('stype')=='1')
+                    {
+                        //声纹
+                        if ($id=='')
+                        {
+                            $res=CustModel::find($pid);
+                            $this->system_log('修改声纹客户社保编号','主键:'.$pid.'修改内容:'.$res->cust_si_id.'=>'.$id);
+                            $res->cust_si_id=$id;
+                            $res->save();
 
-                    return ['error'=>'0','msg'=>'修改成功'];
+                            return ['error'=>'0','msg'=>'修改成功'];
+                        }else
+                        {
+                            $res=CustModel::where(['cust_si_id'=>$id])->get()->toArray();
+
+                            if (!empty($res))
+                            {
+                                return ['error'=>'1','msg'=>'社保编号已存在，修改失败'];
+                            }
+
+                            $res=CustModel::find($pid);
+                            $this->system_log('修改声纹客户社保编号','主键:'.$pid.'修改内容:'.$res->cust_si_id.'=>'.$id);
+                            $res->cust_si_id=$id;
+                            $res->save();
+
+                            return ['error'=>'0','msg'=>'修改成功'];
+                        }
+
+                    }elseif (Input::get('stype')=='2')
+                    {
+                        //指静脉
+                        if ($id=='')
+                        {
+                            $res=CustFVModel::find($pid);
+                            $this->system_log('修改指静脉客户社保编号','主键:'.$pid.'修改内容:'.$res->cust_si_id.'=>'.$id);
+                            $res->cust_si_id=$id;
+                            $res->save();
+
+                            return ['error'=>'0','msg'=>'修改成功'];
+                        }else
+                        {
+                            $res=CustFVModel::where(['cust_si_id'=>$id])->get()->toArray();
+
+                            if (!empty($res))
+                            {
+                                return ['error'=>'1','msg'=>'社保编号已存在，修改失败'];
+                            }
+
+                            $res=CustFVModel::find($pid);
+                            $this->system_log('修改指静脉客户社保编号','主键:'.$pid.'修改内容:'.$res->cust_si_id.'=>'.$id);
+                            $res->cust_si_id=$id;
+                            $res->save();
+
+                            return ['error'=>'0','msg'=>'修改成功'];
+                        }
+
+                    }else
+                    {
+
+                    }
                 }else
                 {
-                    $res=CustModel::where(['cust_si_id'=>$id])->get()->toArray();
-
-                    if (!empty($res))
-                    {
-                        return ['error'=>'1','msg'=>'社保编号已存在，修改失败'];
-                    }
-
-                    $res=CustModel::find($pid);
-                    $this->system_log('修改社保编号','主键:'.$pid.'修改内容:'.$res->cust_si_id.'=>'.$id);
-                    $res->cust_si_id=$id;
-                    $res->save();
-
-                    return ['error'=>'0','msg'=>'修改成功'];
+                    return ['error'=>'1','msg'=>'请重新选一下声纹还是指静脉'];
                 }
 
                 break;
@@ -2694,26 +2849,74 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $phone=Input::get('key');
                 $pid=Input::get('pid');
 
-                $res=CustModel::find($pid);
-                $this->system_log('修改备用号码','主键:'.$pid.'修改内容:'.$res->cust_phone_num.'=>'.$phone);
-                $res->cust_phone_num=$phone;
-                $res->save();
+                if (Input::get('stype')!='')
+                {
+                    if (Input::get('stype')=='1')
+                    {
+                        //声纹
+                        $res=CustModel::find($pid);
+                        $this->system_log('修改声纹客户备用号码','主键:'.$pid.'修改内容:'.$res->cust_phone_num.'=>'.$phone);
+                        $res->cust_phone_num=$phone;
+                        $res->save();
 
-                return ['error'=>'0','msg'=>'修改成功'];
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }elseif (Input::get('stype')=='2')
+                    {
+                        //指静脉
+                        $res=CustFVModel::find($pid);
+                        $this->system_log('修改指静脉客户手机号码','主键:'.$pid.'修改内容:'.$res->cust_phone_num.'=>'.$phone);
+                        $res->cust_phone_num=$phone;
+                        $res->save();
+
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }else
+                    {
+
+                    }
+                }else
+                {
+                    return ['error'=>'1','msg'=>'请重新选一下声纹还是指静脉'];
+                }
 
                 break;
 
             case 'modify_cust_address':
 
-                $phone=Input::get('key');
+                $addr=Input::get('key');
                 $pid=Input::get('pid');
 
-                $res=CustModel::find($pid);
-                $this->system_log('修改客户地址','主键:'.$pid.'修改内容:'.$res->cust_address.'=>'.$phone);
-                $res->cust_address=$phone;
-                $res->save();
+                if (Input::get('stype')!='')
+                {
+                    if (Input::get('stype')=='1')
+                    {
+                        //声纹
+                        $res=CustModel::find($pid);
+                        $this->system_log('修改声纹客户地址','主键:'.$pid.'修改内容:'.$res->cust_address.'=>'.$addr);
+                        $res->cust_address=$addr;
+                        $res->save();
 
-                return ['error'=>'0','msg'=>'修改成功'];
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }elseif (Input::get('stype')=='2')
+                    {
+                        //指静脉
+                        $res=CustFVModel::find($pid);
+                        $this->system_log('修改指静脉客户地址','主键:'.$pid.'修改内容:'.$res->cust_address.'=>'.$addr);
+                        $res->cust_address=$addr;
+                        $res->save();
+
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }else
+                    {
+
+                    }
+                }else
+                {
+                    return ['error'=>'1','msg'=>'请重新选一下声纹还是指静脉'];
+                }
 
                 break;
 
@@ -2741,12 +2944,36 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $proj=Input::get('key');
                 $pid=Input::get('pid');
 
-                $res=CustModel::find($pid);
-                $this->system_log('修改客户属地','主键:'.$pid.'修改内容:'.$res->cust_project.'=>'.$proj);
-                $res->cust_project=$proj;
-                $res->save();
+                if (Input::get('stype')!='')
+                {
+                    if (Input::get('stype')=='1')
+                    {
+                        //声纹
+                        $res=CustModel::find($pid);
+                        $this->system_log('修改声纹客户属地','主键:'.$pid.'修改内容:'.$res->cust_project.'=>'.$proj);
+                        $res->cust_project=$proj;
+                        $res->save();
 
-                return ['error'=>'0','msg'=>'修改成功'];
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }elseif (Input::get('stype')=='2')
+                    {
+                        //指静脉
+                        $res=CustFVModel::find($pid);
+                        $this->system_log('修改指静脉客户属地','主键:'.$pid.'修改内容:'.$res->cust_project.'=>'.$proj);
+                        $res->cust_project=$proj;
+                        $res->save();
+
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }else
+                    {
+
+                    }
+                }else
+                {
+                    return ['error'=>'1','msg'=>'请重新选一下声纹还是指静脉'];
+                }
 
                 break;
 
@@ -2755,12 +2982,36 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $si=Input::get('key');
                 $pid=Input::get('pid');
 
-                $res=CustModel::find($pid);
-                $this->system_log('修改参保类型','主键:'.$pid.'修改内容:'.$res->cust_si_type.'=>'.$si);
-                $res->cust_si_type=$si;
-                $res->save();
+                if (Input::get('stype')!='')
+                {
+                    if (Input::get('stype')=='1')
+                    {
+                        //声纹
+                        $res=CustModel::find($pid);
+                        $this->system_log('修改声纹客户参保类型','主键:'.$pid.'修改内容:'.$res->cust_si_type.'=>'.$si);
+                        $res->cust_si_type=$si;
+                        $res->save();
 
-                return ['error'=>'0','msg'=>'修改成功'];
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }elseif (Input::get('stype')=='2')
+                    {
+                        //指静脉
+                        $res=CustFVModel::find($pid);
+                        $this->system_log('修改指静脉客户参保类型','主键:'.$pid.'修改内容:'.$res->cust_si_type.'=>'.$si);
+                        $res->cust_si_type=$si;
+                        $res->save();
+
+                        return ['error'=>'0','msg'=>'修改成功'];
+
+                    }else
+                    {
+
+                    }
+                }else
+                {
+                    return ['error'=>'1','msg'=>'请重新选一下声纹还是指静脉'];
+                }
 
                 break;
 
@@ -2807,76 +3058,159 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 $pid=Input::get('pid');
 
-                $res=CustModel::find($pid);
-
-                //第一年审人不能直接删除，必须先删除第二年审人
-                if ($res->cust_relation_flag!='0')
+                //分辨是声纹还是指静脉
+                if (Input::get('stype')!='')
                 {
-                    try
+                    if (Input::get('stype')=='1')
                     {
-                        //查询是否存在第二年审人
-                        CustModel::findOrFail($res->cust_relation_flag);
+                        //声纹
+                        $res=CustModel::find($pid);
 
-                        return ['error'=>'1','msg'=>'不可以直接删除第一年审人'];
-                    }catch (ModelNotFoundException $exception)
+                        //第一年审人不能直接删除，必须先删除第二年审人
+                        if ($res->cust_relation_flag!='0')
+                        {
+                            try
+                            {
+                                //查询是否存在第二年审人
+                                CustModel::findOrFail($res->cust_relation_flag);
+
+                                return ['error'=>'1','msg'=>'不可以直接删除第一年审人'];
+                            }catch (ModelNotFoundException $exception)
+                            {
+
+                            }
+                        }else
+                        {
+                            //如果等于0，说明是删除的第二年审人，或者，还没有添加第二年审人的第一年审人
+                            //可以直接删除
+                            //需要把第一年审人的cust_relation_flag改为0
+                            $a=CustModel::where(['cust_relation_flag'=>$pid])->first();
+
+                            if ($a!=null)
+                            {
+                                $a->cust_relation_flag='0';
+                                $a->save();
+                            }
+                        }
+
+                        $this->voice_file_ModifyOrDelete($pid,'delete');
+
+                        $this->system_log('删除声纹客户信息','主键:'.$pid);
+
+                        CustDeleteModel::create($res->toArray());
+
+                        $res->delete();
+
+                        VocalPrintModel::where(['vp_id'=>$pid])->delete();
+
+                        return ['error'=>'0','msg'=>'删除成功'];
+
+                    }elseif (Input::get('stype')=='2')
+                    {
+                        //指静脉
+                        $res=CustFVModel::find($pid);
+
+                        $res->delete();
+
+                        $this->system_log('删除声纹客户信息','主键:'.$pid);
+
+                        return ['error'=>'0','msg'=>'删除成功'];
+
+                    }else
                     {
 
                     }
+
                 }else
                 {
-                    //如果等于0，说明是删除的第二年审人，或者，还没有添加第二年审人的第一年审人
-                    //可以直接删除
-                    //需要把第一年审人的cust_relation_flag改为0
-                    $a=CustModel::where(['cust_relation_flag'=>$pid])->first();
-
-                    if ($a!=null)
-                    {
-                        $a->cust_relation_flag='0';
-                        $a->save();
-                    }
+                    return ['error'=>'1','msg'=>'请重新选一下声纹还是指静脉'];
                 }
-
-                $this->voice_file_ModifyOrDelete($pid,'delete');
-
-                $this->system_log('删除客户信息','主键:'.$pid);
-
-                CustDeleteModel::create($res->toArray());
-
-                $res->delete();
-
-                VocalPrintModel::where(['vp_id'=>$pid])->delete();
-
-                return ['error'=>'0','msg'=>'删除成功'];
 
                 break;
 
             case 'modify_cust_death':
 
-                $pid=Input::get('pid');
+                if (Input::get('stype')!='')
+                {
+                    if (Input::get('stype')=='1')
+                    {
+                        //声纹
+                        $pid=Input::get('pid');
 
-                $res=CustModel::find($pid);
+                        $res=CustModel::find($pid);
 
-                $res->cust_death_flag='1';
-                $res->save();
+                        $res->cust_death_flag='1';
+                        $res->save();
 
-                $this->system_log('设置客户为去世状态','主键:'.$pid);
+                        $this->system_log('设置声纹客户为去世状态','主键:'.$pid);
 
-                return ['error'=>'0','msg'=>'设置成功'];
+                        return ['error'=>'0','msg'=>'设置成功'];
+
+                    }elseif (Input::get('stype')=='2')
+                    {
+                        //指静脉
+                        $pid=Input::get('pid');
+
+                        $res=CustFVModel::find($pid);
+
+                        $res->cust_death_flag='1';
+                        $res->save();
+
+                        $this->system_log('设置指静脉客户为去世状态','主键:'.$pid);
+
+                        return ['error'=>'0','msg'=>'设置成功'];
+
+                    }else
+                    {
+
+                    }
+                }else
+                {
+                    return ['error'=>'1','msg'=>'请重新选一下声纹还是指静脉'];
+                }
 
                 break;
 
             case 'modify_cust_restore':
 
-                $pid=Input::get('pid');
+                if (Input::get('stype')!='')
+                {
+                    if (Input::get('stype')=='1')
+                    {
+                        //声纹
+                        $pid=Input::get('pid');
 
-                $res=CustModel::find($pid);
+                        $res=CustModel::find($pid);
 
-                $res->cust_death_flag='0';
-                $res->save();
+                        $res->cust_death_flag='0';
+                        $res->save();
 
-                $this->system_log('设置客户为认证状态','主键:'.$pid);
+                        $this->system_log('设置声纹客户为认证状态','主键:'.$pid);
 
-                return ['error'=>'0','msg'=>'设置成功'];
+                        return ['error'=>'0','msg'=>'设置成功'];
+
+                    }elseif (Input::get('stype')=='2')
+                    {
+                        //指静脉
+                        $pid=Input::get('pid');
+
+                        $res=CustFVModel::find($pid);
+
+                        $res->cust_death_flag='0';
+                        $res->save();
+
+                        $this->system_log('设置指静脉客户为认证状态','主键:'.$pid);
+
+                        return ['error'=>'0','msg'=>'设置成功'];
+
+                    }else
+                    {
+
+                    }
+                }else
+                {
+                    return ['error'=>'1','msg'=>'请重新选一下声纹还是指静脉'];
+                }
 
                 break;
 
@@ -3683,10 +4017,20 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     {
                         $template=$row['value'];
                     }
+                    //上面是指静脉信息，下面是指纹信息
+                    if ($row['name']=='my_fpID')
+                    {
+                        $fp_id=$row['value'];
+                    }
+
+                    if ($row['name']=='my_fpTemplate')
+                    {
+                        $fp_template=$row['value'];
+                    }
                 }
 
                 //如果数据是空
-                if (trim($id)=='' || trim($template==''))
+                if (trim($id)=='' || trim($template)=='' || trim($fp_id)=='' || trim($fp_template)=='')
                 {
                     return ['error'=>'1','msg'=>'未取得指静脉数据'];
                 }
@@ -3694,14 +4038,25 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $template=trim($template);
                 $template=str_replace(["\r\n","\n"],'',$template);
 
+                //注册指静脉
                 $myfv=FingerRegister::getSingleton();
                 $myfv->Register(explode(',',$id),explode(',',$template));
+
+                //注册指纹
+                $fp_id=str_replace(['[',']'],'',$fp_id);
+                $fp_template=str_replace(['[',']'],'',$fp_template);
+                $myfv->RegisterFP(explode(',',$fp_id),explode(',',$fp_template));
 
                 //创建变量，储存指静脉模板
                 foreach ($myfv->whichAttrHasData() as $key=>$value)
                 {
+                    //指静脉
                     $attr='Finger_'.$value;
                     $$attr=implode(',',$myfv->$attr);
+
+                    //指纹
+                    $attr1='FingerPrint_'.$value;
+                    $$attr1=$myfv->$attr1;
                 }
 
                 //取出要添加的用户信息
@@ -3814,7 +4169,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 //$id是fv的id
                 //$template是模板
 
-                //把指静脉信息存储到mongo里
+                //把指静脉和指纹信息存储到mongo里
                 $obj=$this->mymongo();
                 $obj->Finger->CustTemplate->insert([
                     '_id'=>$model->cust_num,
@@ -3828,6 +4183,16 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     'Finger_7'=>isset($Finger_7)?$Finger_7:'',
                     'Finger_8'=>isset($Finger_8)?$Finger_8:'',
                     'Finger_9'=>isset($Finger_9)?$Finger_9:'',
+                    'FingerPrint_0'=>isset($FingerPrint_0)?$FingerPrint_0:'',
+                    'FingerPrint_1'=>isset($FingerPrint_1)?$FingerPrint_1:'',
+                    'FingerPrint_2'=>isset($FingerPrint_2)?$FingerPrint_2:'',
+                    'FingerPrint_3'=>isset($FingerPrint_3)?$FingerPrint_3:'',
+                    'FingerPrint_4'=>isset($FingerPrint_4)?$FingerPrint_4:'',
+                    'FingerPrint_5'=>isset($FingerPrint_5)?$FingerPrint_5:'',
+                    'FingerPrint_6'=>isset($FingerPrint_6)?$FingerPrint_6:'',
+                    'FingerPrint_7'=>isset($FingerPrint_7)?$FingerPrint_7:'',
+                    'FingerPrint_8'=>isset($FingerPrint_8)?$FingerPrint_8:'',
+                    'FingerPrint_9'=>isset($FingerPrint_9)?$FingerPrint_9:'',
                     'time'=>time()
                 ]);
 
@@ -3848,21 +4213,35 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     {
                         $template=$row['value'];
                     }
+                    //上面是指静脉信息，下面是指纹信息
+                    if ($row['name']=='my_fpID')
+                    {
+                        $fp_id=$row['value'];
+                    }
+
+                    if ($row['name']=='my_fpTemplate')
+                    {
+                        $fp_template=$row['value'];
+                    }
                 }
 
                 //如果数据是空
-                if (trim($id)=='' || trim($template)=='')
+                if (trim($id)=='' || trim($template)=='' || trim($fp_id)=='' || trim($fp_template)=='')
                 {
                     return ['error'=>'1','msg'=>'等待指静脉数据'];
                 }
 
                 $template=trim($template);
-
                 $template=str_replace(["\r\n","\n"],'',$template);
 
                 //实时更新前台采集的数据
                 $obj_for_fv=FingerRegister::getSingleton();
                 $obj_for_fv->Register(explode(',',$id),explode(',',$template));
+
+                //把前台传过来的数据加工一下后，放到类里
+                $fp_id=str_replace(['[',']'],'',$fp_id);
+                $fp_template=str_replace(['[',']'],'',$fp_template);
+                $obj_for_fv->RegisterFP(explode(',',$fp_id),explode(',',$fp_template));
 
                 return ['error'=>'0','data'=>$obj_for_fv->attrToChinese($obj_for_fv)];
 
@@ -3881,12 +4260,27 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     {
                         $template=$row['value'];
                     }
+                    //上面是指静脉信息，下面是指纹信息
+                    if ($row['name']=='my_fpID')
+                    {
+                        $fp_id=$row['value'];
+                    }
+
+                    if ($row['name']=='my_fpTemplate')
+                    {
+                        $fp_template=$row['value'];
+                    }
                 }
 
                 //如果数据是空
-                if (trim($id)=='' || trim($template)=='' || trim(Input::get('cust_id'))=='')
+                if (trim($id)=='' || trim($template)=='' || trim($fp_id)=='' || trim($fp_template)=='' || trim(Input::get('cust_id'))=='')
                 {
-                    return ['error'=>'1','msg'=>'等待数据'];
+                    return ['error'=>'3','msg'=>'等待数据'];
+                }
+
+                if (!$this->is_idcard(trim(Input::get('cust_id'))))
+                {
+                    return ['error'=>'3','msg'=>'身份证输入不正确'];
                 }
 
                 $id=substr($id,0,1);
@@ -3901,11 +4295,23 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $res=$row;
                 }
 
+                //指静脉模板与数据
                 $template=trim($template);
                 $template=str_replace(["\r\n","\n"],'',$template);
                 $template=explode(',',$template);
                 $mongotemplate=$res['Finger_'.$id];
                 $mongotemplate=explode(',',$mongotemplate);
+
+                //指纹模板与数据
+                $fp_template=str_replace(['[',']'],'',$fp_template);
+                $mongotemplate_fp=$res['FingerPrint_'.$id];
+
+                //判断一下，如果没有采集该手指的指静脉，返回给前端
+                if (count($mongotemplate)<3 || strlen($mongotemplate_fp)<50)
+                {
+                    return ['error'=>'1','msg'=>'没有采集该手指信息'];
+                }
+
                 $data=[
                     'pid'=>(string)$cust_pid->cust_num,//用户的主键号
                     'fv1'=>$template[0],//当前采集的用户指静脉
@@ -3914,25 +4320,117 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     'fv4'=>$mongotemplate[0],//mongo里的模板
                     'fv5'=>$mongotemplate[1],//mongo里的模板
                     'fv6'=>$mongotemplate[2],//mongo里的模板
+                    'fp1'=>$fp_template,//当前采集的用户指纹
+                    'fp2'=>$mongotemplate_fp,//mongo里的模板
+                    'fno'=>(string)$id,//手指编号
+                    'fvs'=>(string)Config::get('constant.fingervenascore')//指静脉阈值
                 ];
 
                 $curl_res=$this->mycurl('http://58.19.253.212:7510/fingervena',$data);
-                $curl_res=json_decode($curl_res['msg'],true);
-                if ($curl_res['result']=='true')
+
+                //判断返回值
+                if ($curl_res['error']!='0')
                 {
-                    return ['error'=>'0','msg'=>'成功'];
+                    return ['error'=>'1','msg'=>'指静脉SDK故障，请求被拒绝'];
+                }
+
+                $curl_res=json_decode($curl_res['msg'],true);
+
+                if ($curl_res['result']=='true' || $curl_res['fp_result']!='error' && $curl_res['fp_result']>=Config::get('constant.fingerprintscore'))
+                {
+                    //结果放到mongo里
+                    $mongo=$this->mymongo();
+                    $mongo->Finger->ConfirmRes->insert([
+                        'id_in_mysql'=>$curl_res['pid'],//mysql表中的主键
+                        'res_of_fv'=>$curl_res['result'],//指静脉的对比结果
+                        'res_of_fp'=>$curl_res['fp_result'],//指纹的对比分数
+                        'fno'=>$curl_res['fno'],//该次认证的哪个手指
+                        'sno'=>$this->get_data_in_session('staff_num'),//操作认证的员工主键(mysql)
+                        'time'=>date('Ymd',time())//该条数据的插入时间
+                    ]);
+
+                    //修改mysql中，该客户的最后认证时间
+                    $model=CustFVModel::find($curl_res['pid']);
+                    $model->cust_last_confirm_date=date('Y-m-d',time());
+                    $model->save();
+
+                    return ['error'=>'0','msg'=>'认证成功'];
+
                 }elseif ($curl_res['result']=='false')
                 {
-                    return ['error'=>'0','msg'=>'失败'];
+                    //结果放到mongo里
+                    $mongo=$this->mymongo();
+                    $mongo->Finger->ConfirmRes->insert([
+                        'id_in_mysql'=>$curl_res['pid'],//mysql表中的主键
+                        'res_of_fv'=>$curl_res['result'],//指静脉的对比结果
+                        'res_of_fp'=>$curl_res['fp_result'],//指纹的对比分数
+                        'fno'=>$curl_res['fno'],//该次认证的哪个手指
+                        'sno'=>$this->get_data_in_session('staff_num'),//操作认证的员工主键(mysql)
+                        'time'=>date('Ymd',time())//该条数据的插入时间
+                    ]);
+
+                    return ['error'=>'0','msg'=>'认证失败'];
+
                 }elseif ($curl_res['result']=='error')
                 {
-                    return ['error'=>'0','msg'=>'错误'];
+                    return ['error'=>'1','msg'=>'指静脉SDK故障，接口调用失败'];
                 }else
                 {
 
                 }
 
-                return ['error'=>'0'];
+                return ['error'=>'0','msg'=>'未知的错误'];
+
+                break;
+
+            case 'fv_match_refresh':
+
+                $getMongo=$this->mymongo();
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=3;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                //查询当天的数据
+                $time=date('Ymd');
+
+                //总页数
+                $count_data=$getMongo->Finger->ConfirmRes->count(['sno'=>$this->get_data_in_session('staff_num'),'time'=>$time]);
+                $cnt_page=intval(ceil($count_data/$limit));
+
+                //展示的数据
+                $model=$getMongo->Finger->ConfirmRes->find(['sno'=>$this->get_data_in_session('staff_num'),'time'=>$time])
+                    ->sort(['time'=>-1])->limit($limit)->skip($offset);
+
+                foreach ($model as $row)
+                {
+                    $tmp[]=$row;
+                }
+
+                foreach ($tmp as $row)
+                {
+                    //组成前端能显示的数据
+                    $cust=CustFVModel::find($row['id_in_mysql']);
+
+                    $tmp_tmp[]=[
+                        $cust->cust_name,
+                        $cust->cust_id,
+                        $row['res_of_fv']=='true'?'认证通过':'认证失败',
+                        $row['res_of_fp']=='error'?'认证失败':($row['res_of_fp']>=Config::get('constant.fingerprintscore')?'认证通过':'认证失败'),
+                        $this->get_finger_name($row['fno']),
+                        $cust->cust_phone_num,
+                        $cust->cust_phone_bku
+                    ];
+                }
+
+                $model=$tmp_tmp;
+
+                return ['error'=>'0','msg'=>'数据读取成功','pages'=>$cnt_page,'data'=>array_reverse($model),'count_data'=>$count_data];
 
                 break;
         }

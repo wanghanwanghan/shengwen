@@ -23,6 +23,10 @@ return [
     'province'=>'湖北',
     'city'=>'黄石',
 
+    //对比指纹指静脉的分值
+    'fingerprintscore'=>'80',
+    'fingervenascore'=>'80'
+
 
 
 

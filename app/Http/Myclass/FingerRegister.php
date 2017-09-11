@@ -8,6 +8,7 @@ class FingerRegister
     public static $MySingleton;
 
     //左手小拇指为0，左手无名指为1，依次往下，右手无名指为8，右手小拇指为9
+    //指静脉
     public $Finger_0;
     public $Finger_1;
     public $Finger_2;
@@ -19,9 +20,24 @@ class FingerRegister
     public $Finger_8;
     public $Finger_9;
 
+    //指纹
+    public $FingerPrint_0;
+    public $FingerPrint_1;
+    public $FingerPrint_2;
+    public $FingerPrint_3;
+    public $FingerPrint_4;
+    public $FingerPrint_5;
+    public $FingerPrint_6;
+    public $FingerPrint_7;
+    public $FingerPrint_8;
+    public $FingerPrint_9;
+
     //把指静脉模板数据绑定到这个变量里，然后再分配给Finger_[0-9]
     public $FingerTemplateData;
+    //把指纹模板数据绑定到这个变量里，然后再分配给Finger_[0-9]
+    public $FingerPrintTemplateData;
 
+    //注册指静脉
     public function Register(Array $id,Array $template)
     {
         //给指静脉属性赋值
@@ -35,6 +51,24 @@ class FingerRegister
         foreach ($this->FingerTemplateData as $key=>$value)
         {
             $AttrName='Finger_'.$key;
+            $this->$AttrName=$value;
+        }
+    }
+
+    //注册指纹
+    public function RegisterFP(Array $id,Array $template)
+    {
+        //给指纹属性赋值
+        for ($i=0;$i<count($id);$i++)
+        {
+            $IdNumber=substr($id[$i],0,1);
+            $this->FingerPrintTemplateData[$IdNumber]=array_shift($template);
+        }
+
+        //分配给FingerPrint_[0-9]
+        foreach ($this->FingerPrintTemplateData as $key=>$value)
+        {
+            $AttrName='FingerPrint_'.$key;
             $this->$AttrName=$value;
         }
     }

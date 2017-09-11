@@ -1153,6 +1153,62 @@ function statistics_change(curr) {
 
 }
 
+function fv_match_refresh(curr) {
+
+    //取得mongodb中的，当天认证的数据
+    $("#fv_match_table tbody").children().remove();
+
+    var url ='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        page  :curr||1,
+        type  :'fv_match_refresh'
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.msg(response.msg);
+
+            $("#data_total").html(response.count_data);
+
+            //遍历返回的数据-表内容
+            for(var i=0;i<response.data.length;i++){
+
+                var tabletr=$("<tr></tr>");
+
+                $.each(response.data[i],function (k,v) {
+
+                    tabletr.append('<td align="center">'+v+'</td>');
+
+                });
+
+                $("#fv_match_table tbody").append(tabletr);
+
+            }
+
+            //显示分页
+            laypage({
+                cont: 'fv_match_laypage', //容器
+                pages: response.pages, //通过后台拿到的总页数
+                curr: curr || 1, //当前页
+                jump: function(obj, first){ //触发分页后的回调
+                    if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
+                        fv_match_refresh(obj.curr);
+                    }
+                }
+            });
+
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
+
 function service_care_change(curr) {
 
     $("#service_care_table tbody").children().remove();

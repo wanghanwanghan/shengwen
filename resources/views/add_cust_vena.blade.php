@@ -153,6 +153,15 @@
                         <legend>三枚指静脉模板数据</legend>
                         <textarea rows="1" cols="70" id="fvTemplate10" name="my_fvTemplate"></textarea>
                     </fieldset>
+
+                    <fieldset style="width:130px" id="t">
+                        <legend>指纹的id</legend>
+                        <textarea rows="1" cols="70" id="fingerId" name="my_fpID"></textarea>
+                    </fieldset>
+                    <fieldset style="width:530px" id="te">
+                        <legend>指纹模板数据</legend>
+                        <textarea rows="1" cols="70" id="fingerTemplate10" name="my_fpTemplate"></textarea>
+                    </fieldset>
                 </form>
             </div>
 

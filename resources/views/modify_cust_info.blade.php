@@ -28,6 +28,12 @@
                                         <option value="2">第二年审人</option>
                                     </select>
                                 </div>
+                                <div class="col-sm-2">
+                                    <select style="padding-left: 8px" name="vv_or_fv" class="form-control">
+                                        <option value="1">声纹</option>
+                                        <option value="2">指静脉</option>
+                                    </select>
+                                </div>
                                 <button type="button" class="btn btn-box-tool" data-widget="collapse" style="float: right">
                                     <i class="fa fa-minus"></i>
                                 </button>
@@ -89,7 +95,9 @@
                     var data={
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_delete',
-                        pid   :$("#modify_pid").html()};
+                        pid   :$("#modify_pid").html(),
+                        stype :$('select[name=vv_or_fv]').val()
+                    };
                     $.post(url,data,function (response) {
                         if(response.error=='0')
                         {layer.msg(response.msg);location.reload();}
@@ -110,7 +118,9 @@
                     var data={
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_death',
-                        pid   :$("#modify_pid").html()};
+                        pid   :$("#modify_pid").html(),
+                        stype :$('select[name=vv_or_fv]').val()
+                    };
                     $.post(url,data,function (response) {
                         if(response.error=='0')
                         {layer.msg(response.msg);location.reload();}
@@ -131,7 +141,9 @@
                     var data={
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_restore',
-                        pid   :$("#modify_pid").html()};
+                        pid   :$("#modify_pid").html(),
+                        stype :$('select[name=vv_or_fv]').val()
+                    };
                     $.post(url,data,function (response) {
                         if(response.error=='0')
                         {layer.msg(response.msg);location.reload();}
@@ -167,7 +179,9 @@
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_name',
                         key   :value,
-                        pid   :$("#modify_pid").html()};
+                        pid   :$("#modify_pid").html(),
+                        stype :$('select[name=vv_or_fv]').val()
+                    };
                     $.post(url,data,function (response) {
                         if(response.error=='0')
                         {layer.msg(response.msg);}
@@ -200,7 +214,9 @@
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_id',
                         key   :value,
-                        pid   :$("#modify_pid").html()};
+                        pid   :$("#modify_pid").html(),
+                        stype :$('select[name=vv_or_fv]').val()
+                    };
                     $.post(url,data,function (response) {
                         if(response.error=='0')
                         {layer.msg(response.msg);}
@@ -229,7 +245,9 @@
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_si_id',
                         key   :$.trim(value),
-                        pid   :$("#modify_pid").html()};
+                        pid   :$("#modify_pid").html(),
+                        stype :$('select[name=vv_or_fv]').val()
+                    };
                     $.post(url,data,function (response) {
                         if(response.error=='0')
                         {layer.msg(response.msg);}
@@ -293,7 +311,9 @@
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_phone_num',
                         key   :$.trim(value),
-                        pid   :$("#modify_pid").html()};
+                        pid   :$("#modify_pid").html(),
+                        stype :$('select[name=vv_or_fv]').val()
+                    };
                     $.post(url,data,function (response) {
                         if(response.error=='0')
                         {layer.msg(response.msg);}
@@ -322,7 +342,9 @@
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_address',
                         key   :$.trim(value),
-                        pid   :$("#modify_pid").html()};
+                        pid   :$("#modify_pid").html(),
+                        stype :$('select[name=vv_or_fv]').val()
+                    };
                     $.post(url,data,function (response) {
                         if(response.error=='0')
                         {layer.msg(response.msg);}
@@ -351,7 +373,9 @@
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_project',
                         key   :value,
-                        pid   :$("#modify_pid").html()};
+                        pid   :$("#modify_pid").html(),
+                        stype :$('select[name=vv_or_fv]').val()
+                    };
                     $.post(url,data,function (response) {
                         if(response.error=='0')
                         {layer.msg(response.msg);}
@@ -380,7 +404,9 @@
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_si_type',
                         key   :value,
-                        pid   :$("#modify_pid").html()};
+                        pid   :$("#modify_pid").html(),
+                        stype :$('select[name=vv_or_fv]').val()
+                    };
                     $.post(url,data,function (response) {
                         if(response.error=='0')
                         {layer.msg(response.msg);}
@@ -428,6 +454,7 @@
                 _token:$("input[name=_token]").val(),
                 cond1   :$("#cond").val(),
                 cond2   :$('select[name=cust_review_flag]').val(),
+                cond3   :$('select[name=vv_or_fv]').val(),
                 type  :'modify_info'
             };
 
@@ -475,6 +502,10 @@
         });
 
         $('select[name=cust_review_flag]').change(function () {
+            all();
+        });
+
+        $('select[name=vv_or_fv]').change(function () {
             all();
         });
 
