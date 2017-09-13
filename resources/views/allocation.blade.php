@@ -19,12 +19,12 @@
                 <div class="row">
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
                     <form id="allocation_form">
-                        <div class="col-sm-2">
-                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){allocation_change();}});" name="star_date" placeholder="开始时间"/>
+                        <div class="col-sm-1">
+                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){allocation_change();}});" name="star_date" placeholder="开始"/>
                         </div>
 
-                        <div class="col-sm-2">
-                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){allocation_change();}});" name="stop_date" placeholder="结束时间"/>
+                        <div class="col-sm-1">
+                            <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){allocation_change();}});" name="stop_date" placeholder="结束"/>
                         </div>
 
                         <div class="col-sm-2" onclick="select_project();">
@@ -51,6 +51,13 @@
                                 <option value="0">客户类型-默认全部</option>
                                 <option value="A">A类</option>
                                 <option value="B">B类</option>
+                            </select>
+                        </div>
+
+                        <div class="col-sm-2">
+                            <select class="form-control" name="vv_or_fv" style="padding-left: 8px;">
+                                <option value="1">声纹</option>
+                                {{--<option value="2">指静脉</option>--}}
                             </select>
                         </div>
                     </form>
@@ -170,6 +177,10 @@
         });
 
         $("select[name=cust_type]").change(function () {
+            allocation_change();
+        });
+
+        $("select[name=vv_or_fv]").change(function () {
             allocation_change();
         });
 

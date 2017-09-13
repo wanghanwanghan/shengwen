@@ -11,19 +11,23 @@
         <div class="box-header with-border">
 
             <form id="analysis_form">
-            <input type="hidden" name="_token" value="{{ csrf_token() }}">
-
-            <div class="col-sm-2" onclick="select_project();">
-                <span id="parentIframe">redis启动失败</span>
-                <input type="hidden" name="cust_project">
-            </div>
-
-            <div class="col-sm-2">
-                <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){analysis_change();}});" name="year_and_month" placeholder="选择年/月(不支持日)"/>
-            </div>
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <div class="col-sm-2" onclick="select_project();">
+                    <span id="parentIframe">redis启动失败</span>
+                    <input type="hidden" name="cust_project">
+                </div>
+                <div class="col-sm-2">
+                    <input class="form-control layer-date" readonly type="text" id="" onclick="laydate({istoday:false,isclear:false,issure:false,choose:function(){analysis_change();}});" name="year_and_month" placeholder="选择年/月(不支持日)"/>
+                </div>
+                <div class="col-sm-2">
+                    <select style="padding-left: 8px" name="vv_or_fv" class="form-control">
+                        <option value="1">声纹</option>
+                        <option value="2">指静脉</option>
+                    </select>
+                </div>
             </form>
 
-            <div class="col-sm-5">
+            <div class="col-sm-3">
                 <div style="padding-top: 8px;">当前月份一共<<span style="color: red;" id="data_total">0</span>>条记录</div>
             </div>
 
@@ -43,6 +47,10 @@
     <script>
 
         $(function () {
+
+            $("select[name=vv_or_fv]").on('change',function () {
+                analysis_change();
+            });
 
             var url ='/data/ajax';
             var data={

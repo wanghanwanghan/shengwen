@@ -20,17 +20,15 @@ class TestController extends Controller
             ['name'=>'孙5','age'=>'17','totle'=>'11111']
         ];
 
-        $array=[
-            '9','5','2','7'
-        ];
-
-        //1.需要加载php扩展 dl("php_w32api.dll");
-        //2.从你的dll里面导出函数，假定该函数在dll里面被声明为FuncDll,并且返回值是int类型
-        //  w32api_register_function("函数所在的dll","FuncDll","int");
-        //3.现在你可以调用它了 $result=FuncDll();
 
 
-        $fv=FingerRegister::getSingleton();
+        $str='黏黏我想约上次我妈说的它一来就生孩子的那只狗周日来家里啊';
+
+        $str=md5($str);
+
+        dd($str);
+
+
 
 
 

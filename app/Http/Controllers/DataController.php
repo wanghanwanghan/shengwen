@@ -1256,71 +1256,142 @@ class DataController extends Controller
                             return ['error'=>'1','msg'=>'必须要选择一个日期'];
                         }else
                         {
-                            //得到年-月
-                            $yearAndmonth=substr($row['value'],0,strlen($row['value'])-3);
-
-                            //得到当前年的当前月有多少天
-                            $unixTime=strtotime($row['value']);
-                            $day=date('t',$unixTime);
-
-                            //从数据库中查询符合条件的数据
-                            $data=CustModel::where(['cust_project'=>$proj])->where('created_at','like',$yearAndmonth.'%')
-                                ->orderBy('created_at','asc')
-                                ->groupBy('cust_review_num')
-                                ->get(['created_at','cust_review_num'])
-                                ->toArray();
-
-                            //只要数组中的创建时间
-                            foreach ($data as $row)
-                            {
-                                $tmp[]=$row['created_at'];
-                            }
-
-                            $data=isset($tmp) ? $tmp : null;
-
-                            if (empty($data))
-                            {
-                                return ['error'=>'1','msg'=>'没有匹配到数据'];
-                            }else
-                            {
-                                //上面已经得到当前月的所有数据了
-                                foreach ($data as $row)
-                                {
-                                    //只保留年月日
-                                    $time[]=substr($row,0,10);
-                                }
-
-                                //制造返回给前端页面的数组
-                                foreach (array_count_values($time) as $k=>$v)
-                                {
-                                    $morris_data[]=['y'=>$k,'mytarget'=>$v];
-                                }
-
-                                //得到当前日期的前缀
-                                $prefix=date('Y-m-',$unixTime);
-
-                                //补齐丢失的日期
-                                for ($i=1;$i<=$day;$i++)
-                                {
-                                    if (strlen($i)=='1')
-                                    {
-                                        if (!array_key_exists($prefix.'0'.$i,array_count_values($time)))
-                                        {
-                                            $morris_data[]=['y'=>$prefix.'0'.$i,'mytarget'=>'0'];
-                                        }
-                                    }else
-                                    {
-                                        if (!array_key_exists($prefix.$i,array_count_values($time)))
-                                        {
-                                            $morris_data[]=['y'=>$prefix.$i,'mytarget'=>'0'];
-                                        }
-                                    }
-                                }
-
-                                return ['error'=>'0','msg'=>'成功','data'=>$morris_data,'data_total'=>array_sum(array_count_values($time))];
-                            }
+                            $date=$row['value'];
                         }
                     }
+
+                    if ($row['name']=='vv_or_fv')
+                    {
+                        $vv_or_fv=$row['value'];
+                    }
+                }
+
+                if ($vv_or_fv=='1')
+                {
+                    //声纹
+                    //得到年-月
+                    $yearAndmonth=substr($date,0,strlen($date)-3);
+
+                    //得到当前年的当前月有多少天
+                    $unixTime=strtotime($date);
+                    $day=date('t',$unixTime);
+
+                    //从数据库中查询符合条件的数据
+                    $data=CustModel::where(['cust_project'=>$proj])->where('created_at','like',$yearAndmonth.'%')
+                        ->orderBy('created_at','asc')
+                        ->groupBy('cust_review_num')
+                        ->get(['created_at','cust_review_num'])
+                        ->toArray();
+
+                    //只要数组中的创建时间
+                    foreach ($data as $row)
+                    {
+                        $tmp[]=$row['created_at'];
+                    }
+
+                    $data=isset($tmp) ? $tmp : null;
+
+                    if (empty($data))
+                    {
+                        return ['error'=>'1','msg'=>'没有匹配到数据'];
+                    }else
+                    {
+                        //上面已经得到当前月的所有数据了
+                        foreach ($data as $row)
+                        {
+                            //只保留年月日
+                            $time[]=substr($row,0,10);
+                        }
+
+                        //制造返回给前端页面的数组
+                        foreach (array_count_values($time) as $k=>$v)
+                        {
+                            $morris_data[]=['y'=>$k,'mytarget'=>$v];
+                        }
+
+                        //得到当前日期的前缀
+                        $prefix=date('Y-m-',$unixTime);
+
+                        //补齐丢失的日期
+                        for ($i=1;$i<=$day;$i++)
+                        {
+                            if (strlen($i)=='1')
+                            {
+                                if (!array_key_exists($prefix.'0'.$i,array_count_values($time)))
+                                {
+                                    $morris_data[]=['y'=>$prefix.'0'.$i,'mytarget'=>'0'];
+                                }
+                            }else
+                            {
+                                if (!array_key_exists($prefix.$i,array_count_values($time)))
+                                {
+                                    $morris_data[]=['y'=>$prefix.$i,'mytarget'=>'0'];
+                                }
+                            }
+                        }
+
+                        return ['error'=>'0','msg'=>'成功','data'=>$morris_data,'data_total'=>array_sum(array_count_values($time))];
+                    }
+                }elseif ($vv_or_fv=='2')
+                {
+                    //指静脉
+                    //得到年-月
+                    $yearAndmonth=substr($date,0,strlen($date)-3);
+
+                    //得到当前年的当前月有多少天
+                    $unixTime=strtotime($date);
+                    $day=date('t',$unixTime);
+
+                    //从数据库中查询符合条件的数据
+                    $data=CustFVModel::where(['cust_project'=>$proj])->where('created_at','like',$yearAndmonth.'%')
+                        ->orderBy('created_at','asc')
+                        ->get(['created_at'])
+                        ->toArray();
+
+                    //只要数组中的创建时间
+                    foreach ($data as $row)
+                    {
+                        $tmp[]=$row['created_at'];
+                    }
+
+                    $data=isset($tmp) ? $tmp : null;
+
+                    if (empty($data))
+                    {
+                        return ['error'=>'1','msg'=>'没有匹配到数据'];
+                    }else {
+                        //上面已经得到当前月的所有数据了
+                        foreach ($data as $row) {
+                            //只保留年月日
+                            $time[] = substr($row, 0, 10);
+                        }
+
+                        //制造返回给前端页面的数组
+                        foreach (array_count_values($time) as $k => $v) {
+                            $morris_data[] = ['y' => $k, 'mytarget' => $v];
+                        }
+
+                        //得到当前日期的前缀
+                        $prefix = date('Y-m-', $unixTime);
+
+                        //补齐丢失的日期
+                        for ($i = 1; $i <= $day; $i++) {
+                            if (strlen($i) == '1') {
+                                if (!array_key_exists($prefix . '0' . $i, array_count_values($time))) {
+                                    $morris_data[] = ['y' => $prefix . '0' . $i, 'mytarget' => '0'];
+                                }
+                            } else {
+                                if (!array_key_exists($prefix . $i, array_count_values($time))) {
+                                    $morris_data[] = ['y' => $prefix . $i, 'mytarget' => '0'];
+                                }
+                            }
+                        }
+
+                        return ['error'=>'0','msg'=>'成功','data'=>$morris_data,'data_total'=>array_sum(array_count_values($time))];
+                    }
+                }else
+                {
+
                 }
 
                 break;
@@ -1547,7 +1618,7 @@ class DataController extends Controller
                                     {
                                         //通过
                                         $res=CustFVModel::where($condition)
-                                            ->where('cust_last_confirm_date','>',$start_tmp)
+                                            ->where('cust_last_confirm_date','>=',$start_tmp)
                                             ->get([
                                                 'cust_num',
                                                 'cust_name',
@@ -2136,6 +2207,29 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 $AorB=[$row['value']];
                             }
                         }
+
+                        if ($row['name']=='vv_or_fv')
+                        {
+                            if ($row['value']=='1')
+                            {
+                                //声纹数据
+                                $vv_or_fv='1';
+                            }elseif ($row['value']=='2')
+                            {
+                                //指静脉数据
+                                $vv_or_fv='2';
+                            }else
+                            {
+                            }
+                        }
+                    }
+
+                    //要声纹还是指静脉
+                    if ($vv_or_fv=='2')
+                    {
+                        //指静脉
+                        dd($condition);
+
                     }
 
                     //查询想要的数据
@@ -4420,8 +4514,8 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $tmp_tmp[]=[
                         $cust->cust_name,
                         $cust->cust_id,
-                        $row['res_of_fv']=='true'?'认证通过':'认证失败',
-                        $row['res_of_fp']=='error'?'认证失败':($row['res_of_fp']>=Config::get('constant.fingerprintscore')?'认证通过':'认证失败'),
+                        $row['res_of_fv']=='true'?'<font color="green">认证通过</font>':'<font color="red">认证失败</font>',
+                        $row['res_of_fp']=='error'?'<font color="red">认证失败</font>':($row['res_of_fp']>=Config::get('constant.fingerprintscore')?'<font color="green">认证通过</font>':'<font color="red">认证失败</font>'),
                         $this->get_finger_name($row['fno']),
                         $cust->cust_phone_num,
                         $cust->cust_phone_bku

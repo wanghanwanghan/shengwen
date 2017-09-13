@@ -1710,7 +1710,11 @@ function aaa() {
         if(response.error=='0')
         {
             layer.msg(response.msg);
-            parent.layer.closeAll();
+            setTimeout(function () {
+                parent.layer.closeAll();
+            },1000);
+
+            parent.$("select[name=vv_or_fv]").change();
         }else
         {
             layer.msg(response.msg);
@@ -1734,7 +1738,11 @@ function aaa_fv() {
         if(response.error=='0')
         {
             layer.msg(response.msg);
-            parent.layer.closeAll();
+            setTimeout(function () {
+                parent.layer.closeAll();
+            },1000);
+
+            parent.$("select[name=vv_or_fv]").change();
         }else
         {
             layer.msg(response.msg);
