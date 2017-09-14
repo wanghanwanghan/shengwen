@@ -35,7 +35,7 @@
                                 <input type="hidden" name="cust_project">
                             </div>
                         </td>
-                        <td rowspan="4" width="200px">
+                        <td rowspan="4" width="240px">
                             <div id="localImag">
                                 <img width="200px" height="240px" name="cust_photo" id="id_img_pers" src="{{asset('public/img/userImage.png')}}" onerror="{{asset('public/img/userImage.png')}}">
                             </div>
@@ -199,7 +199,7 @@
 
                     }else
                     {
-
+                        $("#coldata").children().remove();
                     }
 
                 },'json');
@@ -209,6 +209,7 @@
             //给身份证输入框绑定change事件
             $("input[name=cust_id]").on('change',function () {
 
+                //***事件一开始*****************************************************************************************
                 var url ='/data/ajax';
                 var data={
                     _token :$("input[name=_token]").val(),
@@ -246,6 +247,35 @@
                     }
 
                 },'json');
+                //***事件一结束*****************************************************************************************
+
+                //***事件二开始*****************************************************************************************
+                var url1 ='/data/ajax';
+                var data1={
+                    _token :$("input[name=_token]").val(),
+                    type   :'get_finger_mongo_data',
+                    key    :$("input[name=cust_id]").val()
+                };
+                $.post(url1,data1,function (response) {
+
+                    if (response.error=='0')
+                    {
+                    }else if(response.error=='1')
+                    {
+                    }else if(response.error=='2')
+                    {
+                        $("#fvId").val(response.fv_id);
+                        $("#fvTemplate10").val(response.fv_tm);
+                        $("#fingerId").val(response.fp_id);
+                        $("#fingerTemplate10").val(response.fp_tm);
+                    }else
+                    {
+                    }
+
+                    layer.msg(response.msg);
+
+                },'json');
+                //***事件二结束*****************************************************************************************
 
             });
 

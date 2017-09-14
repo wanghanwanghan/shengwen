@@ -2689,6 +2689,23 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $data['社保编号']='<a id=modify_cust_si_id>'.$res[0]['cust_si_id'].'</a>';
                     $data['手机号码']='<a id=modify_cust_phone_num>'.$res[0]['cust_phone_num'].'</a>';
                     $data['备用号码']='<a id=modify_cust_phone_bku>'.$res[0]['cust_phone_bku'].'</a>';
+
+                    //从mongo中的到客户采集的是哪个手指
+                    $mongo=$this->mymongo();
+                    $mongo_res=$mongo->Finger->CustTemplate->find(['_id'=>$res[0]['cust_num']]);
+                    foreach ($mongo_res as $row)
+                    {
+                        $mongo_res=$row;
+                    }
+                    $collectioned=null;
+                    for ($i=0;$i<=9;$i++)
+                    {
+                        if ($mongo_res['Finger_'.$i]!='')
+                        {
+                            $collectioned.="<span style='width: 100px;margin-left: 2px;' class='btn btn-success btn-sm'>".$this->get_finger_name($i)."</span>";
+                        }
+                    }
+                    $data['已采手指']=$collectioned;
                     $data['客户地址']='<a id=modify_cust_address>'.$res[0]['cust_address'].'</a>';
 
                     //组成一下所有父节点都有的地区名称
@@ -4049,6 +4066,62 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }else
                 {
                     return ['error'=>'0','data'=>$res[0],'msg'=>'查询成功'];
+                }
+
+                break;
+
+            case 'get_finger_mongo_data':
+
+                if (!$this->is_idcard(Input::get('key')))
+                {
+                    return ['error'=>'1','msg'=>'不是一个有效的身份证'];
+                }
+
+                //查询是否有这个人的信息
+                $res=CustFVModel::where('cust_id',Input::get('key'))->get();
+
+                if (empty($res->toArray()))
+                {
+                    return ['error'=>'0','msg'=>'新的客户，请开始采集'];
+                }else
+                {
+                    //说明这个客户已经采集过了
+                    //拿到客户主键，去mongo里查询指静脉和指纹信息
+                    $mongo=$this->mymongo();
+                    $pid=$res[0]->cust_num;
+
+                    $res=$mongo->Finger->CustTemplate->find(['_id'=>$pid]);
+
+                    foreach ($res as $row)
+                    {
+                        $data=$row;
+                    }
+
+                    $fv_id=null;
+                    $fp_id='[';
+                    $fv_tm=null;
+                    $fp_tm='[';
+                    for ($i=0;$i<=9;$i++)
+                    {
+                        if ($data['Finger_'.$i]!='')
+                        {
+                            $fv_id.=$i.'_0,'.$i.'_1,'.$i.'_2,';
+                            $fv_tm.=$data['Finger_'.$i].',';
+                            $fp_id.=$i.',';
+                            $fp_tm.=$data['FingerPrint_'.$i].',';
+                        }
+                    }
+                    $fv_id=substr($fv_id,0,strlen($fv_id)-1);
+
+                    $fp_id=substr($fp_id,0,strlen($fp_id)-1);
+                    $fp_id.=']';
+
+                    $fv_tm=substr($fv_tm,0,strlen($fv_tm)-1);
+
+                    $fp_tm=substr($fp_tm,0,strlen($fp_tm)-1);
+                    $fp_tm.=']';
+
+                    return ['error'=>'2','msg'=>'查到了此人指静脉信息','fv_id'=>$fv_id,'fv_tm'=>$fv_tm,'fp_id'=>$fp_id,'fp_tm'=>$fp_tm];
                 }
 
                 break;
