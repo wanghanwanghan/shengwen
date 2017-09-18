@@ -159,6 +159,9 @@ function checkColl(type)
 				collCount = result.data.enroll_index;
 				base64FPImg = result.data.fv_jpg_base64;
 			}
+
+			//^_^
+
 			if(base64FPImg == ''&&type==2)
 			{
 				//定时器

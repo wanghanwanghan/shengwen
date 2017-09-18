@@ -37,7 +37,7 @@
                     </td>
                     <td rowspan="4" width="240px">
                         <div id="localImag">
-                            <img width="240px" height="240px" name="cust_photo" id="id_img_pers" src="{{asset('public/img/userImage.png')}}" onerror="{{asset('public/img/userImage.png')}}">
+                            <img width="200px" height="240px" name="cust_photo" id="id_img_pers" src="{{asset('public/img/userImage.png')}}" onerror="{{asset('public/img/userImage.png')}}">
                         </div>
                     </td>
                 </tr>

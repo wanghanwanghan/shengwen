@@ -86,7 +86,7 @@
                             <a style="width: 100px;" id="button_readID" onclick="new Device().startFun();" class="btn btn-block btn-primary btn-sm">读取身份证</a>
                         </td>
                         <td align="center">
-                            <a style="width: 100px;" onclick='fpVerification("指静脉比对","请安装指静脉驱动或启动服务",true,globalContext)' class="btn btn-block btn-primary btn-sm">指静脉认证</a>
+                            <a style="width: 100px;" onclick='$("#fvRegister").click();' class="btn btn-block btn-primary btn-sm">指静脉认证</a>
                         </td>
                         <td align="center">
                         </td>
@@ -106,27 +106,26 @@
         </div>
         <div class="box-body">
 
-            <div id="comparisonDiv" class="zhijingmai_box" style="display: none">
-                <h2>指静脉比对</h2>
-                <div class="list">
-                    <canvas id="canvasComp" width="430" height="320" style="background:url({{asset('public/img/base_fpVerify.jpg')}}) rgb(243, 245, 240)"></canvas>
-                    <input type="button" value="关闭" onclick='closeCompa()' />
-                </div>
+            <div id="fvRegisterDiv" style="display: none;">
+                <a id="fvRegister" onclick='submitFVRegister("指静脉","指静脉数:","确认保存当前修改吗？","驱动下载", false)' title="请安装指静脉驱动或启动该服务" class="showGray" onmouseover="this.className='showGray'">注册</a>
             </div>
 
             <div id="bg" style="display: none;"></div>
 
-            <div hidden>
-                <fieldset style="width:530px">
-                    <legend>指静脉比对的模板数据</legend>
-                    <textarea rows="22" cols="70" id="fpVerify"></textarea>
-                </fieldset>
-            </div>
+            <div id="zhijingmai_box" class="zhijingmai_box" style="display: none;">
+                <h2>指静脉登记</h2>
+                <div class="list">
+                    <canvas id="canvas" width="430px" height="450px" style="background: rgb(243, 245, 240)"></canvas>
+                    <input type="hidden" id="whetherModify" name="whetherModify" alt="" value="111" />
 
-            <form id="fvId_and_fvTemplate">
-                <input type="hidden" id="verifyTemplate" name="my_fvTemplate" />
-                <input type="hidden" id="verifyTemplate_myfp" name="my_fpTemplate" />
-            </form>
+                    <div style="position: absolute; left: 310px; top: 325px; width: 70px; height: 28px;">
+                        <button type="button" id="submitButtonId" name="makeSureName" onclick="submitEvent()" class="button-form">确定</button>
+                    </div>
+                    <div style="position: absolute; left: 310px; top: 365px; width: 70px; height: 28px;">
+                        <button class="button-form" type="button" id="closeButton" name="closeButton" onclick='cancelEvent("确认保存当前修改吗?", "指静脉数:");'>取消</button>
+                    </div>
+                </div>
+            </div>
 
             <div>
                 <table class="table table-bordered" id="fv_match_table">
@@ -154,6 +153,28 @@
                 </div>
             </div>
 
+            <div hidden>
+                <form id="fvId_or_fvTemplate">
+                    <fieldset style="width:130px" id="t">
+                        <legend>三枚指静脉的id</legend>
+                        <textarea rows="1" cols="70" id="fvId" name="my_fvID"></textarea>
+                    </fieldset>
+                    <fieldset style="width:530px" id="te">
+                        <legend>三枚指静脉模板数据</legend>
+                        <textarea rows="1" cols="70" id="fvTemplate10" name="my_fvTemplate"></textarea>
+                    </fieldset>
+
+                    <fieldset style="width:130px" id="t">
+                        <legend>指纹的id</legend>
+                        <textarea rows="1" cols="70" id="fingerId" name="my_fpID"></textarea>
+                    </fieldset>
+                    <fieldset style="width:530px" id="te">
+                        <legend>指纹模板数据</legend>
+                        <textarea rows="1" cols="70" id="fingerTemplate10" name="my_fpTemplate"></textarea>
+                    </fieldset>
+                </form>
+            </div>
+
         </div>
     </div>
 
@@ -171,7 +192,7 @@
                 var data={
                     _token :$("input[name=_token]").val(),
                     type   :'fv_match',
-                    key    :$("#fvId_and_fvTemplate").serializeArray(),
+                    key    :$("#fvId_or_fvTemplate").serializeArray(),
                     cust_id:$("#certNumber").val()
                 };
                 $.post(url,data,function (response) {

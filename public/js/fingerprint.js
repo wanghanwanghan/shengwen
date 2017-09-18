@@ -1638,6 +1638,8 @@ function getFPTemplate(paramArray, flag)
 				}
 				else if(flag == "verification")
 				{
+					//指纹模板
+					$("#verifyTemplate_myfp").val(fpTemplate);
 					verifyFlag = false;
 					//指纹比对
 					fpComparison(result.data.fingervein[0].template);

@@ -4418,29 +4418,18 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 foreach (Input::get('key') as $row)
                 {
-                    if ($row['name']=='my_fvID')
-                    {
-                        $id=$row['value'];
-                    }
-
                     if ($row['name']=='my_fvTemplate')
                     {
-                        $template=$row['value'];
+                        $fv_template=trim($row['value']);
                     }
-                    //上面是指静脉信息，下面是指纹信息
-                    if ($row['name']=='my_fpID')
-                    {
-                        $fp_id=$row['value'];
-                    }
-
                     if ($row['name']=='my_fpTemplate')
                     {
-                        $fp_template=$row['value'];
+                        $fp_template=trim($row['value']);
                     }
                 }
 
                 //如果数据是空
-                if (trim($id)=='' || trim($template)=='' || trim($fp_id)=='' || trim($fp_template)=='' || trim(Input::get('cust_id'))=='')
+                if (trim($fv_template)=='' || trim($fp_template)=='' || trim(Input::get('cust_id'))=='')
                 {
                     return ['error'=>'3','msg'=>'等待数据'];
                 }
@@ -4450,50 +4439,16 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     return ['error'=>'3','msg'=>'身份证输入不正确'];
                 }
 
-                $id=substr($id,0,1);
-
-                //从mongo中得到客户模板数据
                 $cust_pid=CustFVModel::where('cust_id',trim(Input::get('cust_id')))->first();
-                $mongo_obj=$this->mymongo();
-                $data=$mongo_obj->Finger->CustTemplate->find(['_id'=>$cust_pid->cust_num]);
-
-                foreach ($data as $row)
-                {
-                    $res=$row;
-                }
-
-                //指静脉模板与数据
-                $template=trim($template);
-                $template=str_replace(["\r\n","\n"],'',$template);
-                $template=explode(',',$template);
-                $mongotemplate=$res['Finger_'.$id];
-                $mongotemplate=explode(',',$mongotemplate);
-
-                //指纹模板与数据
-                $fp_template=str_replace(['[',']'],'',$fp_template);
-                $mongotemplate_fp=$res['FingerPrint_'.$id];
-
-                //判断一下，如果没有采集该手指的指静脉，返回给前端
-                if (count($mongotemplate)<3 || strlen($mongotemplate_fp)<50)
-                {
-                    return ['error'=>'1','msg'=>'没有采集该手指信息'];
-                }
 
                 $data=[
                     'pid'=>(string)$cust_pid->cust_num,//用户的主键号
-                    'fv1'=>$template[0],//当前采集的用户指静脉
-                    'fv2'=>$template[1],//当前采集的用户指静脉
-                    'fv3'=>$template[2],//当前采集的用户指静脉
-                    'fv4'=>$mongotemplate[0],//mongo里的模板
-                    'fv5'=>$mongotemplate[1],//mongo里的模板
-                    'fv6'=>$mongotemplate[2],//mongo里的模板
-                    'fp1'=>$fp_template,//当前采集的用户指纹
-                    'fp2'=>$mongotemplate_fp,//mongo里的模板
-                    'fno'=>(string)$id,//手指编号
+                    'fv'=>$fv_template,//当前采集的客户指静脉
+                    'fp'=>$fp_template,//当前采集的客户指纹
                     'fvs'=>(string)Config::get('constant.fingervenascore')//指静脉阈值
                 ];
 
-                $curl_res=$this->mycurl('http://58.19.253.212:7510/fingervena',$data);
+                $curl_res=$this->mycurl(env('APP_URL').'/fingervena',$data);
 
                 //判断返回值
                 if ($curl_res['error']!='0')
@@ -4508,7 +4463,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     //结果放到mongo里
                     $mongo=$this->mymongo();
                     $mongo->Finger->ConfirmRes->insert([
-                        'id_in_mysql'=>$curl_res['pid'],//mysql表中的主键
+                        'id_in_mysql'=>$curl_res['pid'],//mysql表中的客户主键
                         'res_of_fv'=>$curl_res['result'],//指静脉的对比结果
                         'res_of_fp'=>$curl_res['fp_result'],//指纹的对比分数
                         'fno'=>$curl_res['fno'],//该次认证的哪个手指
