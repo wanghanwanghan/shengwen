@@ -4445,10 +4445,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     'pid'=>(string)$cust_pid->cust_num,//用户的主键号
                     'fv'=>$fv_template,//当前采集的客户指静脉
                     'fp'=>$fp_template,//当前采集的客户指纹
-                    'fvs'=>(string)Config::get('constant.fingervenascore')//指静脉阈值
+                    'fvs'=>(string)Config::get('constant.fingervenascore'),//指静脉阈值
+                    'fps'=>(string)Config::get('constant.fingerprintscore')//指纹阈值
                 ];
 
-                $curl_res=$this->mycurl(env('APP_URL').'/fingervena',$data);
+                $curl_res=$this->mycurl('http://127.0.0.1:7510/fingervena',$data);
+                //$curl_res=$this->mycurl('http://58.19.253.212:7510/fingervena',$data);
+                dd($curl_res);
 
                 //判断返回值
                 if ($curl_res['error']!='0')
@@ -4460,6 +4463,11 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 if ($curl_res['result']=='true' || $curl_res['fp_result']!='error' && $curl_res['fp_result']>=Config::get('constant.fingerprintscore'))
                 {
+                    //修改mysql中，该客户的最后认证时间
+                    $model=CustFVModel::find($curl_res['pid']);
+                    $model->cust_last_confirm_date=date('Y-m-d',time());
+                    $model->save();
+
                     //结果放到mongo里
                     $mongo=$this->mymongo();
                     $mongo->Finger->ConfirmRes->insert([
@@ -4470,11 +4478,6 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         'sno'=>$this->get_data_in_session('staff_num'),//操作认证的员工主键(mysql)
                         'time'=>date('Ymd',time())//该条数据的插入时间
                     ]);
-
-                    //修改mysql中，该客户的最后认证时间
-                    $model=CustFVModel::find($curl_res['pid']);
-                    $model->cust_last_confirm_date=date('Y-m-d',time());
-                    $model->save();
 
                     return ['error'=>'0','msg'=>'认证成功'];
 

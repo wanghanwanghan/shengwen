@@ -22,20 +22,6 @@ class TestController extends Controller
 
 
 
-        $str='黏黏我想约上次我妈说的它一来就生孩子的那只狗周日来家里啊';
-
-        $str=md5($str);
-
-        dd($str);
-
-
-
-
-
-
-
-
-
 
 
 
