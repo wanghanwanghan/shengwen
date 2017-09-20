@@ -74,6 +74,10 @@ class Controller extends BaseController
         {
             return '右手小拇指';
         }
+        if ($id=='99')
+        {
+            return '无匹配手指';
+        }
 
         return '参数错误';
     }

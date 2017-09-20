@@ -4451,7 +4451,6 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 $curl_res=$this->mycurl('http://127.0.0.1:7510/fingervena',$data);
                 //$curl_res=$this->mycurl('http://58.19.253.212:7510/fingervena',$data);
-                dd($curl_res);
 
                 //判断返回值
                 if ($curl_res['error']!='0')
@@ -4461,8 +4460,20 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 $curl_res=json_decode($curl_res['msg'],true);
 
-                if ($curl_res['result']=='true' || $curl_res['fp_result']!='error' && $curl_res['fp_result']>=Config::get('constant.fingerprintscore'))
+                if ($curl_res['fv']['result']=='true' || $curl_res['fp']['result']=='true')
                 {
+                    //得到fno
+                    if ($curl_res['fv']['result']=='true')
+                    {
+                        $fno=substr($curl_res['fv']['match'],-1);
+                    }elseif ($curl_res['fp']['result']=='true')
+                    {
+                        $fno=substr($curl_res['fp']['match'],-1);
+                    }else
+                    {
+
+                    }
+
                     //修改mysql中，该客户的最后认证时间
                     $model=CustFVModel::find($curl_res['pid']);
                     $model->cust_last_confirm_date=date('Y-m-d',time());
@@ -4472,31 +4483,35 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $mongo=$this->mymongo();
                     $mongo->Finger->ConfirmRes->insert([
                         'id_in_mysql'=>$curl_res['pid'],//mysql表中的客户主键
-                        'res_of_fv'=>$curl_res['result'],//指静脉的对比结果
-                        'res_of_fp'=>$curl_res['fp_result'],//指纹的对比分数
-                        'fno'=>$curl_res['fno'],//该次认证的哪个手指
+                        'res_of_fv'=>$curl_res['fv']['result'],//指静脉的对比结果
+                        'res_of_fp'=>$curl_res['fp']['result'],//指纹的对比分数
+                        'fno'=>$fno,//该次认证的哪个手指
                         'sno'=>$this->get_data_in_session('staff_num'),//操作认证的员工主键(mysql)
-                        'time'=>date('Ymd',time())//该条数据的插入时间
+                        'time'=>date('Ymd',time()),//该条数据的插入时间
+                        'sort'=>time()//用来排序的时间
                     ]);
 
                     return ['error'=>'0','msg'=>'认证成功'];
 
-                }elseif ($curl_res['result']=='false')
+                }elseif ($curl_res['fv']['result']=='false' || $curl_res['fp']['result']=='false')
                 {
+                    $fno='99';
+
                     //结果放到mongo里
                     $mongo=$this->mymongo();
                     $mongo->Finger->ConfirmRes->insert([
                         'id_in_mysql'=>$curl_res['pid'],//mysql表中的主键
-                        'res_of_fv'=>$curl_res['result'],//指静脉的对比结果
-                        'res_of_fp'=>$curl_res['fp_result'],//指纹的对比分数
-                        'fno'=>$curl_res['fno'],//该次认证的哪个手指
+                        'res_of_fv'=>$curl_res['fv']['result'],//指静脉的对比结果
+                        'res_of_fp'=>$curl_res['fp']['result'],//指纹的对比分数
+                        'fno'=>$fno,//该次认证的哪个手指
                         'sno'=>$this->get_data_in_session('staff_num'),//操作认证的员工主键(mysql)
-                        'time'=>date('Ymd',time())//该条数据的插入时间
+                        'time'=>date('Ymd',time()),//该条数据的插入时间
+                        'sort'=>time()//用来排序的时间
                     ]);
 
                     return ['error'=>'0','msg'=>'认证失败'];
 
-                }elseif ($curl_res['result']=='error')
+                }elseif ($curl_res['fv']['result']=='error' || $curl_res['fp']['result']=='error')
                 {
                     return ['error'=>'1','msg'=>'指静脉SDK故障，接口调用失败'];
                 }else
@@ -4530,7 +4545,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 //展示的数据
                 $model=$getMongo->Finger->ConfirmRes->find(['sno'=>$this->get_data_in_session('staff_num'),'time'=>$time])
-                    ->sort(['time'=>-1])->limit($limit)->skip($offset);
+                    ->sort(['sort'=>-1])->limit($limit)->skip($offset);
 
                 foreach ($model as $row)
                 {
@@ -4546,7 +4561,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         $cust->cust_name,
                         $cust->cust_id,
                         $row['res_of_fv']=='true'?'<font color="green">认证通过</font>':'<font color="red">认证失败</font>',
-                        $row['res_of_fp']=='error'?'<font color="red">认证失败</font>':($row['res_of_fp']>=Config::get('constant.fingerprintscore')?'<font color="green">认证通过</font>':'<font color="red">认证失败</font>'),
+                        $row['res_of_fp']=='error'?'<font color="red">认证失败</font>':($row['res_of_fp']=='true'?'<font color="green">认证通过</font>':'<font color="red">认证失败</font>'),
                         $this->get_finger_name($row['fno']),
                         $cust->cust_phone_num,
                         $cust->cust_phone_bku
@@ -4555,7 +4570,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 $model=$tmp_tmp;
 
-                return ['error'=>'0','msg'=>'数据读取成功','pages'=>$cnt_page,'data'=>array_reverse($model),'count_data'=>$count_data];
+                return ['error'=>'0','msg'=>'数据读取成功','pages'=>$cnt_page,'data'=>$model,'count_data'=>$count_data];
 
                 break;
         }

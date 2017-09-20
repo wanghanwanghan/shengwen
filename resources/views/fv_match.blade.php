@@ -178,11 +178,11 @@
 
                     if (response.error=='0' || response.error=='1')
                     {
-                        layer.alert(response.msg);
+                        layer.msg(response.msg,{time:2000});
                         clearInterval(mytimer);
                         setTimeout(function () {
                             location.reload();
-                        },3000);
+                        },2500);
                     }else
                     {
 
