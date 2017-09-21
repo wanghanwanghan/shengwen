@@ -86,7 +86,8 @@
                             <a style="width: 100px;" id="button_readID" onclick="new Device().startFun();" class="btn btn-block btn-primary btn-sm">读取身份证</a>
                         </td>
                         <td align="center">
-                            <a style="width: 100px;" onclick='fpVerification("指静脉比对","请安装指静脉驱动或启动服务",true,globalContext)' class="btn btn-block btn-primary btn-sm">指静脉认证</a>
+                            <a id="OPENfv" style="width: 100px;display: none" onclick='fpVerification("指静脉比对","请安装指静脉驱动或启动服务",true,globalContext)' class="btn btn-block btn-primary btn-sm">指静脉认证</a>
+                            <a id="CLOSEfv" style="width: 150px;display: block" class="btn btn-block btn-warning btn-sm">请先输入身份证号码</a>
                         </td>
                         <td align="center">
                         </td>
@@ -204,6 +205,33 @@
                 $("input[name=cust_project]").val(response.res1);
 
             },'json');
+
+            //给身份证输入框绑定事件
+            $("#certNumber").on('change',function () {
+
+                var urla ='/data/ajax';
+                var dataa={
+                    _token :$("input[name=_token]").val(),
+                    type   :'get_wait_register_customer_fv_info',
+                    key    :$("#certNumber").val()
+                };
+                $.post(urla,dataa,function (response) {
+
+                    if (response.error=='0')
+                    {
+                        $("#OPENfv").css('display','block');
+                        $("#CLOSEfv").css('display','none');
+                    }else
+                    {
+                        $("#OPENfv").css('display','none');
+                        $("#CLOSEfv").css('display','block');
+                    }
+
+                    layer.msg(response.msg);
+
+                },'json');
+
+            })
 
         });
 

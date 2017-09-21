@@ -89,7 +89,7 @@
                             <a style="width: 100px;" onclick='$("#fvRegister").click();' class="btn btn-block btn-primary btn-sm">采集指静脉</a>
                         </td>
                         <td align="center">
-                            <a style="width: 100px;" onclick="add_fv_cust();" class="btn btn-block btn-success btn-sm">提交信息</a>
+                            <a id="sub_info" style="width: 100px;" onclick="add_fv_cust();" class="btn btn-block btn-success btn-sm">提交信息</a>
                         </td>
                     </tr>
                     </tbody>
@@ -120,7 +120,7 @@
                     <input type="hidden" id="whetherModify" name="whetherModify" alt="" value="111" />
 
                     <div style="position: absolute; left: 310px; top: 325px; width: 70px; height: 28px;">
-                        <button type="button" id="submitButtonId" name="makeSureName" onclick="submitEvent()" class="button-form">确定</button>
+                        <button type="button" id="submitButtonId" name="makeSureName" onclick="mysubmitEvent();" class="button-form">确定</button>
                     </div>
                     <div style="position: absolute; left: 310px; top: 365px; width: 70px; height: 28px;">
                         <button class="button-form" type="button" id="closeButton" name="closeButton" onclick='cancelEvent("确认保存当前修改吗?", "指静脉数:");'>取消</button>
@@ -293,6 +293,10 @@
             },'json');
 
         });
+        
+        function mysubmitEvent() {
+            submitEvent();
+        }
 
     </script>
 

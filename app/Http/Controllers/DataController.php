@@ -4070,6 +4070,26 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
+            case 'get_wait_register_customer_fv_info':
+
+                if (!$this->is_idcard(Input::get('key')))
+                {
+                    return ['error'=>'1','msg'=>'不是一个有效的身份证'];
+                }
+
+                //查询是否有这个人的信息
+                $res=CustFVModel::where('cust_id',Input::get('key'))->get()->toArray();
+
+                if (empty($res))
+                {
+                    return ['error'=>'1','msg'=>'此人未参加采集'];
+                }else
+                {
+                    return ['error'=>'0','msg'=>'请开始认证'];
+                }
+
+                break;
+
             case 'get_finger_mongo_data':
 
                 if (!$this->is_idcard(Input::get('key')))
