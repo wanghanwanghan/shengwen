@@ -38,17 +38,14 @@ Route::group(['middleware'=>['LoginMiddleware','AddCustMiddleware']],function ()
 
 });
 
-//客服功能
+//客服功能 => 用户认证
 Route::group(['middleware'=>['LoginMiddleware','ServiceCareMiddleware']],function (){
 
     //指静脉认证
     Route::get('fv/match','WebController@fv_match');
 
-    //维护现有客户
-    Route::get('service/care','WebController@service_care');
-
-    //导出认证结果
-    Route::get('import/confirm/result','WebController@import_confirm_result');
+    //轮播认证
+    Route::get('loop/call','WebController@loop_call');
 
 });
 
@@ -58,25 +55,38 @@ Route::group(['middleware'=>['LoginMiddleware','CustManagementMiddleware']],func
     //修改客户信息
     Route::get('modify/cust/info','WebController@modify_cust_info');
 
-    //录音返回信息
-    Route::get('ivr/return/msg','WebController@ivr_return_msg');
+});
+
+//数据统计
+Route::group(['middleware'=>['LoginMiddleware','DataStatisticsMiddleware']],function (){
+
+    //维护现有客户 => 认证结果统计
+    Route::get('service/care','WebController@service_care');
+
+    //导出认证结果 => 采集结果统计
+    Route::get('import/confirm/result','WebController@import_confirm_result');
 
 });
 
-//声纹管理
+//分析
+Route::group(['middleware'=>['LoginMiddleware','DataAnalysisMiddleware']],function (){
+
+    //统计 => 声纹登记检查
+    Route::get('statistics','WebController@statistics');
+
+    //分析 => 采集总览
+    Route::get('analysis','WebController@analysis');
+
+});
+
+//声纹管理 => 操作日志
 Route::group(['middleware'=>['LoginMiddleware','VoiceManagementMiddleware']],function (){
 
-    //循环拨打用户认证
-    Route::get('loop/call','WebController@loop_call');
+    //录音返回信息
+    Route::get('ivr/return/msg','WebController@ivr_return_msg');
 
     //轮播返回信息
     Route::get('ivr/return/loop/msg','WebController@ivr_return_loop_msg');
-
-    //统计
-    Route::get('statistics','WebController@statistics');
-
-    //分析
-    Route::get('analysis','WebController@analysis');
 
 });
 

@@ -1266,6 +1266,15 @@ class DataController extends Controller
                     }
                 }
 
+                //如果输入的是父类地区，就查询父类地区下所有地区的数据
+                $proj_tmp=$this->get_all_children($proj);
+
+                foreach ($proj_tmp as $row)
+                {
+                    $id_of_proj[]=$row['project_id'];
+                }
+                $id_of_proj[]=$proj;
+
                 if ($vv_or_fv=='1')
                 {
                     //声纹
@@ -1277,7 +1286,7 @@ class DataController extends Controller
                     $day=date('t',$unixTime);
 
                     //从数据库中查询符合条件的数据
-                    $data=CustModel::where(['cust_project'=>$proj])->where('created_at','like',$yearAndmonth.'%')
+                    $data=CustModel::whereIn('cust_project',$id_of_proj)->where('created_at','like',$yearAndmonth.'%')
                         ->orderBy('created_at','asc')
                         ->groupBy('cust_review_num')
                         ->get(['created_at','cust_review_num'])
@@ -1343,7 +1352,7 @@ class DataController extends Controller
                     $day=date('t',$unixTime);
 
                     //从数据库中查询符合条件的数据
-                    $data=CustFVModel::where(['cust_project'=>$proj])->where('created_at','like',$yearAndmonth.'%')
+                    $data=CustFVModel::whereIn('cust_project',$id_of_proj)->where('created_at','like',$yearAndmonth.'%')
                         ->orderBy('created_at','asc')
                         ->get(['created_at'])
                         ->toArray();
@@ -3417,6 +3426,30 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
             case 'delete_cust_voice':
 
+                //明静大人老随意删数据，所以我决定加一个权限
+                $level=$this->get_data_in_session('staff_level');
+                $can_i_delete=false;
+                foreach (explode(',',$level) as $row)
+                {
+                    try
+                    {
+                        $model=LevelModel::findOrFail($row);
+                    }catch (ModelNotFoundException $e)
+                    {
+                        continue;
+                    }
+
+                    if ($model->level_name=='删除客户语音')
+                    {
+                        $can_i_delete=true;
+                    }
+                }
+
+                if (!$can_i_delete)
+                {
+                    return ['error'=>'1','msg'=>'您没有删除语音的权限'];
+                }
+
                 $res=CustModel::find(Input::get('key'));
 
                 $res->cust_register_flag='0';
@@ -3718,9 +3751,11 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 //选择菜单中的id
                 $now_we_get=[
                     'yong_hu_deng_ji',
-                    'ke_fu_gong_neng',
+                    'yong_hu_ren_zheng',
                     'ke_hu_guan_li',
-                    'sheng_wen_guan_li',
+                    'shu_ju_tong_ji',
+                    'fen_xi',
+                    'cao_zuo_ri_zhi',
                     'xi_tong_she_zhi',
                     'chao_ji_guan_li_yuan_gong_neng'
                 ];

@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
-@section('page_heading','客服功能')
-@section('page_heading_small','客户维护')
+@section('page_heading','数据统计')
+@section('page_heading_small','认证结果统计')
 @section('section')
 
     <div class="box">

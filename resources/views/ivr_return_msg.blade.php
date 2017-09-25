@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
-@section('page_heading','客户管理')
-@section('page_heading_small','客户登记、验证是否成功的信息')
+@section('page_heading','操作日志')
+@section('page_heading_small','登记声纹返回信息')
 @section('section')
 
     <div class="box">

@@ -1,5 +1,5 @@
 @extends('layouts.dashboard')
-@section('page_heading','声纹管理')
+@section('page_heading','用户认证')
 @section('page_heading_small','循环拨打电话进行用户认证')
 @section('section')
 

@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
-@section('page_heading','声纹管理')
-@section('page_heading_small','分析')
+@section('page_heading','分析')
+@section('page_heading_small','采集总览')
 @section('section')
 
     <link rel="stylesheet" href="{{asset('public/bower_components/AdminLTE/plugins/morris/morris.css')}}">

@@ -204,15 +204,14 @@
                     </li>
 
                     <li class="treeview">
-                        <a id="ke_fu_gong_neng" href="#"><i class="fa fa-link"></i> <span>客服功能</span>
+                        <a id="yong_hu_ren_zheng" href="#"><i class="fa fa-link"></i> <span>用户认证</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
                         <ul class="treeview-menu">
                             <li><a href="{{url('fv/match')}}"><i class="fa fa-fw fa-hand-o-right"></i>指静脉认证</a></li>
-                            <li><a href="{{url('service/care')}}"><i class="fa fa-fw fa-hand-o-right"></i>维护现有客户</a></li>
-                            <li><a href="{{url('import/confirm/result')}}"><i class="fa fa-fw fa-hand-o-right"></i>导出认证结果</a></li>
+                            <li><a href="{{url('loop/call')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹轮播认证</a></li>
                         </ul>
                     </li>
 
@@ -224,22 +223,43 @@
                         </a>
                         <ul class="treeview-menu">
                             <li><a href="{{url('modify/cust/info')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改客户信息</a></li>
-                            <li><a href="{{url('ivr/return/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>录音返回信息</a></li>
                         </ul>
                     </li>
 
                     <li class="treeview">
-                        <a id="sheng_wen_guan_li" href="#"><i class="fa fa-link"></i> <span>声纹管理</span>
+                        <a id="shu_ju_tong_ji" href="#"><i class="fa fa-link"></i> <span>数据统计</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="{{url('service/care')}}"><i class="fa fa-fw fa-hand-o-right"></i>认证结果统计</a></li>
+                            <li><a href="{{url('import/confirm/result')}}"><i class="fa fa-fw fa-hand-o-right"></i>采集结果统计</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="treeview">
+                        <a id="fen_xi" href="#"><i class="fa fa-link"></i> <span>分析</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="{{url('statistics')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹登记检查</a></li>
+                            <li><a href="{{url('analysis')}}"><i class="fa fa-fw fa-hand-o-right"></i>采集总览</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="treeview">
+                        <a id="cao_zuo_ri_zhi" href="#"><i class="fa fa-link"></i> <span>操作日志</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
                         <ul class="treeview-menu">
                         <!--<li><a href="{{url('select/info')}}"><i class="fa fa-fw fa-hand-o-right"></i>查询用户声纹信息</a></li>-->
-                            <li><a href="{{url('loop/call')}}"><i class="fa fa-fw fa-hand-o-right"></i>循环拨打用户认证</a></li>
-                            <li><a href="{{url('ivr/return/loop/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>轮播返回信息</a></li>
-                            <li><a href="{{url('statistics')}}"><i class="fa fa-fw fa-hand-o-right"></i>统计</a></li>
-                            <li><a href="{{url('analysis')}}"><i class="fa fa-fw fa-hand-o-right"></i>分析</a></li>
+                            <li><a href="{{url('ivr/return/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>登记声纹返回信息</a></li>
+                            <li><a href="{{url('ivr/return/loop/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹认证返回信息</a></li>
                         </ul>
                     </li>
 
@@ -373,7 +393,7 @@
                 set_treeview_active($(this).attr('id'));
             });
 
-            $("#ke_fu_gong_neng").on('click',function () {
+            $("#yong_hu_ren_zheng").on('click',function () {
                 set_treeview_active($(this).attr('id'));
             });
 
@@ -381,7 +401,15 @@
                 set_treeview_active($(this).attr('id'));
             });
 
-            $("#sheng_wen_guan_li").on('click',function () {
+            $("#shu_ju_tong_ji").on('click',function () {
+                set_treeview_active($(this).attr('id'));
+            });
+
+            $("#fen_xi").on('click',function () {
+                set_treeview_active($(this).attr('id'));
+            });
+
+            $("#cao_zuo_ri_zhi").on('click',function () {
                 set_treeview_active($(this).attr('id'));
             });
 

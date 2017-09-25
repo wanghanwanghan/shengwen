@@ -60,6 +60,8 @@ class Kernel extends HttpKernel
         'APIMiddleware' => \App\Http\Middleware\APIMiddleware::class,
         'AddCustMiddleware' => \App\Http\Middleware\AddCustMiddleware::class,
         'ServiceCareMiddleware' => \App\Http\Middleware\ServiceCareMiddleware::class,
+        'DataStatisticsMiddleware' => \App\Http\Middleware\DataStatisticsMiddleware::class,
+        'DataAnalysisMiddleware' => \App\Http\Middleware\DataAnalysisMiddleware::class,
         'CustManagementMiddleware' => \App\Http\Middleware\CustManagementMiddleware::class,
         'VoiceManagementMiddleware' => \App\Http\Middleware\VoiceManagementMiddleware::class,
     ];

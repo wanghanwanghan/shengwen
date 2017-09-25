@@ -12,13 +12,9 @@ class TestController extends Controller
 {
     public function test_1()
     {
-        $array=[
-            ['name'=>'张1','age'=>'23','totle'=>'1'],
-            ['name'=>'李2','age'=>'64','totle'=>'11'],
-            ['name'=>'王3','age'=>'55','totle'=>'111'],
-            ['name'=>'赵4','age'=>'66','totle'=>'1111'],
-            ['name'=>'孙5','age'=>'17','totle'=>'11111']
-        ];
+
+
+
 
 
 
@@ -27,9 +23,22 @@ class TestController extends Controller
 
     }
 
+    //二维数组排序
     public function sort1(Array $array,Array $cond)
     {
+        /*
+         * $array=[
+            ['name'=>'张1','age'=>'23','totle'=>'1'],
+            ['name'=>'李2','age'=>'64','totle'=>'11'],
+            ['name'=>'王3','age'=>'55','totle'=>'111'],
+            ['name'=>'赵4','age'=>'66','totle'=>'1111'],
+            ['name'=>'孙5','age'=>'17','totle'=>'11111']
+        ];
+        $this->sort1($array,['SORT_ASC','totle'])
+         */
+
         $mysort=null;
+
         foreach ($array as $k=>$v)
         {
             foreach ($v as $key=>$value)
@@ -44,6 +53,7 @@ class TestController extends Controller
 
     }
 
+    //冒泡
     public function sort2(Array $array)
     {
         if (count($array)<=1)
@@ -67,6 +77,7 @@ class TestController extends Controller
         return $array;
     }
 
+    //快速
     public function sort3(Array $array)
     {
         if (count($array)<=1)
@@ -93,6 +104,18 @@ class TestController extends Controller
         $righ=$this->sort3($righ);
 
         array_merge($left,$key,$righ);
+    }
+
+    //过滤敏感词
+    public function filterword()
+    {
+        $black_word=['','',''];
+
+        $tmp=array_combine($black_word,array_fill(0,count($black_word),'*'));
+
+        $a='';
+
+        return strtr($a,$tmp);
     }
 
 

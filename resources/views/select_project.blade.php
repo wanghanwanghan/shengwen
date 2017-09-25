@@ -8,9 +8,25 @@
                     <div class="box-header with-border">
                         <h3 class="box-title">请选择一个地区</h3>
                     </div>
+
+                    <div style="height:50px;width:100%;position:fixed;z-index: 999;">
+                        <div class="col-sm-12">
+                            <div class="row">
+                                <div style="text-align: center" class="col-sm-12">
+                                    <a href="javascript:;" id="transmit" class="btn btn-primary">选择这个地区</a>
+                                    <a href="javascript:;" onclick="select_node($('#select_str').val());" class="btn btn-primary">查找一个地区</a>
+                                    <input style="text-align: center" id="select_str" class="input" size="15" type="text" placeholder="输入要查找的地区">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     {{csrf_field()}}
+
+                    {{--自动吸顶--}}
+                    <div style="height: 50px;width: 100px" class="col-sm-12"></div>
+
                     <form role="form">
-                        <div class="box-body">
+                        <div style="z-index: 1;" class="box-body">
                             <div class="form-group">
                                 <div class="col-sm-12">
                                     <div class="col-sm-3">
@@ -25,15 +41,7 @@
                         </div>
 
                         <div class="box-footer">
-                            <div class="col-sm-12">
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <a href="javascript:;" id="transmit" class="btn btn-primary">选择这个地区</a>
-                                        <a href="javascript:;" onclick="select_node($('#select_str').val());" class="btn btn-primary">查找一个地区</a>
-                                        <input style="text-align: center" id="select_str" class="input" size="15" type="text" placeholder="输入要查找的地区">
-                                    </div>
-                                </div>
-                            </div>
+
                         </div>
                     </form>
                 </div>

@@ -486,17 +486,8 @@ class Controller extends BaseController
     //取出所有该节点的子节点
     public function get_all_children($parent_id)
     {
-        if (Redis::get('all_project')=='')
-        {
-            //取出所有地区放入redis
-            $all_project=ProjectModel::get(['project_id','project_name','project_parent'])->toArray();
-            $this->redis_set('all_project',json_encode($all_project),60);
-        }else
-        {
-            $all_project=json_decode(Redis::get('all_project'),true);
-        }
+        $all_project=ProjectModel::get(['project_id','project_name','project_parent'])->toArray();
 
-        //查询子节点
         return $this->get_children($all_project,$parent_id);
     }
 

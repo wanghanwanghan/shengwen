@@ -1093,7 +1093,7 @@ function select_data_B(curr) {
 
 function tell_ivr_make_phone_call(id,phone) {
 
-    //location.assign('/add/cust');
+    layer.msg('主键：'+id+'</br>'+'电话：'+phone);
 
 }
 
