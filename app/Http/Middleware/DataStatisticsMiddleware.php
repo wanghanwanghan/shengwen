@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Support\Facades\Session;
+use App\Http\Model\LevelModel;
 
 class DataStatisticsMiddleware
 {

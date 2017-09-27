@@ -167,6 +167,15 @@
                                 $("select[name=cust_si_type]").val(v);
                             }
 
+                            if (k=='project_id')
+                            {
+                                $("input[name=cust_project]").val(v);
+                            }
+
+                            if (k=='project_long_name')
+                            {
+                                $("#parentIframe").html(v);
+                            }
                         });
 
                         layer.msg(response.msg);

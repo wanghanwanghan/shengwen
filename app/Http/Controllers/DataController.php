@@ -4100,6 +4100,66 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     return ['error'=>'1','msg'=>'系统中不含此人信息'];
                 }else
                 {
+                    //查出来这个地区的中文
+                    $str=explode('_',$res[0]['position_path']);
+
+                    $projtmp1=ChinaAllPositionModel::where([
+                        'county_id'=>$str[0],
+                        'town_id'=>$str[1],
+                        'village_id'=>$str[2]
+                    ])->get();
+
+                    //一会要对比的数组
+                    $arr_saki=[
+                        $projtmp1[0]->province_name,
+                        $projtmp1[0]->city_name,
+                        $projtmp1[0]->county_name,
+                        $projtmp1[0]->town_name
+                    ];
+
+                    $projtmp2=ProjectModel::where([
+                        'project_name'=>$projtmp1[0]->village_name
+                    ])->get();
+
+                    foreach ($projtmp2 as $row)
+                    {
+                        //在project表中，所有等于village_name的地名
+                        //mysql表中储存了，该地区往上4级的地名pid，一个一个找，看看有没有符合的
+                        $position=explode('-',$row->project_path);
+                        $position=ProjectModel::whereIn('project_id',$position)->get();
+
+                        //是不是都在数组里
+                        $inarray_res=null;
+                        foreach ($position as $inarray)
+                        {
+                            if (in_array($inarray->project_name,$arr_saki))
+                            {
+                                $inarray_res[]='yes';
+                            }else
+                            {
+                                $inarray_res[]='no';
+                            }
+                        }
+
+                        if (in_array('no',$inarray_res))
+                        {
+                            $res[0]['project_id']='';
+                        }else
+                        {
+                            $res[0]['project_id']=$row->project_id;
+                            break;
+                        }
+                    }
+
+                    //如果没查到，返回   不存在
+                    if ($res[0]['project_id']=='')
+                    {
+                        $res[0]['project_long_name']='未找到地区';
+                    }else
+                    {
+                        $res[0]['project_long_name']=implode('-',$arr_saki);
+                    }
+
                     return ['error'=>'0','data'=>$res[0],'msg'=>'查询成功'];
                 }
 

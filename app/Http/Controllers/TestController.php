@@ -12,6 +12,15 @@ class TestController extends Controller
 {
     public function test_1()
     {
+        $myarr=[
+            '赵','钱','孙','李','周','吴','郑',
+            '王','冯','陈','褚','卫','蒋','沈',
+            '韩','杨','朱','秦','尤','许','何',
+            '吕','施','张','孔','曹','严','华'
+        ];
+
+        dd($this->JosephProblem($myarr));
+
 
 
 
@@ -116,6 +125,66 @@ class TestController extends Controller
         $a='';
 
         return strtr($a,$tmp);
+    }
+
+    //反转函数
+    public function reverse($arr)
+    {
+        $n = count($arr);
+
+        $left = 0;
+        $right = $n - 1;
+
+        while ($left < $right) {
+            $temp = $arr[$left];
+            $arr[$left++] = $arr[$right];
+            $arr[$right--] = $temp;
+        }
+
+        return $arr;
+    }
+
+    //打乱数组
+    public function custom_shuffle($arr)
+    {
+        $n = count($arr);
+        for ($i = 0; $i < $n; $i++) {
+            $rand_pos = mt_rand(0, $n);
+            if ($rand_pos != $i) {
+                $temp = $arr[$i];
+                $arr[$i] = $arr[$rand_pos];
+                $arr[$rand_pos] = $temp;
+            }
+        }
+        return $arr;
+    }
+
+    //约瑟夫环
+    public function JosephProblem($arr,$step=3)
+    {
+        //计数器
+        $num=0;
+
+        while (count($arr)>1)
+        {
+            //取出一个元素
+            $element=array_shift($arr);
+
+            //计数器加壹
+            $num++;
+
+            if ($num==$step)
+            {
+                //删除这个元素
+                //计数器清零
+                $num=0;
+            }else
+            {
+                array_push($arr,$element);
+            }
+        }
+
+        return $arr;
     }
 
 

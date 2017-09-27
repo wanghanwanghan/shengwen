@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Model\LevelModel;
 use Closure;
+use Illuminate\Support\Facades\Session;
 
 class DataAnalysisMiddleware
 {
