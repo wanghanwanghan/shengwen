@@ -260,6 +260,8 @@
                         <!--<li><a href="{{url('select/info')}}"><i class="fa fa-fw fa-hand-o-right"></i>查询用户声纹信息</a></li>-->
                             <li><a href="{{url('ivr/return/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>登记声纹返回信息</a></li>
                             <li><a href="{{url('ivr/return/loop/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹认证返回信息</a></li>
+                            <li><a href="{{url('fv/register/return/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>登记指静脉返回信息</a></li>
+                            <li><a href="{{url('fv/confirm/return/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>指静脉认证返回信息</a></li>
                         </ul>
                     </li>
 

@@ -47,6 +47,14 @@
                                         </div>
 
                                         <div class="col-sm-2">
+                                            <select class="form-control" name="vv_or_fv" style="padding-left: 8px;">
+                                                <option value="all">认证类型-默认全部</option>
+                                                <option value="vocalvena">声纹</option>
+                                                <option value="fingervena">指静脉</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-sm-2">
                                             <select class="form-control" name="cust_type" style="padding-left: 8px;">
                                                 <option value="0">客户类型-默认全部</option>
                                                 <option value="A">A类</option>
@@ -54,12 +62,6 @@
                                             </select>
                                         </div>
 
-                                        <div class="col-sm-2">
-                                            <select class="form-control" name="vv_or_fv" style="padding-left: 8px;">
-                                                <option value="vocalvena">声纹</option>
-                                                <option value="fingervena">指静脉</option>
-                                            </select>
-                                        </div>
                                     </form>
                                 </span>
                             </div>

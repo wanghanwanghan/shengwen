@@ -601,6 +601,74 @@ class ExcelController extends Controller
         })->store('xls')->export('xls');
     }
 
+    //导出声纹指静脉认证结果
+    public function export4($key)
+    {
+        $data=json_decode(Redis::get($key),true);
+
+        foreach ($data as &$row)
+        {
+            $row=array_values($row);
+        }
+
+        Excel::create($key,function($excel) use ($data){
+            $excel->sheet('score', function($sheet) use ($data){
+                $sheet->rows($data);
+            });
+        })->store('xls')->export('xls');
+    }
+
+    //导出声纹指静脉认证结果
+    public function export5($key)
+    {
+        $data=json_decode(Redis::get($key),true);
+
+        foreach ($data as &$row)
+        {
+            $row=array_values($row);
+        }
+
+        Excel::create($key,function($excel) use ($data){
+            $excel->sheet('score', function($sheet) use ($data){
+                $sheet->rows($data);
+            });
+        })->store('xls')->export('xls');
+    }
+
+    //导出声纹指静脉认证结果
+    public function export6($key)
+    {
+        $data=json_decode(Redis::get($key),true);
+
+        foreach ($data as &$row)
+        {
+            $row=array_values($row);
+        }
+
+        Excel::create($key,function($excel) use ($data){
+            $excel->sheet('score', function($sheet) use ($data){
+                $sheet->rows($data);
+            });
+        })->store('xls')->export('xls');
+    }
+
+    //导出声纹指静脉认证结果
+    public function export7($key)
+    {
+        $data=json_decode(Redis::get($key),true);
+
+        foreach ($data as &$row)
+        {
+            $row=array_values($row);
+        }
+
+        Excel::create($key,function($excel) use ($data){
+            $excel->sheet('score', function($sheet) use ($data){
+                $sheet->rows($data);
+            });
+        })->store('xls')->export('xls');
+    }
+
 
 
 

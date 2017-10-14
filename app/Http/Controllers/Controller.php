@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Model\ConfirmTypeModel;
+use App\Http\Model\CustConfirmModel;
+use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\LevelModel;
 use App\Http\Model\LogModel;
@@ -23,6 +25,194 @@ use Illuminate\Support\Facades\Session;
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    //声纹和指静脉的认证结果导出，当要导出两者公用的时，筛选用
+    public function filter_confirm_res($vp,$fv,$pass_or_nopass,$webtime)
+    {
+        if ($pass_or_nopass=='nopass')
+        {
+            //取出两边的cust_id身份证号码
+            foreach ($vp as &$row)
+            {
+                unset($row['num']);
+                $IDCARD_Of_vp[]=$row['cust_id'];
+            }
+            unset($row);
+            foreach ($fv as $row)
+            {
+                $IDCARD_Of_fv[]=$row['cust_id'];
+            }
+
+            //返回两个数组中的交集
+            $res_intersect=array_intersect($IDCARD_Of_vp,$IDCARD_Of_fv);
+            //vp中独有的，arraydiff函数是以第一个数组参数为基准的，所以需要参数对调diff两次
+            $res_vp1=array_diff($res_intersect,$IDCARD_Of_vp);
+            $res_vp2=array_diff($IDCARD_Of_vp,$res_intersect);
+            $res_vp=array_unique(array_merge($res_vp1,$res_vp2));
+            //fv中独有的，arraydiff函数是以第一个数组参数为基准的，所以需要参数对调diff两次
+            $res_fv1=array_diff($IDCARD_Of_fv,$res_intersect);
+            $res_fv2=array_diff($res_intersect,$IDCARD_Of_fv);
+            $res_fv=array_unique(array_merge($res_fv1,$res_fv2));
+
+            //webtime=>time
+            $fv_need_start_time=substr($webtime[0],0,10);
+
+            //放redis之前，把各方独有的，做一下判断，如果在另一边通过了，就消除这个身份证号码
+            //1.判断声纹未通过的在指静脉中通过没
+            if (!empty($res_vp))
+            {
+                $res_in_fv=CustFVModel::whereIn('cust_id',$res_vp)->get();
+
+                $res_vp=array_flip($res_vp);
+
+                if (count($res_in_fv)!='0')
+                {
+                    foreach ($res_in_fv as $onebyone)
+                    {
+                        if ($onebyone->cust_last_confirm_date>=$fv_need_start_time)
+                        {
+                            unset($res_vp[$onebyone->cust_id]);
+                        }
+                    }
+                }
+
+                $res_vp=array_flip($res_vp);
+            }
+
+            //2.判断指静脉未通过的在声纹中通过没
+            if (!empty($res_fv))
+            {
+                //身份证号码对应的客户主键
+                $comfirm_pid=CustModel::whereIn('cust_id',$res_fv)->get(['cust_num','cust_id'])->toArray();
+
+                //组成key：主键 value：身份证的数组
+                $res_fv=null;
+                foreach ($comfirm_pid as $onbyon)
+                {
+                    $res_fv[$onbyon['cust_num']]=$onbyon['cust_id'];
+                    $a_little_cond[]=$onbyon['cust_num'];
+                }
+
+                if (count($comfirm_pid)!='0')
+                {
+                    //找到是否有通过的
+                    $res_in_vp=CustConfirmModel::whereIn('confirm_pid',$a_little_cond)
+                        ->wherebetween('created_at',$webtime)
+                        ->where(['confirm_res'=>'Y'])->groupBy('confirm_pid')->get();
+
+                    if (count($res_in_vp)!='0')
+                    {
+                        foreach ($res_in_vp as $onyon)
+                        {
+                            unset($res_fv[$onyon->confirm_pid]);
+                        }
+                    }
+                }
+            }
+
+            //把身份号码放到redis里
+            $arr['intersect']=$res_intersect;
+            $arr['vp']=$res_vp;
+            $arr['fv']=$res_fv;
+
+            $time=time();
+            $redisKey='BothNopass'.$time;
+            $this->redis_set($redisKey,json_encode($arr),100);
+
+            //导出的数据交给excelcontroller去做，这里返回前台显示的数据
+            foreach ($res_intersect as $row)
+            {
+                $both[]=$this->findcond1($row,$vp);
+                $both[]=$this->findcond1($row,$fv);
+            }
+            foreach ($res_vp as $row)
+            {
+                $only_vp[]=$this->findcond1($row,$vp);
+            }
+            foreach ($res_fv as $row)
+            {
+                $only_fv[]=$this->findcond1($row,$fv);
+            }
+
+            $both=isset($both)?$both:[];
+            $only_vp=isset($only_vp)?$only_vp:[];
+            $only_fv=isset($only_fv)?$only_fv:[];
+            $all=array_merge($both,$only_vp,$only_fv);
+
+            //第一个是前台要显示的数据，第二个是rediskey
+            return [$all,$redisKey];
+        }
+
+        if ($pass_or_nopass=='pass')
+        {
+            $vp=$this->obj2arr($vp);
+            //取出两边的cust_id身份证号码
+            foreach ($vp as $row)
+            {
+                $IDCARD_Of_vp[]=$row['cust_id'];
+            }
+            foreach ($fv as $row)
+            {
+                $IDCARD_Of_fv[]=$row['cust_id'];
+            }
+
+            //返回两个数组中的交集
+            $res_intersect=array_intersect($IDCARD_Of_vp,$IDCARD_Of_fv);
+            //vp中独有的，arraydiff函数是以第一个数组参数为基准的，所以需要参数对调diff两次
+            $res_vp1=array_diff($res_intersect,$IDCARD_Of_vp);
+            $res_vp2=array_diff($IDCARD_Of_vp,$res_intersect);
+            $res_vp=array_unique(array_merge($res_vp1,$res_vp2));
+            //fv中独有的，arraydiff函数是以第一个数组参数为基准的，所以需要参数对调diff两次
+            $res_fv1=array_diff($IDCARD_Of_fv,$res_intersect);
+            $res_fv2=array_diff($res_intersect,$IDCARD_Of_fv);
+            $res_fv=array_unique(array_merge($res_fv1,$res_fv2));
+
+            //把身份号码放到redis里
+            $arr['intersect']=$res_intersect;
+            $arr['vp']=$res_vp;
+            $arr['fv']=$res_fv;
+
+            $time=time();
+            $redisKey='BothYespass'.$time;
+            $this->redis_set($redisKey,json_encode($arr),100);
+
+            //导出的数据交给excelcontroller去做，这里返回前台显示的数据
+            foreach ($res_intersect as $row)
+            {
+                $both[]=$this->findcond1($row,$vp);
+                $both[]=$this->findcond1($row,$fv);
+            }
+            foreach ($res_vp as $row)
+            {
+                $only_vp[]=$this->findcond1($row,$vp);
+            }
+            foreach ($res_fv as $row)
+            {
+                $only_fv[]=$this->findcond1($row,$fv);
+            }
+
+            $both=isset($both)?$both:[];
+            $only_vp=isset($only_vp)?$only_vp:[];
+            $only_fv=isset($only_fv)?$only_fv:[];
+            $all=array_merge($both,$only_vp,$only_fv);
+
+            //第一个是前台要显示的数据，第二个是rediskey
+            return [$all,$redisKey];
+        }
+    }
+
+    public function findcond1($idcard,$idcard_array)
+    {
+        foreach ($idcard_array as $value)
+        {
+            if ($value['cust_id']==$idcard)
+            {
+                return $value;
+            }
+        }
+
+        return [];
+    }
 
     //取得session中的数据
     public function get_data_in_session($myinput)

@@ -1570,7 +1570,7 @@ class DataController extends Controller
                         {
                             if ($row['value']=='0')
                             {
-                                $YorN=['Y','N'];
+                                return ['error'=>'1','msg'=>'请输入查询条件'];
                             }else
                             {
                                 $YorN=[$row['value']];
@@ -1593,9 +1593,15 @@ class DataController extends Controller
                         {
                             if ($row['value']=='vocalvena')
                             {
+                                $staff_choice='vocalvena';
+                            }
+                            if ($row['value']=='all')
+                            {
+                                $staff_choice='all';
                             }
                             if ($row['value']=='fingervena')
                             {
+                                $staff_choice='fingervena';
                                 //开始结束时间 $start $stop
                                 //地区和参保类型 $condition
                                 //已通过未通过 $YorN
@@ -1609,7 +1615,7 @@ class DataController extends Controller
                                 {
                                     //查询全部的
                                     $res=CustFVModel::where($condition)
-                                        ->wherebetween('created_at',[$start,$stop])
+                                        ->whereBetween('created_at',[$start,$stop])
                                         ->get([
                                             'cust_num',
                                             'cust_name',
@@ -1627,7 +1633,7 @@ class DataController extends Controller
                                     {
                                         //通过
                                         $res=CustFVModel::where($condition)
-                                            ->where('cust_last_confirm_date','>=',$start_tmp)
+                                            ->whereBetween('cust_last_confirm_date',[$start_tmp,$stop_tmp])
                                             ->get([
                                                 'cust_num',
                                                 'cust_name',
@@ -1642,7 +1648,7 @@ class DataController extends Controller
                                     {
                                         //没通过
                                         $res=CustFVModel::where($condition)
-                                            ->where('cust_last_confirm_date','<',$start_tmp)
+                                            ->whereNotBetween('cust_last_confirm_date',[$start_tmp,$stop_tmp])
                                             ->get([
                                                 'cust_num',
                                                 'cust_name',
@@ -1652,7 +1658,6 @@ class DataController extends Controller
                                                 'cust_last_confirm_date',
                                                 'cust_btw'
                                             ])->toArray();
-
                                     }else
                                     {
 
@@ -1697,6 +1702,432 @@ class DataController extends Controller
                             }
                         }
                     }
+
+                    //这里是如果员工选择要导出声纹和指静脉合并后的谁通过，谁没通过的数据
+                    //通过$staff_choice这个变量
+                    if ($staff_choice=='all')
+                    {
+                        //执行一次指静脉的过滤条件
+                        //以下代码是复制上面的指静脉的
+                        //**********************************************************************************************
+                        $start_tmp = substr($start, 0, 10);
+                        $stop_tmp = substr($stop, 0, 10);
+
+                        //查询通过的，未通过的，还是全部的
+                        if (count($YorN) == '2') {
+                            //查询全部的
+                            $res = CustFVModel::where($condition)
+                                ->whereBetween('created_at', [$start, $stop])
+                                ->get([
+                                    'cust_num',
+                                    'cust_name',
+                                    'cust_id',
+                                    'cust_phone_num',
+                                    'cust_phone_bku',
+                                    'cust_last_confirm_date',
+                                    'cust_btw'
+                                ])->toArray();
+
+                        } elseif (count($YorN) == '1') {
+                            //查询通过，或者未通过的
+                            if ($YorN[0] == 'Y') {
+                                //通过
+                                $res = CustFVModel::where($condition)
+                                    ->whereBetween('cust_last_confirm_date', [$start_tmp, $stop_tmp])
+                                    ->get([
+                                        'cust_num',
+                                        'cust_name',
+                                        'cust_id',
+                                        'cust_phone_num',
+                                        'cust_phone_bku',
+                                        'cust_last_confirm_date',
+                                        'cust_btw'
+                                    ])->toArray();
+
+                            } elseif ($YorN[0] == 'N') {
+                                //没通过
+                                $res = CustFVModel::where($condition)
+                                    ->whereNotBetween('cust_last_confirm_date', [$start_tmp, $stop_tmp])
+                                    ->get([
+                                        'cust_num',
+                                        'cust_name',
+                                        'cust_id',
+                                        'cust_phone_num',
+                                        'cust_phone_bku',
+                                        'cust_last_confirm_date',
+                                        'cust_btw'
+                                    ])->toArray();
+                            } else {
+
+                            }
+
+                        } else {
+
+                        }
+
+                        //给数组添加几个元素
+                        foreach ($res as $row) {
+                            $res2['cust_num'] = $row['cust_num'];
+                            $res2['cust_name'] = $row['cust_name'];
+                            $res2['cust_id'] = $row['cust_id'];
+                            $res2['cust_phone_num'] = $row['cust_phone_num'];
+                            $res2['cust_phone_bku'] = $row['cust_phone_bku'];
+                            $res2['this_is_fv_cust'] = '指静脉';
+                            $res2['cust_last_confirm_date'] = $row['cust_last_confirm_date'];
+                            $res2['pass_the_confirm'] = '通过认证';
+                            $res2['cust_btw'] = $row['cust_btw'];
+
+                            $res3[] = $res2;
+
+                            //导出用的
+                            $redis_content[] = $res2['cust_id'];
+                        }
+
+                        if (empty($res)) {
+                            $res3 = [];
+                        }
+
+                        //$res3是指静脉符合条件的客户
+                        $final_fv_res=$res3;
+                        //**********************************************************************************************
+
+                        //以下代码是复制声纹的
+                        //**********************************************************************************************
+                        $get = [
+                            'customer_info.cust_name',
+                            'customer_info.cust_id',
+                            'customer_info.cust_review_num',
+                            'customer_info.cust_phone_num',
+                            'customer_info.cust_type',
+                            'customer_confirm.created_at',
+                            'customer_confirm.confirm_res',
+                            'customer_confirm.confirm_num',
+                            'customer_confirm.confirm_btw'
+                        ];
+
+                        //查询数据
+                        if (count($YorN) == '1' && $YorN[0] == 'N') {
+                            //仅仅是查询未通过的
+                            //判断是不是超级管理员
+                            if (Session::get('user')[0]['staff_num'] == '1') {
+                                //是超管
+                                $sql = "select confirm_num,confirm_pid,confirm_res,confirm_btw,created_at,COUNT(confirm_pid) as num 
+FROM (select * from zbxl_customer_confirm as t1 where created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2 
+GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
+
+                                $res1 = \DB::select($sql, [$start, $stop, '2', 'N']);
+                            } else {
+                                //不是超管
+                                $sql = "select confirm_num,confirm_pid,confirm_res,confirm_btw,created_at,COUNT(confirm_pid) as num 
+FROM (select * from zbxl_customer_confirm as t1 where belong_to=? AND created_at between ? and ? GROUP BY confirm_pid,confirm_res) as t2 
+GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
+
+                                $mypid = Session::get('user')[0]['staff_num'];
+                                $res1 = \DB::select($sql, [$mypid, $start, $stop, '2', 'N']);
+                            }
+
+                            //对象转数组
+                            $res2 = $this->obj2arr($res1);
+
+                            if (empty($res2)) {
+                                //这里是如果声纹没有符合的，看看指静脉有没有符合的
+                                if (!empty($final_fv_res)) {
+                                    $time = time();
+                                    $this->redis_set('only_fv_nopass' . $time, json_encode($redis_content), 100);
+
+                                    return ['error' => '0', 'msg' => '查询成功', 'data' => $final_fv_res, 'pages' => intval(ceil(count($final_fv_res) / $limit)),
+                                        'count_data' => count($final_fv_res), 'redis_key' => 'only_fv_nopass' . $time];
+                                }
+
+                                return ['error' => '0', 'msg' => '查询成功'];
+                            }
+
+                            //给每个数组里插入客户相关信息
+                            foreach ($res2 as &$row) {
+                                try {
+                                    $data = CustModel::findOrFail($row['confirm_pid']);
+                                } catch (ModelNotFoundException $e) {
+                                    //没有查找到相应客户，说明客户被删除
+                                    $row = [];
+                                    continue;
+                                }
+
+                                if ($data->cust_project == $condition['cust_project'] && $data->cust_si_type == $condition['cust_si_type']) {
+                                    //判断要查询的是A还是B用户
+                                    if (count($AorB) == '2') {
+                                        //全部的用户
+                                        $row['cust_name'] = $data->cust_name;
+                                        $row['cust_id'] = $data->cust_id;
+                                        $row['cust_review_num'] = $data->cust_review_num;
+                                        $row['cust_phone_num'] = $data->cust_phone_num;
+                                        $row['cust_type'] = $data->cust_type;
+                                    } else {
+                                        //只是A或者B
+                                        if ($data->cust_type == $AorB[0]) {
+                                            $row['cust_name'] = $data->cust_name;
+                                            $row['cust_id'] = $data->cust_id;
+                                            $row['cust_review_num'] = $data->cust_review_num;
+                                            $row['cust_phone_num'] = $data->cust_phone_num;
+                                            $row['cust_type'] = $data->cust_type;
+                                        } else {
+                                            //不满族条件直接清除数据
+                                            $row = [];
+                                        }
+                                    }
+                                } else {
+                                    //不满族条件直接清除数据
+                                    $row = [];
+                                }
+                            }
+
+                            unset($row);
+                            //去掉空数组后，这才是满足条件的所有数据
+                            $res2 = array_filter($res2);
+                            $res2 = array_values($res2);
+
+                            //自制分页
+                            $data1 = [];
+                            for ($i = $offset; $i <= $limit * Input::get('page') - 1; $i++) {
+                                if (!isset($res2[$i])) {
+                                    break;
+                                }
+                                $data2 = null;
+
+                                //为了符合前台页面显示，数组里的数据顺序需要改一下
+                                $data2['confirm_num'] = $res2[$i]['confirm_num'];
+                                $data2['cust_name'] = $res2[$i]['cust_name'];
+                                $data2['cust_id'] = $res2[$i]['cust_id'];
+                                $data2['cust_review_num'] = $res2[$i]['cust_review_num'];
+                                $data2['cust_phone_num'] = $res2[$i]['cust_phone_num'];
+                                $data2['cust_type'] = $res2[$i]['cust_type'];
+                                $data2['created_at'] = $res2[$i]['created_at'];
+                                $data2['confirm_res'] = $res2[$i]['confirm_res'];
+                                $data2['confirm_btw'] = $res2[$i]['confirm_btw'];
+
+                                $data1[] = $data2;
+                            }
+
+                            //把所有没通过的客户的pid取出来放到redis里
+                            foreach ($res2 as $row) {
+                                $redis_value[] = $row['confirm_pid'];
+                            }
+
+                            if (!isset($redis_value))
+                            {
+                                return ['error' => '0', 'msg' => '没有匹配的数据'];
+                            }else
+                            {
+                                //这里是声纹有未通过的，看看指静脉有没有符合的
+                                if (!empty($final_fv_res))
+                                {
+                                    //前台的筛选条件
+                                    $cond_of_web_time=[$start,$stop];
+                                    $myres=$this->filter_confirm_res($res2,$final_fv_res,'nopass',$cond_of_web_time);
+
+                                    //自制分页
+                                    $data1=[];
+                                    for ($i=$offset;$i<=$limit*Input::get('page')-1;$i++)
+                                    {
+                                        if (!isset($myres[0][$i]))
+                                        {
+                                            break;
+                                        }
+                                        $data2=null;
+
+                                        //为了符合前台页面显示，数组里的数据顺序需要改一下
+                                        if (isset($myres[0][$i]['confirm_num']))
+                                        {
+                                            $data2['confirm_num']    = $myres[0][$i]['confirm_num'];
+                                            $data2['cust_name']      = $myres[0][$i]['cust_name'];
+                                            $data2['cust_id']        = $myres[0][$i]['cust_id'];
+                                            $data2['cust_review_num']= $myres[0][$i]['cust_review_num'];
+                                            $data2['cust_phone_num'] = $myres[0][$i]['cust_phone_num'];
+                                            $data2['cust_type']      = $myres[0][$i]['cust_type'];
+                                            $data2['created_at']     = $myres[0][$i]['created_at'];
+                                            $data2['confirm_res']    = $myres[0][$i]['confirm_res'];
+                                            $data2['confirm_btw']    = $myres[0][$i]['confirm_btw'];
+                                        }else
+                                        {
+                                            $data2['confirm_num']    = $myres[0][$i]['cust_num'];
+                                            $data2['cust_name']      = $myres[0][$i]['cust_name'];
+                                            $data2['cust_id']        = $myres[0][$i]['cust_id'];
+                                            $data2['cust_phone_num'] = $myres[0][$i]['cust_phone_num'];
+                                            $data2['cust_phone_bku'] = $myres[0][$i]['cust_phone_bku'];
+                                            $data2['this_is_fv_cust']= $myres[0][$i]['this_is_fv_cust'];
+                                            $data2['cust_last_confirm_date']=$myres[0][$i]['cust_last_confirm_date'];
+                                            $data2['pass_the_confirm']=$myres[0][$i]['pass_the_confirm'];
+                                            $data2['cust_btw']       =$myres[0][$i]['cust_btw'];
+                                        }
+
+                                        $data1[]=$data2;
+                                    }
+
+                                    return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>intval(ceil(count($myres[0])/$limit)),
+                                        'count_data'=>count($myres[0]),'redis_key'=>$myres[1]];
+                                }
+                            }
+
+                            $redis_key = 'daochu_' . time();
+                            $this->redis_set($redis_key, json_encode($redis_value), 60);
+
+                            return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>intval(ceil(count($res2)/$limit)),
+                                'count_data'=>count($res2),'redis_key'=>$redis_key];
+                        } else {
+                            //判断是不是超管
+                            if (Session::get('user')[0]['staff_num'] == '1') {
+                                //是超管
+                                $res = \DB::table('customer_info')
+                                    ->leftJoin('customer_confirm', 'customer_info.cust_num', '=', 'customer_confirm.confirm_pid')
+                                    ->where($condition)
+                                    ->whereIn('customer_confirm.confirm_res', $YorN)
+                                    ->whereIn('customer_info.cust_type', $AorB)
+                                    ->orderBy('customer_confirm.confirm_pid', 'desc')
+                                    ->orderBy('customer_confirm.created_at', 'desc')
+                                    ->wherebetween('customer_confirm.created_at', [$start, $stop])
+                                    ->offset($offset)->limit($limit)
+                                    ->get($get);
+
+                                //查询总页数
+                                $cnt = \DB::table('customer_info')
+                                    ->leftJoin('customer_confirm', 'customer_info.cust_num', '=', 'customer_confirm.confirm_pid')
+                                    ->where($condition)
+                                    ->whereIn('customer_confirm.confirm_res', $YorN)
+                                    ->whereIn('customer_info.cust_type', $AorB)
+                                    ->wherebetween('customer_confirm.created_at', [$start, $stop])
+                                    ->count();
+                                $cnt_page = intval(ceil($cnt / $limit));
+                            } else {
+                                //不是超管
+                                $res = \DB::table('customer_info')
+                                    ->leftJoin('customer_confirm', 'customer_info.cust_num', '=', 'customer_confirm.confirm_pid')
+                                    ->where($condition)
+                                    ->where('belong_to', $mypid = Session::get('user')[0]['staff_num'])
+                                    ->whereIn('customer_confirm.confirm_res', $YorN)
+                                    ->whereIn('customer_info.cust_type', $AorB)
+                                    ->orderBy('customer_confirm.confirm_pid', 'desc')
+                                    ->orderBy('customer_confirm.created_at', 'desc')
+                                    ->wherebetween('customer_confirm.created_at', [$start, $stop])
+                                    ->offset($offset)->limit($limit)
+                                    ->get($get);
+
+                                //查询总页数
+                                $cnt = \DB::table('customer_info')
+                                    ->leftJoin('customer_confirm', 'customer_info.cust_num', '=', 'customer_confirm.confirm_pid')
+                                    ->where($condition)
+                                    ->where('belong_to', $mypid = Session::get('user')[0]['staff_num'])
+                                    ->whereIn('customer_confirm.confirm_res', $YorN)
+                                    ->whereIn('customer_info.cust_type', $AorB)
+                                    ->wherebetween('customer_confirm.created_at', [$start, $stop])
+                                    ->count();
+                                $cnt_page = intval(ceil($cnt / $limit));
+                            }
+
+                            //从这里以上是导出数据的逻辑
+                            foreach ($res as $myrow)
+                            {
+                                $cust_id[]=$myrow->cust_id;
+                            }
+
+                            //看看指静脉有没有通过的
+                            $finger_res=CustFVModel::where($condition)->where('cust_last_confirm_date','>=',$start_tmp)->get([
+                                'cust_name',
+                                'cust_id',
+                                'cust_phone_num',
+                                'cust_phone_bku',
+                                'cust_last_confirm_date',
+                                'cust_num',
+                                'cust_btw'])->toArray();
+
+                            if (!isset($cust_id) && !empty($finger_res))
+                            {
+                                //声纹无数据，指静脉有数据
+                                //自制分页
+                                $data1=[];
+                                for ($i=$offset;$i<=$limit*Input::get('page')-1;$i++)
+                                {
+                                    if (!isset($finger_res[$i]))
+                                    {
+                                        break;
+                                    }
+                                    $data2=null;
+
+                                    //为了符合前台页面显示，数组里的数据顺序需要改一下
+                                    $data2['cust_name']      = $finger_res[$i]['cust_name'];
+                                    $data2['cust_id']        = $finger_res[$i]['cust_id'];
+                                    $data2['cust_review_num']= $finger_res[$i]['cust_phone_num'];
+                                    $data2['cust_phone_num'] = $finger_res[$i]['cust_phone_bku'];
+                                    $data2['cust_type']      = '指静脉';
+                                    $data2['created_at']     = $finger_res[$i]['cust_last_confirm_date'];
+                                    $data2['confirm_res']    = '通过认证';
+                                    $data2['confirm_num']    = $finger_res[$i]['cust_num'];
+                                    $data2['confirm_btw']    = $finger_res[$i]['cust_btw'];
+
+                                    $data1[]=$data2;
+                                    $cust_id[]=$finger_res[$i]['cust_id'];
+                                }
+
+                                $time=time();
+                                $this->redis_set('only_fv_yespass'.$time,json_encode($cust_id),100);
+
+                                return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>intval(ceil(count($finger_res)/$limit)),'count_data'=>count($finger_res),'redis_key'=>'only_fv_yespass'.$time];
+                            }elseif (!isset($cust_id) && empty($finger_res))
+                            {
+                                //声纹无数据，指静脉无数据
+                                return ['error'=>'0','msg'=>'无匹配数据'];
+                            }elseif (isset($cust_id) && !empty($finger_res))
+                            {
+                                //声纹有数据，指静脉有数据
+                                //$res是声纹的数据，$cust_id是声纹的身份证号
+                                $myres=$this->filter_confirm_res($res,$finger_res,'pass',[$start,$stop]);
+
+                                //自制分页
+                                $data1=[];
+                                for ($i=$offset;$i<=$limit*Input::get('page')-1;$i++)
+                                {
+                                    if (!isset($myres[0][$i]))
+                                    {
+                                        break;
+                                    }
+                                    $data2=null;
+
+                                    //为了符合前台页面显示，数组里的数据顺序需要改一下
+                                    if (isset($myres[0][$i]['cust_review_num']))
+                                    {
+                                        $data2['confirm_num']    = $myres[0][$i]['confirm_num'];
+                                        $data2['cust_name']      = $myres[0][$i]['cust_name'];
+                                        $data2['cust_id']        = $myres[0][$i]['cust_id'];
+                                        $data2['cust_review_num']= $myres[0][$i]['cust_review_num'];
+                                        $data2['cust_phone_num'] = $myres[0][$i]['cust_phone_num'];
+                                        $data2['cust_type']      = $myres[0][$i]['cust_type'];
+                                        $data2['created_at']     = $myres[0][$i]['created_at'];
+                                        $data2['confirm_res']    = $myres[0][$i]['confirm_res'];
+                                        $data2['confirm_btw']    = $myres[0][$i]['confirm_btw'];
+                                    }else
+                                    {
+                                        $data2['confirm_num']    = $myres[0][$i]['cust_num'];
+                                        $data2['cust_name']      = $myres[0][$i]['cust_name'];
+                                        $data2['cust_id']        = $myres[0][$i]['cust_id'];
+                                        $data2['cust_phone_num'] = $myres[0][$i]['cust_phone_num'];
+                                        $data2['cust_phone_bku'] = $myres[0][$i]['cust_phone_bku'];
+                                        $data2['this_is_fv_cust']= '指静脉';
+                                        $data2['cust_last_confirm_date']=$myres[0][$i]['cust_last_confirm_date'];
+                                        $data2['pass_the_confirm']='通过认证';
+                                        $data2['cust_btw']       =$myres[0][$i]['cust_btw'];
+                                    }
+
+                                    $data1[]=$data2;
+                                }
+                                return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>intval(ceil(count($myres[0])/$limit)),'count_data'=>count($myres[0]),'redis_key'=>$myres[1]];
+                            }
+
+                            //声纹有数据，指静脉无数据
+                            $time=time();
+                            $this->redis_set('yes_pass'.$time,json_encode($cust_id),100);
+
+                            return ['error'=>'0','msg'=>'查询成功','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt,'redis_key'=>'yes_pass'.$time];
+                        }
+                    }
+                    //**************************************************************************************************
 
                     //查询想要的数据
                     $get=[
@@ -2009,6 +2440,156 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 //这里是客户的主键数组
                 $in_data=json_decode(Redis::get($redis_key),true);
+
+                //only_fv_nopass
+                if (strpos(Input::get('key'),'only_fv_nopass')!==false)
+                {
+                    //strpos($a, $b) !== false 如果$a 中存在 $b，则为 true ，否则为 false。
+                    $res=CustFVModel::whereIn('cust_id',$in_data)->get($get)->toArray();
+
+                    //给res的第一行
+                    array_unshift($res,['客户姓名','身份证号','社保编号']);
+
+                    //因为ajax触发不了Excel::里的export方法，所以用redis传过去
+                    $time=time();
+                    $this->redis_set('only_fv_nopass'.$time,json_encode($res),100);
+
+                    //生成excel
+                    file_get_contents(env('APP_URL').'/export4/only_fv_nopass'.$time);
+
+                    $excel_file=env('APP_URL').'/storage/exports/'.'only_fv_nopass'.$time.'.xls';
+
+                    return ['error'=>'0','msg'=>'导出成功','file_name'=>$excel_file];
+
+                }
+
+                //BothNopass
+                if (strpos(Input::get('key'),'BothNopass')!==false)
+                {
+                    //strpos($a, $b) !== false 如果$a 中存在 $b，则为 true ，否则为 false。
+                    if (!empty($in_data['intersect']))
+                    {
+                        $res_both=CustModel::whereIn('cust_id',$in_data['intersect'])->get($get)->toArray();
+                        foreach ($res_both as &$row)
+                        {
+                            $row['service']='声纹和指静脉';
+                        }
+                        unset($row);
+                    }
+                    if (!empty($in_data['vp']))
+                    {
+                        $res_vp=CustModel::whereIn('cust_id',$in_data['vp'])->get($get)->toArray();
+                        foreach ($res_vp as &$row)
+                        {
+                            $row['service']='声纹';
+                        }
+                        unset($row);
+                    }
+                    if (!empty($in_data['fv']))
+                    {
+                        $res_fv=CustFVModel::whereIn('cust_id',$in_data['fv'])->get($get)->toArray();
+                        foreach ($res_fv as &$row)
+                        {
+                            $row['service']='指静脉';
+                        }
+                        unset($row);
+                    }
+
+                    $res_both=isset($res_both)?$res_both:[];
+                    $res_vp=isset($res_vp)?$res_vp:[];
+                    $res_fv=isset($res_fv)?$res_fv:[];
+                    $res=array_merge($res_both,$res_vp,$res_fv);
+
+                    //给res的第一行
+                    array_unshift($res,['客户姓名','身份证号','社保编号','参与认证并且未通过']);
+
+                    //因为ajax触发不了Excel::里的export方法，所以用redis传过去
+                    $time=time();
+                    $this->redis_set('BothNopass'.$time,json_encode($res),100);
+
+                    //生成excel
+                    file_get_contents(env('APP_URL').'/export5/BothNopass'.$time);
+
+                    $excel_file=env('APP_URL').'/storage/exports/'.'BothNopass'.$time.'.xls';
+
+                    return ['error'=>'0','msg'=>'导出成功','file_name'=>$excel_file];
+
+                }
+
+                //BothYespass
+                if (strpos(Input::get('key'),'BothYespass')!==false)
+                {
+                    //strpos($a, $b) !== false 如果$a 中存在 $b，则为 true ，否则为 false。
+                    if (!empty($in_data['intersect']))
+                    {
+                        $res_both=CustModel::whereIn('cust_id',$in_data['intersect'])->get($get)->toArray();
+                        foreach ($res_both as &$row)
+                        {
+                            $row['service']='声纹和指静脉';
+                        }
+                        unset($row);
+                    }
+                    if (!empty($in_data['vp']))
+                    {
+                        $res_vp=CustModel::whereIn('cust_id',$in_data['vp'])->get($get)->toArray();
+                        foreach ($res_vp as &$row)
+                        {
+                            $row['service']='声纹';
+                        }
+                        unset($row);
+                    }
+                    if (!empty($in_data['fv']))
+                    {
+                        $res_fv=CustFVModel::whereIn('cust_id',$in_data['fv'])->get($get)->toArray();
+                        foreach ($res_fv as &$row)
+                        {
+                            $row['service']='指静脉';
+                        }
+                        unset($row);
+                    }
+
+                    $res_both=isset($res_both)?$res_both:[];
+                    $res_vp=isset($res_vp)?$res_vp:[];
+                    $res_fv=isset($res_fv)?$res_fv:[];
+                    $res=array_merge($res_both,$res_vp,$res_fv);
+
+                    //给res的第一行
+                    array_unshift($res,['客户姓名','身份证号','社保编号','参与认证并且未通过']);
+
+                    //因为ajax触发不了Excel::里的export方法，所以用redis传过去
+                    $time=time();
+                    $this->redis_set('BothYespass'.$time,json_encode($res),100);
+
+                    //生成excel
+                    file_get_contents(env('APP_URL').'/export7/BothYespass'.$time);
+
+                    $excel_file=env('APP_URL').'/storage/exports/'.'BothYespass'.$time.'.xls';
+
+                    return ['error'=>'0','msg'=>'导出成功','file_name'=>$excel_file];
+
+                }
+
+                //only_fv_yespass
+                if (strpos(Input::get('key'),'only_fv_yespass')!==false)
+                {
+                    //strpos($a, $b) !== false 如果$a 中存在 $b，则为 true ，否则为 false。
+                    $res=CustFVModel::whereIn('cust_id',$in_data)->get($get)->toArray();
+
+                    //给res的第一行
+                    array_unshift($res,['客户姓名','身份证号','社保编号']);
+
+                    //因为ajax触发不了Excel::里的export方法，所以用redis传过去
+                    $time=time();
+                    $this->redis_set('only_fv_yespass'.$time,json_encode($res),100);
+
+                    //生成excel
+                    file_get_contents(env('APP_URL').'/export6/only_fv_yespass'.$time);
+
+                    $excel_file=env('APP_URL').'/storage/exports/'.'only_fv_yespass'.$time.'.xls';
+
+                    return ['error'=>'0','msg'=>'导出成功','file_name'=>$excel_file];
+
+                }
 
                 //如果要导出的是指静脉数据
                 if (strpos(Input::get('key'),'fv_yes_pass')!==false)

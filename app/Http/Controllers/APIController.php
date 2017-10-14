@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Model\ConfirmTypeModel;
 use App\Http\Model\CustConfirmModel;
+use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\LogModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SiTypeModel;
+use App\Http\Model\StaffModel;
 use App\Http\Model\VocalPrintModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -319,6 +321,64 @@ class APIController extends Controller
 
                 break;
 
+            case 'get_fv_register_mongo_data':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=15;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                $obj=$this->mymongo();
+
+                //查询数据
+                $res=$obj->Finger->CustTemplate->find([],['_id'=>'1'])->sort(['time'=>-1])->limit($limit)->skip($offset);
+
+                //总页数
+                $cnt=$obj->Finger->CustTemplate->find()->count();
+                $cnt_page=intval(ceil($cnt/$limit));
+
+                foreach ($res as $row)
+                {
+                    //把所有mongo数据取出来
+                    $tmp[]=$row;
+                }
+
+                if (empty($tmp))
+                {
+                    return ['error'=>'1','msg'=>'未取得数据或数据是空'];
+                }
+
+                //重新整理并发送给前端显示
+                foreach ($tmp as $row1)
+                {
+                    try
+                    {
+                        $my_tmp1=CustFVModel::findOrFail($row1['_id']);
+                        $my_tmp2[]=[
+                            $my_tmp1->cust_name,
+                            $my_tmp1->cust_id,
+                            $my_tmp1->cust_phone_num,
+                            $my_tmp1->cust_phone_bku,
+                            $my_tmp1->cust_last_confirm_date,
+                            (string)$my_tmp1->created_at
+                        ];
+                    }
+                    catch(ModelNotFoundException $e)
+                    {
+
+                    }
+                }
+
+                $data=$my_tmp2;
+
+                return ['error'=>'0','data'=>$data,'pages'=>$cnt_page,'count_data'=>$cnt];
+
+                break;
+
             case 'get_loop_return_mongo_data':
 
                 //用户传入的页
@@ -383,6 +443,70 @@ class APIController extends Controller
                 }
 
                 $data=$tmp;
+
+                return ['error'=>'0','data'=>$data,'pages'=>$cnt_page,'count_data'=>$cnt];
+
+                break;
+
+            case 'get_fv_confirm_mongo_data':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=15;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                $obj=$this->mymongo();
+
+                //查询数据
+                $res=$obj->Finger->ConfirmRes->find()->sort(['sort'=>-1])->limit($limit)->skip($offset);
+
+                //总页数
+                $cnt=$obj->Finger->ConfirmRes->find()->count();
+                $cnt_page=intval(ceil($cnt/$limit));
+
+                foreach ($res as $row)
+                {
+                    //把所有mongo数据取出来
+                    $tmp[]=$row;
+                }
+
+                if (empty($tmp))
+                {
+                    return ['error'=>'1','msg'=>'未取得数据或数据是空'];
+                }
+
+                //重新整理并发送给前端显示
+                foreach ($tmp as $row1)
+                {
+                    try
+                    {
+                        $staffname=StaffModel::findOrFail($row1['sno']);
+
+                        $my_tmp1=CustFVModel::findOrFail($row1['id_in_mysql']);
+
+                        $fv=$row1['res_of_fv']=='true'?'<font color="green">认证通过</font>':'<font color="red">认证失败</font>';
+                        $fp=$row1['res_of_fp']=='true'?'<font color="green">认证通过</font>':'<font color="red">认证失败</font>';
+
+                        $my_tmp2[]=[
+                            $staffname->staff_name,
+                            $my_tmp1->cust_name,
+                            $my_tmp1->cust_id,
+                            $fv,
+                            $fp,
+                            date('Y-m-d H:i:s',$row1['sort'])
+                        ];
+                    }
+                    catch(ModelNotFoundException $e)
+                    {
+
+                    }
+                }
+
+                $data=$my_tmp2;
 
                 return ['error'=>'0','data'=>$data,'pages'=>$cnt_page,'count_data'=>$cnt];
 

@@ -490,6 +490,9 @@
 
                 }else
                 {
+                    //清空表格
+                    $("#modify_cust_info").children().remove();
+
                     layer.msg(response.msg);
                 }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Model\ProjectModel;
 use App\Http\Myclass\FingerRegister;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Redis;
@@ -19,7 +20,29 @@ class TestController extends Controller
             '吕','施','张','孔','曹','严','华'
         ];
 
-        dd($this->JosephProblem($myarr));
+        $a = 1;
+        $b = $a + $a++;
+
+        $a = 1;
+        $c = $a + $a + $a++;
+
+        require_once public_path('baidu/AipSpeech.php');
+
+
+        $aipSpeech=new \AipSpeech(Config::get('constant.APP_ID'),Config::get('constant.API_KEY'),Config::get('constant.SECRET_KEY'));
+
+        //识别本地文件
+        //$res=$aipSpeech->asr(file_get_contents('test.pcm'),'pcm',16000,['lan'=>'zh']);
+        $res=$aipSpeech->asr(file_get_contents('wanghan123.wav'),'wav',16000,['lan'=>'zh']);
+        //$res=$aipSpeech->asr(file_get_contents('wanghan1234.wav'),'wav',8000,['lan'=>'zh']);
+
+        dd($res);
+
+
+
+
+
+
 
 
 
@@ -170,7 +193,7 @@ class TestController extends Controller
             //取出一个元素
             $element=array_shift($arr);
 
-            //计数器加壹
+            //计数器加一
             $num++;
 
             if ($num==$step)

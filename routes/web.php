@@ -88,6 +88,12 @@ Route::group(['middleware'=>['LoginMiddleware','VoiceManagementMiddleware']],fun
     //轮播返回信息
     Route::get('ivr/return/loop/msg','WebController@ivr_return_loop_msg');
 
+    //指静脉登记返回信息
+    Route::get('fv/register/return/msg','WebController@fv_register_return_msg');
+
+    //指静脉认证返回信息
+    Route::get('fv/confirm/return/msg','WebController@fv_confirm_return_msg');
+
 });
 
 //系统设置的路由组
@@ -252,10 +258,11 @@ Route::get('/export1/{key}','ExcelController@export1');
 Route::get('/export2/{key}','ExcelController@export2');
 //指静脉
 Route::get('/export3/{key}','ExcelController@export3');
-
-
-
-
+//导出声纹指静脉认证结果
+Route::get('/export4/{key}','ExcelController@export4');
+Route::get('/export5/{key}','ExcelController@export5');
+Route::get('/export6/{key}','ExcelController@export6');
+Route::get('/export7/{key}','ExcelController@export7');
 
 
 
