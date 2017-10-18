@@ -511,13 +511,6 @@ class APIController extends Controller
                 return ['error'=>'0','data'=>$data,'pages'=>$cnt_page,'count_data'=>$cnt];
 
                 break;
-
-            case '':
-
-
-
-                break;
-
         }
     }
 
@@ -552,7 +545,7 @@ class APIController extends Controller
 
                     case '动态口令':
 
-                        $confirm_text=$this->myrand();
+                        $confirm_text=$this->myrand('register');
 
                         break;
                 }
@@ -626,7 +619,7 @@ class APIController extends Controller
 
                     case '动态口令':
 
-                        $confirm_text=$this->myrand();
+                        $confirm_text=$this->myrand('verify');
 
                         break;
                 }
@@ -747,7 +740,7 @@ class APIController extends Controller
                     $phone_array[]=$row->cust_review_num;
                 }
 
-                $rand_num=$this->myrand();
+                $rand_num=$this->myrand('verify');
 
                 $data=[
                     'phone_array'=>$phone_array,//电话数组
@@ -840,8 +833,6 @@ class APIController extends Controller
             $id=VocalPrintModel::create(['vp_id'=>$pid,'vp_action'=>'登记','vp_ivr_url'=>$url,'vp_model_url'=>$model_url]);
 
             //拿到这次返回结果插入数据库中的主键
-            //dd($id->vp_pid);
-
             //通知mongo
             $obj=$this->mymongo();
             $obj->ivrlog->test1->insert([
@@ -1103,10 +1094,4 @@ class APIController extends Controller
             return ['error'=>'1','msg'=>'参数不正确'];
         }
     }
-
-
-
-
-
-
 }

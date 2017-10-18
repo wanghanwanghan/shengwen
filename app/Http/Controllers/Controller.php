@@ -985,34 +985,74 @@ class Controller extends BaseController
     }
 
     //产生不重复的随机数
-    public function myrand()
+    public function myrand($type='')
     {
-        $rand_num=[];
-        $min='1';
-        $max='9';
-
-        //每组有多少个数字
-        for ($j=1;$j<Config::get('confirm_type.count');$j++)
+        if ($type=='')
         {
-            $min.='0';
-            $max.='9';
-        }
+            $rand_num=[];
+            $min='1';
+            $max='9';
 
-        //产生多少组数字
-        for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
-        {
-            $new=rand($min,$max);
-
-            if (in_array($new,$rand_num))
+            //每组有多少个数字
+            for ($j=1;$j<Config::get('confirm_type.count');$j++)
             {
-                $i--;
-            }else
-            {
-                $rand_num[]=$new;
+                $min.='0';
+                $max.='9';
             }
+
+            //产生多少组数字
+            for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
+            {
+                $new=rand($min,$max);
+
+                //判断这组数字是不是有相同的了
+                if (in_array($new,$rand_num))
+                {
+                    $i--;
+                }else
+                {
+                    $rand_num[]=(string)$new;
+                }
+            }
+
+            return $rand_num;
+
+        }elseif ($type=='register')
+        {
+            $rand_num=[];
+
+            for ($i=0;$i<=9;$i++)
+            {
+                $rand_num[]=(string)$i;
+            }
+
+            return [implode('',$rand_num)];
+
+        }elseif ($type=='verify')
+        {
+            $rand_num=[];
+
+            for ($i=1;$i<=Config::get('confirm_type.count');$i++)
+            {
+                $new=rand(0,9);
+
+                //判断这组数字是不是有相同的了
+                if (in_array($new,$rand_num))
+                {
+                    $i--;
+                }else
+                {
+                    $rand_num[]=(string)$new;
+                }
+            }
+
+            return [implode('',$rand_num)];
+
+        }else
+        {
+
         }
 
-        return $rand_num;
     }
 
 

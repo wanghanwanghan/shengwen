@@ -13,6 +13,8 @@ class TestController extends Controller
 {
     public function test_1()
     {
+
+        dd($this->myrand('verify'));
         $myarr=[
             '赵','钱','孙','李','周','吴','郑',
             '王','冯','陈','褚','卫','蒋','沈',
