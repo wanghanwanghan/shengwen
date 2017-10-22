@@ -4042,8 +4042,65 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
             case 'get_config':
 
-                return ['error'=>'0','DynamicPassword'=>Config::get('confirm_type.repeat'),
-                    'TextDependent'=>Config::get('confirm_type.text')];
+                if (Redis::get('ivr_verify_score_threshold')=='')
+                {
+                    $this->redis_set('ivr_verify_score_threshold','15');
+                }else
+                {
+                    $ivr_verify_score_threshold=Redis::get('ivr_verify_score_threshold');
+                }
+
+                if (Redis::get('ivr_max_lines')=='')
+                {
+                    $this->redis_set('ivr_max_lines','30');
+                }else
+                {
+                    $ivr_max_lines=Redis::get('ivr_max_lines');
+                }
+
+                if (Redis::get('ivr_outgoing_pool_size')=='')
+                {
+                    $this->redis_set('ivr_outgoing_pool_size','20');
+                }else
+                {
+                    $ivr_outgoing_pool_size=Redis::get('ivr_outgoing_pool_size');
+                }
+
+                if (Redis::get('ivr_verify_record_time')=='')
+                {
+                    $this->redis_set('ivr_verify_record_time','30');
+                }else
+                {
+                    $ivr_verify_record_time=Redis::get('ivr_verify_record_time');
+                }
+
+                if (Redis::get('ivr_register_record_time')=='')
+                {
+                    $this->redis_set('ivr_register_record_time','60');
+                }else
+                {
+                    $ivr_register_record_time=Redis::get('ivr_register_record_time');
+                }
+
+                if (Redis::get('ivr_vpr_silence_hits')=='')
+                {
+                    $this->redis_set('ivr_vpr_silence_hits','1');
+                }else
+                {
+                    $ivr_vpr_silence_hits=Redis::get('ivr_vpr_silence_hits');
+                }
+
+                return [
+                    'error'=>'0',
+                    'DynamicPassword'=>Config::get('confirm_type.repeat'),
+                    'TextDependent'=>Config::get('confirm_type.text'),
+                    'ivr_verify_score_threshold'=>$ivr_verify_score_threshold,
+                    'ivr_max_lines'=>$ivr_max_lines,
+                    'ivr_outgoing_pool_size'=>$ivr_outgoing_pool_size,
+                    'ivr_verify_record_time'=>$ivr_verify_record_time,
+                    'ivr_register_record_time'=>$ivr_register_record_time,
+                    'ivr_vpr_silence_hits'=>$ivr_vpr_silence_hits
+                ];
 
                 break;
 
@@ -4061,6 +4118,60 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
 
                 return ['error'=>'0'];
+
+                break;
+
+            case 'set_config_for_ivr':
+
+                if (Input::get('modify_or_default')=='0')
+                {
+                    $this->redis_set('ivr_verify_score_threshold','15');
+                    $this->redis_set('ivr_max_lines','30');
+                    $this->redis_set('ivr_outgoing_pool_size','20');
+                    $this->redis_set('ivr_verify_record_time','30');
+                    $this->redis_set('ivr_register_record_time','60');
+                    $this->redis_set('ivr_vpr_silence_hits','1');
+
+                    $cond=[
+                        'verify_score_threshold'=>'15',
+                        'max_lines'=>'30',
+                        'outgoing_pool_size'=>'20',
+                        'verify_record_time'=>'30',
+                        'register_record_time'=>'60',
+                        'vpr_silence_hits'=>'1'
+                    ];
+
+                }elseif (Input::get('modify_or_default')=='1')
+                {
+                    foreach (Input::get('key') as $row)
+                    {
+                        if (is_numeric($row['value']) && strstr($row['value'],'.')===false)
+                        {
+                            $this->redis_set('ivr_'.$row['name'],(string)$row['value']);
+
+                            $cond[$row['name']]=$row['value'];
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'输入错误，必须是正整数'];
+                        }
+                    }
+
+                }else
+                {
+
+                }
+
+                //发送修改请求
+                $curl_res=$this->mycurl('http://127.0.0.1:7510/config_vars',$cond);
+                //$curl_res=$this->mycurl('http://58.19.253.212:7510/config_vars',$cond);
+
+                //判断返回值
+                if ($curl_res['error']!='0')
+                {
+                    return ['error'=>'1','msg'=>'ivr修改错误'];
+                }
+
+                return ['error'=>'0','msg'=>'ivr修改成功'];
 
                 break;
 

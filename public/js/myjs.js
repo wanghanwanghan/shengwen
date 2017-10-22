@@ -2190,6 +2190,31 @@ function set_config() {
 
 }
 
+function set_config_for_ivr(mytype) {
+
+    var url='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        key:$("#ivr_config_form").serializeArray(),
+        type:'set_config_for_ivr',
+        modify_or_default:mytype
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.msg(response.msg);
+            location.reload();
+        }else
+        {
+            layer.msg(response.msg);
+        }
+
+    },'json');
+
+}
+
 function select_china_all_position() {
 
     $("#daochudiqu_lable").val('xxx');

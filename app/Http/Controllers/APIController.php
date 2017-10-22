@@ -306,6 +306,11 @@ class APIController extends Controller
 
                     $row['time']=date("Y-m-d H:i:s",$row['time']);
 
+                    if ($row['score']=='')
+                    {
+                        $row['score']='空';
+                    }
+
                     if ($row['result']=='0')
                     {
                         $row['result']='正常';
@@ -432,6 +437,11 @@ class APIController extends Controller
                     }
 
                     $row['time']=date("Y-m-d H:i:s",$row['time']);
+
+                    if ($row['score']=='')
+                    {
+                        $row['score']='空';
+                    }
 
                     if ($row['result']=='0')
                     {
@@ -820,6 +830,7 @@ class APIController extends Controller
         $pid=isset($_GET['pid']) ? $_GET['pid'] : '';//客户主键
         $url=isset($_GET['url']) ? $_GET['url'] : '';//客户录音文件
         $model_url=isset($_GET['model_url']) ? $_GET['model_url'] : '';//客户声纹模型
+        $score=isset($_GET['score']) ? $_GET['score'] : '';//客户分数
 
         //找到这个客户
         $model=CustModel::find($pid);
@@ -841,6 +852,7 @@ class APIController extends Controller
                 'result'=>'0',
                 'message'=>$model->cust_name.'登记成功',
                 'mysqlPID'=>$id->vp_pid,
+                'score'=>'',
                 'time'=>time()
             ]);
 
@@ -858,6 +870,7 @@ class APIController extends Controller
                 'result'=>'1',
                 'message'=>$model->cust_name.'登记失败',
                 'mysqlPID'=>$id->vp_pid,
+                'score'=>'',
                 'time'=>time()
             ]);
 
@@ -872,6 +885,7 @@ class APIController extends Controller
                 'result'=>'1',
                 'message'=>$model->cust_name.'登记失败，呼叫失败',
                 'mysqlPID'=>'',
+                'score'=>'',
                 'time'=>time()
             ]);
 
@@ -889,6 +903,7 @@ class APIController extends Controller
         $pid=isset($_GET['pid']) ? $_GET['pid'] : '';//客户主键
         $url=isset($_GET['url']) ? $_GET['url'] : '';//客户录音文件
         $res=isset($_GET['res']) ? $_GET['res'] : '';//客户验证返回结果
+        $score=isset($_GET['score']) ? $_GET['score'] : '';//客户分数
 
         //找到这个客户
         $model=CustModel::find($pid);
@@ -906,6 +921,7 @@ class APIController extends Controller
                 'result'=>'0',
                 'message'=>$model->cust_name.'验证成功',
                 'mysqlPID'=>$id->vp_pid,
+                'score'=>$score,
                 'time'=>time()
             ]);
 
@@ -923,6 +939,7 @@ class APIController extends Controller
                 'result'=>'1',
                 'message'=>$model->cust_name.'验证失败，模型不匹配',
                 'mysqlPID'=>$id->vp_pid,
+                'score'=>$score,
                 'time'=>time()
             ]);
 
@@ -937,6 +954,7 @@ class APIController extends Controller
                 'result'=>'1',
                 'message'=>$model->cust_name.'验证失败，呼叫失败',
                 'mysqlPID'=>'',
+                'score'=>$score,
                 'time'=>time()
             ]);
 
@@ -954,6 +972,7 @@ class APIController extends Controller
         $pid=isset($_GET['pid']) ? $_GET['pid'] : '';//客户主键
         $url=isset($_GET['url']) ? $_GET['url'] : '';//客户录音文件
         $res=isset($_GET['res']) ? $_GET['res'] : '';//客户验证返回结果
+        $score=isset($_GET['score']) ? $_GET['score'] : '';//客户分数
 
         //找到这个客户
         $model=CustModel::find($pid);
@@ -974,6 +993,7 @@ class APIController extends Controller
                 'result'=>'0',
                 'message'=>$model->cust_name.'认证成功',
                 'mysqlPID'=>$id->vp_pid,
+                'score'=>$score,
                 'time'=>time()
             ]);
 
@@ -994,6 +1014,7 @@ class APIController extends Controller
                 'result'=>'1',
                 'message'=>$model->cust_name.'认证失败，模型不匹配',
                 'mysqlPID'=>$id->vp_pid,
+                'score'=>$score,
                 'time'=>time()
             ]);
 
@@ -1011,6 +1032,7 @@ class APIController extends Controller
                 'result'=>'1',
                 'message'=>$model->cust_name.'还没有进行登记',
                 'mysqlPID'=>'',
+                'score'=>$score,
                 'time'=>time()
             ]);
 
@@ -1028,6 +1050,7 @@ class APIController extends Controller
                 'result'=>'1',
                 'message'=>$model->cust_name.'认证失败，呼叫失败',
                 'mysqlPID'=>'',
+                'score'=>$score,
                 'time'=>time()
             ]);
 
@@ -1045,6 +1068,7 @@ class APIController extends Controller
         $pid=isset($_GET['pid']) ? $_GET['pid'] : '';//客户主键
         $url=isset($_GET['url']) ? $_GET['url'] : '';//客户录音文件
         $res=isset($_GET['res']) ? $_GET['res'] : '';//客户验证返回结果
+        $score=isset($_GET['score']) ? $_GET['score'] : '';//客户分数
 
         //找到这个客户
         $model=CustModel::find($pid);
@@ -1065,6 +1089,7 @@ class APIController extends Controller
                 'result'=>'0',
                 'message'=>$model->cust_name.'认证成功',
                 'mysqlPID'=>$id->vp_pid,
+                'score'=>$score,
                 'time'=>time()
             ]);
 
@@ -1085,6 +1110,7 @@ class APIController extends Controller
                 'result'=>'1',
                 'message'=>$model->cust_name.'认证失败，模型不匹配',
                 'mysqlPID'=>$id->vp_pid,
+                'score'=>$score,
                 'time'=>time()
             ]);
 

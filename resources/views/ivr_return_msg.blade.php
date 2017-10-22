@@ -25,6 +25,7 @@
                             <th style="text-align: center">结果</th>
                             <th style="text-align: center">结果信息</th>
                             <th style="text-align: center">客户录音</th>
+                            <th style="text-align: center">声纹分数</th>
                             <th style="text-align: center">操作时间</th>
                             </thead>
                             <tbody>
