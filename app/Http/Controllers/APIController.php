@@ -555,7 +555,7 @@ class APIController extends Controller
 
                     case '动态口令':
 
-                        $confirm_text=$this->myrand('register');
+                        $confirm_text=$this->myrand();
 
                         break;
                 }
@@ -581,6 +581,7 @@ class APIController extends Controller
                         'result'=>$res['error'],
                         'message'=>$res['msg'],
                         'mysqlPID'=>'',
+                        'score'=>'',
                         'time'=>time()
                     ]);
 
@@ -595,6 +596,7 @@ class APIController extends Controller
                         'result'=>$res['error'],
                         'message'=>$cust_name.'登记请求已发送',
                         'mysqlPID'=>'',
+                        'score'=>'',
                         'time'=>time()
                     ]);
 
@@ -655,6 +657,7 @@ class APIController extends Controller
                         'result'=>$res['error'],
                         'message'=>$res['msg'],
                         'mysqlPID'=>'',
+                        'score'=>'',
                         'time'=>time()
                     ]);
 
@@ -669,6 +672,7 @@ class APIController extends Controller
                         'result'=>$res['error'],
                         'message'=>$cust_name.'验证请求已发送',
                         'mysqlPID'=>'',
+                        'score'=>'',
                         'time'=>time()
                     ]);
 
@@ -903,7 +907,7 @@ class APIController extends Controller
         $pid=isset($_GET['pid']) ? $_GET['pid'] : '';//客户主键
         $url=isset($_GET['url']) ? $_GET['url'] : '';//客户录音文件
         $res=isset($_GET['res']) ? $_GET['res'] : '';//客户验证返回结果
-        $score=isset($_GET['score']) ? $_GET['score'] : '';//客户分数
+        $score=isset($_GET['score']) ? number_format($_GET['score'],2) : '';//客户分数
 
         //找到这个客户
         $model=CustModel::find($pid);
@@ -972,7 +976,7 @@ class APIController extends Controller
         $pid=isset($_GET['pid']) ? $_GET['pid'] : '';//客户主键
         $url=isset($_GET['url']) ? $_GET['url'] : '';//客户录音文件
         $res=isset($_GET['res']) ? $_GET['res'] : '';//客户验证返回结果
-        $score=isset($_GET['score']) ? $_GET['score'] : '';//客户分数
+        $score=isset($_GET['score']) ? number_format($_GET['score'],2) : '';//客户分数
 
         //找到这个客户
         $model=CustModel::find($pid);
@@ -1068,7 +1072,7 @@ class APIController extends Controller
         $pid=isset($_GET['pid']) ? $_GET['pid'] : '';//客户主键
         $url=isset($_GET['url']) ? $_GET['url'] : '';//客户录音文件
         $res=isset($_GET['res']) ? $_GET['res'] : '';//客户验证返回结果
-        $score=isset($_GET['score']) ? $_GET['score'] : '';//客户分数
+        $score=isset($_GET['score']) ? number_format($_GET['score'],2) : '';//客户分数
 
         //找到这个客户
         $model=CustModel::find($pid);

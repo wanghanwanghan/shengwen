@@ -58,44 +58,44 @@
         <form id="ivr_config_form" class="form-horizontal">
             <div class="box-body">
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">verify_score_threshold</label>
+                    <label class="col-sm-3 control-label">verify_score_threshold（阈值）</label>
 
-                    <div class="col-sm-4">
-                        <input style="padding-left: 16px;" type="text" class="form-control" name="verify_score_threshold" placeholder="文本相关内容">
+                    <div class="col-sm-2">
+                        <input style="padding-left: 16px;" type="text" class="form-control" name="verify_score_threshold">
                     </div>
 
-                    <label class="col-sm-2 control-label">max_lines</label>
+                    <label class="col-sm-3 control-label">max_lines（未知）</label>
 
-                    <div class="col-sm-4">
-                        <input style="padding-left: 16px;" type="text" class="form-control" name="max_lines" placeholder="文本相关内容">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="col-sm-2 control-label">outgoing_pool_size</label>
-
-                    <div class="col-sm-4">
-                        <input style="padding-left: 16px;" type="text" class="form-control" name="outgoing_pool_size" placeholder="文本相关内容">
-                    </div>
-
-                    <label class="col-sm-2 control-label">verify_record_time</label>
-
-                    <div class="col-sm-4">
-                        <input style="padding-left: 16px;" type="text" class="form-control" name="verify_record_time" placeholder="文本相关内容">
+                    <div class="col-sm-2">
+                        <input style="padding-left: 16px;" type="text" class="form-control" name="max_lines">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">register_record_time</label>
+                    <label class="col-sm-3 control-label">outgoing_pool_size（外呼并发）</label>
 
-                    <div class="col-sm-4">
-                        <input style="padding-left: 16px;" type="text" class="form-control" name="register_record_time" placeholder="文本相关内容">
+                    <div class="col-sm-2">
+                        <input style="padding-left: 16px;" type="text" class="form-control" name="outgoing_pool_size">
                     </div>
 
-                    <label class="col-sm-2 control-label">vpr_silence_hits</label>
+                    <label class="col-sm-3 control-label">verify_record_time（认证最小录音时长）</label>
 
-                    <div class="col-sm-4">
-                        <input style="padding-left: 16px;" type="text" class="form-control" name="vpr_silence_hits" placeholder="文本相关内容">
+                    <div class="col-sm-2">
+                        <input style="padding-left: 16px;" type="text" class="form-control" name="verify_record_time">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">register_record_time（最小录音时长）</label>
+
+                    <div class="col-sm-2">
+                        <input style="padding-left: 16px;" type="text" class="form-control" name="register_record_time">
+                    </div>
+
+                    <label class="col-sm-3 control-label">vpr_silence_hits（静音监测间隔时长）</label>
+
+                    <div class="col-sm-2">
+                        <input style="padding-left: 16px;" type="text" class="form-control" name="vpr_silence_hits">
                     </div>
                 </div>
             </div>

@@ -1003,7 +1003,32 @@ class Controller extends BaseController
             //产生多少组数字
             for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
             {
+                $tmp1=null;
+                $tmp2=null;
+
                 $new=rand($min,$max);
+
+                //数字字符串=>数组
+                for ($j=0;$j<=strlen($new)-1;$j++)
+                {
+                    $tmp1[]=substr($new,$j,1);
+                }
+                $tmp2=array_unique($tmp1);
+
+                //每组数字里面不能有重复的数字
+                while (true)
+                {
+                    if (count($tmp2)<Config::get('confirm_type.count'))
+                    {
+                        $tmp2[]=(string)rand(0,9);
+                        $tmp2=array_unique($tmp2);
+                    }else
+                    {
+                        break;
+                    }
+                }
+
+                $new=implode('',$tmp2);
 
                 //判断这组数字是不是有相同的了
                 if (in_array($new,$rand_num))
