@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Model\CustModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Myclass\FingerRegister;
 use Illuminate\Support\Facades\Config;
@@ -13,14 +14,6 @@ class TestController extends Controller
 {
     public function test_1()
     {
-        $str='123';
-
-        dd($str[1]);
-
-
-
-
-
         $myarr=[
             '赵','钱','孙','李','周','吴','郑',
             '王','冯','陈','褚','卫','蒋','沈',

@@ -26,6 +26,18 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+    //判断身份证照片是否存在
+    public function check_idcard_photo($url)
+    {
+        if (file_exists($url))
+        {
+            return file_get_contents($url);
+        }else
+        {
+            return asset('public/img/userImage.png');
+        }
+    }
+
     //声纹和指静脉的认证结果导出，当要导出两者公用的时，筛选用
     public function filter_confirm_res($vp,$fv,$pass_or_nopass,$webtime)
     {

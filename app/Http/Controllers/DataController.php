@@ -1558,7 +1558,14 @@ class DataController extends Controller
                                 return ['error'=>'1','msg'=>'没有查询该地区的权限'];
                             }
 
-                            $condition['cust_project']=$row['value'];
+                            //如果选择的地区含有子节点，显示包括子节点的数据
+                            $condition_proj_position=array_map(function($rrow){
+
+                                return $rrow['project_id'];
+
+                            },$this->get_all_children($row['value']));
+
+                            array_push($condition_proj_position,$row['value']);
                         }
 
                         if ($row['name']=='cust_si_type')
@@ -1615,6 +1622,7 @@ class DataController extends Controller
                                 {
                                     //查询全部的
                                     $res=CustFVModel::where($condition)
+                                        ->whereIn('cust_project',$condition_proj_position)
                                         ->whereBetween('created_at',[$start,$stop])
                                         ->get([
                                             'cust_num',
@@ -1633,6 +1641,7 @@ class DataController extends Controller
                                     {
                                         //通过
                                         $res=CustFVModel::where($condition)
+                                            ->whereIn('cust_project',$condition_proj_position)
                                             ->whereBetween('cust_last_confirm_date',[$start_tmp,$stop_tmp])
                                             ->get([
                                                 'cust_num',
@@ -1648,6 +1657,7 @@ class DataController extends Controller
                                     {
                                         //没通过
                                         $res=CustFVModel::where($condition)
+                                            ->whereIn('cust_project',$condition_proj_position)
                                             ->whereNotBetween('cust_last_confirm_date',[$start_tmp,$stop_tmp])
                                             ->get([
                                                 'cust_num',
@@ -1717,6 +1727,7 @@ class DataController extends Controller
                         if (count($YorN) == '2') {
                             //查询全部的
                             $res = CustFVModel::where($condition)
+                                ->whereIn('cust_project',$condition_proj_position)
                                 ->whereBetween('created_at', [$start, $stop])
                                 ->get([
                                     'cust_num',
@@ -1733,6 +1744,7 @@ class DataController extends Controller
                             if ($YorN[0] == 'Y') {
                                 //通过
                                 $res = CustFVModel::where($condition)
+                                    ->whereIn('cust_project',$condition_proj_position)
                                     ->whereBetween('cust_last_confirm_date', [$start_tmp, $stop_tmp])
                                     ->get([
                                         'cust_num',
@@ -1747,6 +1759,7 @@ class DataController extends Controller
                             } elseif ($YorN[0] == 'N') {
                                 //没通过
                                 $res = CustFVModel::where($condition)
+                                    ->whereIn('cust_project',$condition_proj_position)
                                     ->whereNotBetween('cust_last_confirm_date', [$start_tmp, $stop_tmp])
                                     ->get([
                                         'cust_num',
@@ -1852,7 +1865,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                     continue;
                                 }
 
-                                if ($data->cust_project == $condition['cust_project'] && $data->cust_si_type == $condition['cust_si_type']) {
+                                if (in_array($data->cust_project,$condition_proj_position) && $data->cust_si_type == $condition['cust_si_type']) {
                                     //判断要查询的是A还是B用户
                                     if (count($AorB) == '2') {
                                         //全部的用户
@@ -1979,6 +1992,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 $res = \DB::table('customer_info')
                                     ->leftJoin('customer_confirm', 'customer_info.cust_num', '=', 'customer_confirm.confirm_pid')
                                     ->where($condition)
+                                    ->whereIn('cust_project',$condition_proj_position)
                                     ->whereIn('customer_confirm.confirm_res', $YorN)
                                     ->whereIn('customer_info.cust_type', $AorB)
                                     ->orderBy('customer_confirm.confirm_pid', 'desc')
@@ -1991,6 +2005,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 $cnt = \DB::table('customer_info')
                                     ->leftJoin('customer_confirm', 'customer_info.cust_num', '=', 'customer_confirm.confirm_pid')
                                     ->where($condition)
+                                    ->whereIn('cust_project',$condition_proj_position)
                                     ->whereIn('customer_confirm.confirm_res', $YorN)
                                     ->whereIn('customer_info.cust_type', $AorB)
                                     ->wherebetween('customer_confirm.created_at', [$start, $stop])
@@ -2001,6 +2016,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 $res = \DB::table('customer_info')
                                     ->leftJoin('customer_confirm', 'customer_info.cust_num', '=', 'customer_confirm.confirm_pid')
                                     ->where($condition)
+                                    ->whereIn('cust_project',$condition_proj_position)
                                     ->where('belong_to', $mypid = Session::get('user')[0]['staff_num'])
                                     ->whereIn('customer_confirm.confirm_res', $YorN)
                                     ->whereIn('customer_info.cust_type', $AorB)
@@ -2014,6 +2030,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 $cnt = \DB::table('customer_info')
                                     ->leftJoin('customer_confirm', 'customer_info.cust_num', '=', 'customer_confirm.confirm_pid')
                                     ->where($condition)
+                                    ->whereIn('cust_project',$condition_proj_position)
                                     ->where('belong_to', $mypid = Session::get('user')[0]['staff_num'])
                                     ->whereIn('customer_confirm.confirm_res', $YorN)
                                     ->whereIn('customer_info.cust_type', $AorB)
@@ -2029,7 +2046,9 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             }
 
                             //看看指静脉有没有通过的
-                            $finger_res=CustFVModel::where($condition)->where('cust_last_confirm_date','>=',$start_tmp)->get([
+                            $finger_res=CustFVModel::where($condition)
+                                ->whereIn('cust_project',$condition_proj_position)
+                                ->where('cust_last_confirm_date','>=',$start_tmp)->get([
                                 'cust_name',
                                 'cust_id',
                                 'cust_phone_num',
@@ -2187,7 +2206,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 continue;
                             }
 
-                            if ($data->cust_project==$condition['cust_project'] && $data->cust_si_type==$condition['cust_si_type'])
+                            if (in_array($data->cust_project,$condition_proj_position) && $data->cust_si_type==$condition['cust_si_type'])
                             {
                                 //判断要查询的是A还是B用户
                                 if (count($AorB)=='2')
@@ -2274,6 +2293,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             $res=\DB::table('customer_info')
                                 ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
                                 ->where($condition)
+                                ->whereIn('cust_project',$condition_proj_position)
                                 ->whereIn('customer_confirm.confirm_res',$YorN)
                                 ->whereIn('customer_info.cust_type',$AorB)
                                 ->orderBy('customer_confirm.confirm_pid','desc')
@@ -2286,6 +2306,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             $cnt=\DB::table('customer_info')
                                 ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
                                 ->where($condition)
+                                ->whereIn('cust_project',$condition_proj_position)
                                 ->whereIn('customer_confirm.confirm_res',$YorN)
                                 ->whereIn('customer_info.cust_type',$AorB)
                                 ->wherebetween('customer_confirm.created_at',[$start,$stop])
@@ -2297,6 +2318,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             $res=\DB::table('customer_info')
                                 ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
                                 ->where($condition)
+                                ->whereIn('cust_project',$condition_proj_position)
                                 ->where('belong_to',$mypid=Session::get('user')[0]['staff_num'])
                                 ->whereIn('customer_confirm.confirm_res',$YorN)
                                 ->whereIn('customer_info.cust_type',$AorB)
@@ -2310,6 +2332,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             $cnt=\DB::table('customer_info')
                                 ->leftJoin('customer_confirm','customer_info.cust_num','=','customer_confirm.confirm_pid')
                                 ->where($condition)
+                                ->whereIn('cust_project',$condition_proj_position)
                                 ->where('belong_to',$mypid=Session::get('user')[0]['staff_num'])
                                 ->whereIn('customer_confirm.confirm_res',$YorN)
                                 ->whereIn('customer_info.cust_type',$AorB)
@@ -3269,7 +3292,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-warning" id=cust_death_btn>设成去世状态</a>';
                     }
 
-                    return ['error'=>'0','msg'=>'查询成功','data'=>$data,'idcard_picture'=>file_get_contents(storage_path('app/IDcard_picture/'.$res[0]['cust_id']))];
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$data,'idcard_picture'=>$this->check_idcard_photo(storage_path('app/IDcard_picture/'.$res[0]['cust_id']))];
 
                 }elseif ($vv_or_fv=='2')
                 {
@@ -3313,7 +3336,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-warning" id=cust_death_btn>设成去世状态</a>';
                     }
 
-                    return ['error'=>'0','msg'=>'查询成功','data'=>$data,'idcard_picture'=>file_get_contents(storage_path('app/IDcard_picture/'.$res[0]['cust_id']))];
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$data,'idcard_picture'=>$this->check_idcard_photo(file_get_contents(storage_path('app/IDcard_picture/'.$res[0]['cust_id'])))];
 
                 }else
                 {
