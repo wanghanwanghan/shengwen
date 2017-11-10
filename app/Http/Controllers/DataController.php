@@ -929,15 +929,6 @@ class DataController extends Controller
 
             case 'select_data_A':
 
-                //用户传入的页
-                $now_page=Input::get('page');
-
-                //每页显示几条数据
-                $limit=5;
-
-                //从第几条开始显示
-                $offset=($now_page-1)*$limit;
-
                 $select_info=[];
 
                 foreach (Input::get('key') as $row)
@@ -976,7 +967,7 @@ class DataController extends Controller
                     $type=explode(',',$row['staff_si_type']);
                 }
 
-                //取出左右节点的子节点
+                //取出所有节点的子节点
                 foreach ($proj as $row1)
                 {
                     $proj_all[]=$row1;
@@ -991,12 +982,8 @@ class DataController extends Controller
                 $proj=$proj_all;
 
                 $model=CustModel::where($select_info)->whereIn('cust_project',$proj)
-                    ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')->offset($offset)->limit($limit)
+                    ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')
                     ->get($get)->toArray();
-
-                //总页数
-                $cnt_page=intval(ceil(CustModel::where($select_info)->whereIn('cust_project',$proj)
-                        ->whereIn('cust_si_type',$type)->count()/$limit));
 
                 //把查询到的数据中，数字转换成中文
                 foreach ($model as &$row)
@@ -1035,7 +1022,7 @@ class DataController extends Controller
 
                 //dd($model);
 
-                return ['error'=>'0','msg'=>'查询成功','data'=>$model,'pages'=>$cnt_page];
+                return ['error'=>'0','msg'=>'查询成功','data'=>$model];
 
                 break;
 
@@ -5246,6 +5233,12 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
             case 'fv_match':
 
+                //为了提高ajax轮询效率，在redis里记录一个值，当值是1的时候退出，值是0的时候往下运行
+                if (Redis::get('fv_match_time_'.$this->get_data_in_session('staff_num'))=='1')
+                {
+                    return ['error'=>'3','msg'=>'别的数据正在认证'];
+                }
+
                 foreach (Input::get('key') as $row)
                 {
                     if ($row['name']=='my_fvTemplate')
@@ -5261,11 +5254,16 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 //如果数据是空
                 if (trim($fv_template)=='' || trim($fp_template)=='' || trim(Input::get('cust_id'))=='')
                 {
+                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                     return ['error'=>'3','msg'=>'等待数据'];
+                }else
+                {
+                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'1',10);
                 }
 
                 if (!$this->is_idcard(trim(Input::get('cust_id'))))
                 {
+                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                     return ['error'=>'3','msg'=>'身份证输入不正确'];
                 }
 
@@ -5280,11 +5278,11 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 ];
 
                 $curl_res=$this->mycurl('http://127.0.0.1:7510/fingervena',$data);
-                //$curl_res=$this->mycurl('http://58.19.253.212:7510/fingervena',$data);
 
                 //判断返回值
                 if ($curl_res['error']!='0')
                 {
+                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                     return ['error'=>'1','msg'=>'指静脉SDK故障，请求被拒绝'];
                 }
 
@@ -5321,6 +5319,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         'sort'=>time()//用来排序的时间
                     ]);
 
+                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                     return ['error'=>'0','msg'=>'认证成功'];
 
                 }elseif ($curl_res['fv']['result']=='false' || $curl_res['fp']['result']=='false')
@@ -5339,16 +5338,19 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         'sort'=>time()//用来排序的时间
                     ]);
 
+                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                     return ['error'=>'0','msg'=>'认证失败'];
 
                 }elseif ($curl_res['fv']['result']=='error' || $curl_res['fp']['result']=='error')
                 {
+                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                     return ['error'=>'1','msg'=>'指静脉SDK故障，接口调用失败'];
                 }else
                 {
 
                 }
 
+                $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                 return ['error'=>'0','msg'=>'未知的错误'];
 
                 break;

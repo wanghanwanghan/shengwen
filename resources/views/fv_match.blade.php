@@ -179,11 +179,11 @@
 
                     if (response.error=='0' || response.error=='1')
                     {
-                        layer.msg(response.msg,{time:2000});
                         clearInterval(mytimer);
+                        layer.msg(response.msg,{time:1000});
                         setTimeout(function () {
                             location.reload();
-                        },2500);
+                        },1500);
                     }else
                     {
 
@@ -191,7 +191,7 @@
 
                 },'json');
 
-            },1500);
+            },500);
 
             //取得redis中的地区信息
             var url ='/data/ajax';

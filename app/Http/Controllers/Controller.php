@@ -686,11 +686,37 @@ class Controller extends BaseController
     }
 
     //取出所有该节点的子节点
-    public function get_all_children($parent_id)
+    public function get_all_children($parent_id,$type='')
     {
-        $all_project=ProjectModel::get(['project_id','project_name','project_parent'])->toArray();
+        if (Redis::get('all_all_project')!='')
+        {
 
-        return $this->get_children($all_project,$parent_id);
+        }else
+        {
+            $this->redis_set(
+                'all_all_project',
+                json_encode(ProjectModel::get(['project_id','project_name','project_parent'])->toArray()),
+                60
+            );
+        }
+
+        $all_project=json_decode(Redis::get('all_all_project'),true);
+
+        if ($type=='')
+        {
+            //需要找出子节点的时候
+            return $this->get_children($all_project,$parent_id);
+
+        }elseif ($type=='1')
+        {
+            //不需要子节点
+            return $all_project;
+
+        }else
+        {
+
+        }
+
     }
 
     //无限分类函数

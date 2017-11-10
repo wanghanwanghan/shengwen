@@ -885,17 +885,18 @@ function add_second(id) {
 
 }
 
-function select_data_A(curr) {
+function select_data_A() {
 
     $("#add_cust_table tbody").children().remove();
 
     var url ='/data/ajax';
     var data={
         _token:$("input[name=_token]").val(),
-        page:curr||1,
         type  :'select_data_A',
         key   :$("#myform2").serializeArray()
     };
+
+    layer.msg('正在查询，稍等片刻',{time:3000});
 
     $.post(url,data,function (response) {
 
@@ -966,18 +967,6 @@ function select_data_A(curr) {
                 $("#add_cust_table tbody").append(tabletr);
 
             }
-
-            //显示分页
-            laypage({
-                cont: 'laypage1', //容器
-                pages: response.pages, //通过后台拿到的总页数
-                curr: curr || 1, //当前页
-                jump: function(obj, first){ //触发分页后的回调
-                    if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
-                        select_data_A(obj.curr);
-                    }
-                }
-            });
 
         }else
         {
