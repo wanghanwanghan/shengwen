@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Model\ChinaAllPositionModel;
 use App\Http\Model\ConfirmTypeModel;
+use App\Http\Model\CustBankNumModel;
 use App\Http\Model\CustConfirmModel;
 use App\Http\Model\CustDeleteModel;
 use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\LevelModel;
 use App\Http\Model\LogModel;
+use App\Http\Model\OnlyTianMenModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SendMailModel;
 use App\Http\Model\SiTypeModel;
@@ -564,6 +566,227 @@ class DataController extends Controller
 
             case 'add_cust':
 
+                //天门版本******************************************************************************************************
+                if (Config::get('constant.app_edition')=='1')
+                {
+                    $cust_info=null;
+
+                    foreach (Input::get('key') as $row)
+                    {
+                        if ($row['name']=='error_info')
+                        {
+                            $thiscust=OnlyTianMenModel::find($this_customer_pid);
+                            $thiscust->is_error_info='error';
+                            $thiscust->save();
+                        }
+
+                        //用户姓名
+                        if ($row['name']=='cust_name')
+                        {
+                            if (!$this->check_chinese_word($row['value']))
+                            {
+                                if (is_numeric($row['value']))
+                                {
+                                    $mycust=OnlyTianMenModel::find($row['value']);
+                                    $cust_info['cust_name']=$mycust->p_name;
+                                    $this_customer_pid=$row['value'];
+                                }else
+                                {
+                                    return ['error'=>'1','msg'=>'姓名必须是中文'];
+                                }
+                            }else
+                            {
+                                $cust_info['cust_name']=$row['value'];
+                            }
+                        }
+
+                        //身份证号
+                        if ($row['name']=='cust_id')
+                        {
+                            if (!$this->is_idcard($row['value']))
+                            {
+                                return ['error'=>'1','msg'=>'身份证输入不正确'];
+                            }
+
+                            //转换成大写
+                            $row['value']=strtoupper($row['value']);
+
+                            //验证一下数据库中是否有相同的项
+                            if (count(CustModel::where(['cust_id'=>$row['value']])->get()->toArray())!='0')
+                            {
+                                return ['error'=>'1','msg'=>'此身份证号已经存在，不能添加了'];
+                            }
+
+                            $cust_info['cust_id']=$row['value'];
+                        }
+
+                        //社保编号
+                        if ($row['name']=='cust_si_id')
+                        {
+                            //不验证了
+                            $cust_info['cust_si_id']=trim($row['value']);
+                        }
+
+                        //手机号码（年审号）
+                        if ($row['name']=='cust_review_num')
+                        {
+                            if (!$this->check_something($row['value'],'phonenumber',null))
+                            {
+                                return ['error'=>'1','msg'=>'手机号码输入不正确'];
+                            }
+
+                            //验证一下数据库中是否有相同的项
+                            if (count(CustModel::where(['cust_review_num'=>$row['value']])->get()->toArray())>='2')
+                            {
+                                return ['error'=>'1','msg'=>'此手机号（年审号）已经存在，不能添加了'];
+                            }else
+                            {
+                                //添加A类的时候查找一下B类有没有这个电话，如果有，则添加失败
+                                if (Input::get('cust_type')=='A')
+                                {
+                                    $cust_type='B';
+                                }else
+                                {
+                                    $cust_type='A';
+                                }
+                                if (!empty(count(CustModel::where(['cust_review_num'=>$row['value'],'cust_type'=>$cust_type])->get()->toArray())))
+                                {
+                                    return ['error'=>'1','msg'=>'此手机号（年审号）不属于当前客户类型，不能添加了'];
+                                }
+
+                                //检查一下是否已经添加过相同的第一年审人了
+                                if (Input::get('cust_review_flag')=='1')
+                                {
+                                    if (!empty(count(CustModel::where(['cust_review_num'=>$row['value'],'cust_review_flag'=>Input::get('cust_review_flag')])->get()->toArray())))
+                                    {
+                                        return ['error'=>'1','msg'=>'此手机号（年审号）已经添加过第一年审人，不能添加了'];
+                                    }
+                                }
+                            }
+
+                            $cust_info['cust_review_num']=$row['value'];
+                        }
+
+                        //备用手机号
+                        if ($row['name']=='cust_phone_num')
+                        {
+                            //不验证了
+
+                            $cust_info['cust_phone_num']=trim($row['value']);
+                        }
+
+                        //地址
+                        if ($row['name']=='cust_address')
+                        {
+                            //不验证了
+
+                            $cust_info['cust_address']=trim($row['value']);
+                        }
+
+                        //所属区域
+                        if ($row['name']=='cust_project')
+                        {
+                            if ($row['value']=='')
+                            {
+                                return ['error'=>'1','msg'=>'所属地区已经过期，请重新选择'];
+                            }else
+                            {
+                                //当添加第二年审人的时候，地区传过来的数据是中文，所以需要改成对应的主键
+                                if ($this->check_chinese_word($row['value']))
+                                {
+                                    $row['value']=ProjectModel::where('project_name',$row['value'])->first()->project_id;
+                                }
+
+                                if (!$this->before_insert_check_projectlevel($row['value']))
+                                {
+                                    return ['error'=>'1','msg'=>'您没有该地区的采集权限'];
+                                }
+
+                                $cust_info['cust_project']=$row['value'];
+                            }
+                            //$res=ProjectModel::where(['project_name'=>$row['value']])->pluck('project_id')->toArray();
+                            //$cust_info['cust_project']=$res[0];
+                        }
+
+                        //确认方式
+                        if ($row['name']=='cust_confirm_type')
+                        {
+                            $res=ConfirmTypeModel::where(['confirm_name'=>$row['value']])->pluck('confirm_id')->toArray();
+
+                            $cust_info['cust_confirm_type']=$res[0];
+                        }
+
+                        //参保类型
+                        if ($row['name']=='cust_si_type')
+                        {
+                            $res=SiTypeModel::where(['si_name'=>$row['value']])->pluck('si_id')->toArray();
+
+                            $cust_info['cust_si_type']=$res[0];
+                        }
+
+                        if ($row['name']=='cust_bank_num')
+                        {
+                            $cust_bank_num=trim($row['value']);
+                        }
+                    }
+
+                    //默认为A类用户
+                    $cust_info['cust_type']=Input::get('cust_type');
+
+                    //从这里添加的默认为第一年审人
+                    $cust_info['cust_review_flag']=Input::get('cust_review_flag');
+
+                    //从这里添加的默认为未注册
+                    $cust_info['cust_register_flag']=Input::get('cust_register_flag');
+
+                    //默认为用户未死亡
+                    $cust_info['cust_death_flag']='0';
+
+                    if (Input::get('cust_relation_flag')=='0')
+                    {
+                        //从这里添加的默认为还没有添加第二年审人
+                        $cust_info['cust_relation_flag']=Input::get('cust_relation_flag');
+                        $need_update='0';
+                    }else
+                    {
+                        //如果进来的数据是第二年审人的话，cust_relation_flag是第一年审人的id
+                        //所以执行完了create后，还要update一下
+                        $cust_info['cust_relation_flag']='0';
+                        $need_update='1';
+                    }
+
+                    if ($need_update)
+                    {
+                        $model=CustModel::create($cust_info);
+
+                        //把第一年审人和第二年审人关联起来
+                        $first=CustModel::find(Input::get('cust_relation_flag'));
+                        $first->update(['cust_relation_flag'=>$model->cust_num]);
+
+                    }else
+                    {
+                        $model=CustModel::create($cust_info);
+                    }
+
+                    //储存用户的身份证头像
+                    Storage::disk('IDcard')->put($model->cust_id,Input::get('cust_photo'));
+
+                    //添加银行账户进入mysql
+                    CustBankNumModel::create(['cust_id'=>$model->cust_id,'cust_bank_num'=>$cust_bank_num]);
+
+                    //修改一下天门基础表的信息
+                    $model_base=OnlyTianMenModel::find($this_customer_pid);
+                    $model_base->id_in_mysql=$model->cust_num;
+                    $model_base->cust_type=Input::get('cust_type');
+                    $model_base->is_register='1';
+                    $model_base->save();
+
+                    $this->system_log('添加新用户','姓名:'.$cust_info['cust_name'].'年审号:'.$cust_info['cust_review_num']);
+
+                    return ['error'=>'0','msg'=>'登记成功'];
+                }
+                //**************************************************************************************************************
+
                 $cust_info=null;
 
                 foreach (Input::get('key') as $row)
@@ -603,7 +826,6 @@ class DataController extends Controller
                     if ($row['name']=='cust_si_id')
                     {
                         //不验证了
-
                         $cust_info['cust_si_id']=trim($row['value']);
                     }
 
@@ -4789,6 +5011,28 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
             case 'get_wait_register_customer_info':
 
+                if (Config::get('constant.app_edition')=='1')
+                {
+                    if (Input::get('tip')=='pid')
+                    {
+                        $res=OnlyTianMenModel::find(Input::get('key'));
+
+                        return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
+                    }
+
+                    //查询是否有这个身份证的客户
+                    $res=OnlyTianMenModel::where(['idcard'=>trim(Input::get('key'))])->get();
+
+                    if (!empty($res->toArray()))
+                    {
+                        return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
+                    }else
+                    {
+
+                    }
+
+                }
+
                 if (!$this->is_idcard(Input::get('key')))
                 {
                     return ['error'=>'1','msg'=>'不是一个有效的身份证'];
@@ -4863,6 +5107,43 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
 
                     return ['error'=>'0','data'=>$res[0],'msg'=>'查询成功'];
+                }
+
+                break;
+
+            case 'get_wait_register_customer_info_tianmen':
+
+                if (Config::get('constant.app_edition')=='1')
+                {
+                    if (Input::get('tip')=='pid')
+                    {
+                        $res=OnlyTianMenModel::find(Input::get('key'));
+
+                        return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
+                    }
+
+                    if (Input::get('tip')=='cust_name')
+                    {
+                        $res=OnlyTianMenModel::where(['p_name'=>trim(Input::get('key'))])->get();
+
+                        if (empty($res->toArray()))
+                        {
+                            return ['error'=>'1','msg'=>'未找到数据'];
+                        }
+
+                        return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
+                    }
+
+                    //查询是否有这个身份证的客户
+                    $res=OnlyTianMenModel::where(['bank'=>trim(Input::get('key'))])->get();
+
+                    if (!empty($res->toArray()))
+                    {
+                        return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
+                    }else
+                    {
+
+                    }
                 }
 
                 break;
@@ -5403,6 +5684,78 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $model=$tmp_tmp;
 
                 return ['error'=>'0','msg'=>'数据读取成功','pages'=>$cnt_page,'data'=>$model,'count_data'=>$count_data];
+
+                break;
+
+            case 'add_btw_only_tianmen':
+
+                $model=OnlyTianMenModel::find(Input::get('key1'));
+                $model->btw=trim(Input::get('key2'));
+                $model->phone=trim(Input::get('key3'));
+                $model->save();
+
+                return ['error'=>'0','msg'=>'添加备注成功'];
+
+                break;
+
+            case 'add_second_for_first_only_tianmen':
+
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='first_id')
+                    {
+                        $first_id=$row['value'];
+                    }
+
+                    if ($row['name']=='cust_name')
+                    {
+                        $second_id=$row['value'];
+                    }
+
+                    if ($row['name']=='error_info')
+                    {
+                        $is_error_info='yes';
+                    }else
+                    {
+                        $is_error_info='no';
+                    }
+                }
+
+                $first_model=OnlyTianMenModel::find($first_id);
+                $secon_model=OnlyTianMenModel::find($second_id);
+
+                if ($first_model->is_second_reviewnum!='')
+                {
+                    return ['error'=>'1','msg'=>'此第一年审人已经添加第二年审人'];
+                }
+
+//                if (OnlyTianMenModel::where(['is_second_reviewnum'=>$first_id])->first()!=null)
+//                {
+//                    return ['error'=>'1','msg'=>'此第一年审人是别人的第二年审人'];
+//                }
+
+                if ($secon_model->is_second_reviewnum!='')
+                {
+                    return ['error'=>'1','msg'=>'此第二年审人已经添加第一年审人'];
+                }
+
+//                if (OnlyTianMenModel::where(['is_second_reviewnum'=>$second_id])->first()!=null)
+//                {
+//                    return ['error'=>'1','msg'=>'此第二年审人是别人的第一年审人'];
+//                }
+
+                $first_model->is_second_reviewnum=$secon_model->id;
+                $first_model->save();
+
+                if ($is_error_info=='yes')
+                {
+                    $secon_model->is_error_info='error';
+                }
+
+                $secon_model->is_second_reviewnum='0';
+                $secon_model->save();
+
+                return ['error'=>'0','msg'=>'添加成功'];
 
                 break;
         }

@@ -7,6 +7,7 @@ Route::get('/test1','TestController@test_1');
 Route::get('/', function () {
     return view('login');
 });
+
 Route::group(['middleware'=>['LoginMiddleware']],function (){
 
     //主页
@@ -35,6 +36,9 @@ Route::group(['middleware'=>['LoginMiddleware','AddCustMiddleware']],function ()
 
     //添加第二年审人
     Route::get('add/second','WebController@add_second');
+
+    //添加无号码客户信息
+    Route::get('add/cust/ready','WebController@add_cust_ready');
 
 });
 

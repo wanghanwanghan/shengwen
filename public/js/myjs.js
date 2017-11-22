@@ -648,6 +648,53 @@ function add_second_cust() {
 
 }
 
+function add_second_ready() {
+
+    //天门版本，在未成为声纹用户时，添加第二年审人，表明是夫妻关系
+    if ($("#add_second_ready").attr('name')=='no_person')
+    {
+        layer.alert('还未填写第一年审人信息');
+    }else
+    {
+        layer.open({
+            type: 2,
+            title: '添加第二年审人信息',
+            maxmin:false,//是否显示最大化最小化按钮
+            resize:false,//窗口是否可以拉伸
+            shadeClose: true, //点击遮罩关闭层
+            scrollbar:false,//是否允许显示滚动条
+            fixed:true,
+            area:['1250px','600px'],
+            content: '/add/second?id='+$("#add_second_ready").attr('name')+'&is_ready_cust=yes'
+        });
+    }
+}
+
+function add_second_for_first_only_tianmen() {
+
+    var url ='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        type  :'add_second_for_first_only_tianmen',
+        key   :$("#add_second_form").serializeArray()
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+
+        }else
+        {
+
+        }
+
+        layer.msg(response.msg);
+
+    },'json');
+
+}
+
 function refresh_A(curr) {
 
     $("#add_cust_table tbody").children().remove();
@@ -869,6 +916,52 @@ function delete_cust_voice_confirm(id) {
 
 }
 
+function add_btw() {
+
+    //天门专用，如果客户今天不办卡有意向办卡，给个标记
+    if ($.isNumeric($("#add_second_ready").attr('name')))
+    {
+        if ($("input[name=cust_phone_num]").val()=='')
+        {
+            layer.msg('请先填写备用电话');
+        }else
+        {
+            $("#add_btw").children().remove();
+            $("#add_btw").append("<input type=text class=form-control name=add_btw placeholder=添加备注>");
+
+            $("input[name=add_btw]").on('change',function () {
+
+                var url='/data/ajax';
+                var data={
+                    _token :$("input[name=_token]").val(),
+                    type   :'add_btw_only_tianmen',
+                    key1   :$("#add_second_ready").attr('name'),
+                    key2   :$("input[name=add_btw]").val(),
+                    key3   :$("input[name=cust_phone_num]").val()
+                };
+
+                $.post(url,data,function (response) {
+
+                    if (response.error=='0')
+                    {
+
+                    }
+
+                    layer.msg(response.msg);
+
+                });
+
+                $("#add_btw").children().remove();
+                $("#add_btw").append("<a style='width: 100px;' onclick='add_btw();' class='btn btn-block btn-primary btn-sm'>添加备注</a>");
+
+            });
+        }
+    }else
+    {
+        layer.msg('请先填写客户信息');
+    }
+}
+
 function add_second(id) {
 
     layer.open({
@@ -880,7 +973,7 @@ function add_second(id) {
         scrollbar:false,//是否允许显示滚动条
         fixed:true,
         area:['850px','600px'],
-        content: '/add/second?id='+id.attr("id")
+        content: '/add/second?id='+id.attr("id")+'&is_ready_cust=no'
     });
 
 }

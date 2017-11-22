@@ -101,11 +101,8 @@
                             </td>
                             <td>
                                 <div class="col-xs-8">
-                                    <select style="padding-left: 8px" name="cust_project" class="form-control">
-                                        @foreach($staff_project as $v)
-                                            <option>{{$v}}</option>
-                                        @endforeach
-                                    </select>
+                                    <input type="text" disabled class="form-control" value={{$model['cust_project']}}>
+                                    <input type="hidden" name="cust_project" value={{$model['cust_project_id']}}>
                                 </div>
                             </td>
                         </tr>

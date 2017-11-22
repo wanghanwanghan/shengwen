@@ -28,6 +28,11 @@ return [
     'province'=>'湖北',
     'city'=>'黄石',
 
+    //用户天门特殊版本切换
+    //0=>通用
+    //1=>天门
+    'app_edition'=>'1',
+
     //对比指纹指静脉的分值
     'fingerprintscore'=>'80',
     'fingervenascore'=>'80'

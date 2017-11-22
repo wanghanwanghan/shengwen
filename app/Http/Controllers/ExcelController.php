@@ -117,6 +117,7 @@ class ExcelController extends Controller
                 $table->string('idcard','18')->unique();
                 $table->string('sitype','20')->index();
                 $table->string('sicard','20')->index();
+                $table->string('bank','30')->index();
                 $table->string('position_path','100')->index();
                 $table->engine='innodb';
             });

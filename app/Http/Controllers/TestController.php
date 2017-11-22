@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Model\CustModel;
+use App\Http\Model\LevelModel;
+use App\Http\Model\OnlyTianMenModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Myclass\FingerRegister;
 use Illuminate\Support\Facades\Config;
@@ -14,37 +16,6 @@ class TestController extends Controller
 {
     public function test_1()
     {
-        $myarr=[
-            '赵','钱','孙','李','周','吴','郑',
-            '王','冯','陈','褚','卫','蒋','沈',
-            '韩','杨','朱','秦','尤','许','何',
-            '吕','施','张','孔','曹','严','华'
-        ];
-
-        $a = 1;
-        $b = $a + $a++;
-
-        $a = 1;
-        $c = $a + $a + $a++;
-
-        require_once public_path('baidu/AipSpeech.php');
-
-
-        $aipSpeech=new \AipSpeech(Config::get('constant.APP_ID'),Config::get('constant.API_KEY'),Config::get('constant.SECRET_KEY'));
-
-        //识别本地文件
-        //$res=$aipSpeech->asr(file_get_contents('test.pcm'),'pcm',16000,['lan'=>'zh']);
-        $res=$aipSpeech->asr(file_get_contents('wanghan123.wav'),'wav',16000,['lan'=>'zh']);
-        //$res=$aipSpeech->asr(file_get_contents('wanghan1234.wav'),'wav',8000,['lan'=>'zh']);
-
-        dd($res);
-
-
-
-
-
-
-
 
 
 

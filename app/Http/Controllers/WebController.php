@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Model\ConfirmTypeModel;
 use App\Http\Model\CustModel;
+use App\Http\Model\OnlyTianMenModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SiTypeModel;
 use App\Http\Model\StaffModel;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Mail;
@@ -36,7 +38,13 @@ class WebController extends Controller
         $confirm_type=ConfirmTypeModel::get(['confirm_name'])->toArray();
         $confirm_type=array_flatten($confirm_type);
 
-        return view('add_cust',compact('staff_project','staff_si_type','confirm_type'));
+        if (Config::get('constant.app_edition')=='1')
+        {
+            return view('add_cust_onlyhubeitianmen',compact('staff_project','staff_si_type','confirm_type'));
+        }else
+        {
+            return view('add_cust',compact('staff_project','staff_si_type','confirm_type'));
+        }
     }
 
     public function add_second()
@@ -59,6 +67,15 @@ class WebController extends Controller
         $confirm_type=ConfirmTypeModel::get(['confirm_name'])->toArray();
         $confirm_type=array_flatten($confirm_type);
 
+        if (Input::get('is_ready_cust')=='yes')
+        {
+            //天门专用
+            $model=OnlyTianMenModel::find(Input::get('id'))->toArray();
+            $first_id=Input::get('id');
+
+            return view('add_second_onlyhubeitianmen',compact('first_id','model','staff_project','staff_si_type','confirm_type'));
+        }
+
         //先通过传过来的第一年审人id，查询处第一年审人的信息给前端页面
         $model=CustModel::find(Input::get('id'))->toArray();
 
@@ -68,6 +85,7 @@ class WebController extends Controller
             if ($key=='cust_project')
             {
                 $model['cust_project']=ProjectModel::find($value)->project_name;
+                $model['cust_project_id']=$value;
             }
 
             if ($key=='cust_confirm_type')

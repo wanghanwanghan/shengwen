@@ -31,7 +31,7 @@
                     </td>
                     <td width="25%" onclick="select_project();">
                         <div>
-                            <span id="parentIframe">redis启动失败</span>
+                            <span style="font-size: 12px;" id="parentIframe">redis启动失败</span>
                             <input type="hidden" name="cust_project">
                         </div>
                     </td>
