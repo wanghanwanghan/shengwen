@@ -16,17 +16,35 @@
                     <tr>
                         <td>
                             <div class="col-xs-9">
-                                <input type="text" disabled class="form-control" value={{$model['p_name']}}>
+                                <input type="text" disabled class="form-control" value=
+                                @if(isset($model['p_name']))
+                                    {{$model['p_name']}}
+                                @else
+                                    {{$model['cust_name']}}
+                                @endif
+                                >
                             </div>
                         </td>
                         <td>
                             <div class="col-xs-9">
-                                <input type="text" disabled class="form-control" value={{$model['idcard']}}>
+                                <input type="text" disabled class="form-control" value=
+                                @if(isset($model['idcard']))
+                                    {{$model['idcard']}}
+                                @else
+                                    {{$model['cust_id']}}
+                                @endif
+                                >
                             </div>
                         </td>
                         <td>
                             <div class="col-xs-9">
-                                <input type="text" disabled class="form-control" value={{$model['bank']}}>
+                                <input type="text" disabled class="form-control" value=
+                                @if(isset($model['bank']))
+                                    {{$model['bank']}}
+                                @else
+                                    {{$model['cust_review_num']}}
+                                @endif
+                                >
                             </div>
                         </td>
                     </tr>

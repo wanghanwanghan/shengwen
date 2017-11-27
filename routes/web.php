@@ -59,6 +59,9 @@ Route::group(['middleware'=>['LoginMiddleware','CustManagementMiddleware']],func
     //修改客户信息
     Route::get('modify/cust/info','WebController@modify_cust_info');
 
+    //修改客户信息
+    Route::get('modify/cust/info/ready','WebController@modify_cust_info_ready');
+
 });
 
 //数据统计

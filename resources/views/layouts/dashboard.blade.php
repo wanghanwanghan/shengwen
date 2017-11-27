@@ -223,6 +223,13 @@
                         </a>
                         <ul class="treeview-menu">
                             <li><a href="{{url('modify/cust/info')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改客户信息</a></li>
+                            @if (\Illuminate\Support\Facades\Config::get('constant.app_edition')=='1')
+                                <li><a href="{{url('modify/cust/info/ready')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改临时客户信息</a></li>
+                            @elseif (\Illuminate\Support\Facades\Config::get('constant.app_edition')=='0')
+
+                            @else
+
+                            @endif
                         </ul>
                     </li>
 

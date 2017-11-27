@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Model\ConfirmTypeModel;
 use App\Http\Model\CustModel;
+use App\Http\Model\CustModel_tianmen_ready;
 use App\Http\Model\OnlyTianMenModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SiTypeModel;
@@ -72,6 +73,17 @@ class WebController extends Controller
             //天门专用
             $model=OnlyTianMenModel::find(Input::get('id'))->toArray();
             $first_id=Input::get('id');
+
+            return view('add_second_onlyhubeitianmen',compact('first_id','model','staff_project','staff_si_type','confirm_type'));
+        }
+
+        if (Redis::get('which_table_'.$this->get_data_in_session('staff_num'))=='cust_ready')
+        {
+            //天门专用
+            $model=CustModel_tianmen_ready::find(Input::get('id'))->toArray();
+            $first_id=Input::get('id');
+
+            //dd($model);
 
             return view('add_second_onlyhubeitianmen',compact('first_id','model','staff_project','staff_si_type','confirm_type'));
         }
@@ -299,6 +311,30 @@ class WebController extends Controller
         $confirm_type=array_flatten($confirm_type);
 
         return view('modify_cust_info',compact('staff_project','staff_si_type','confirm_type'));
+    }
+
+    public function modify_cust_info_ready()
+    {
+        //天门用
+        foreach (Session::get('user') as $row)
+        {
+            $staff_project=$row['staff_project'];
+            $staff_si_type=$row['staff_si_type'];
+            $staff_level=$row['staff_level'];
+        }
+
+        $staff_project=explode(',',$staff_project);
+        $staff_project=ProjectModel::whereIn('project_id',$staff_project)->get(['project_name'])->toArray();
+        $staff_project=array_flatten($staff_project);
+
+        $staff_si_type=explode(',',$staff_si_type);
+        $staff_si_type=SiTypeModel::whereIn('si_id',$staff_si_type)->get(['si_name'])->toArray();
+        $staff_si_type=array_flatten($staff_si_type);
+
+        $confirm_type=ConfirmTypeModel::get(['confirm_name'])->toArray();
+        $confirm_type=array_flatten($confirm_type);
+
+        return view('modify_cust_info_ready',compact('staff_project','staff_si_type','confirm_type'));
     }
 
     public function ivr_return_msg()

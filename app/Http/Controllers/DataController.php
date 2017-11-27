@@ -9,6 +9,7 @@ use App\Http\Model\CustConfirmModel;
 use App\Http\Model\CustDeleteModel;
 use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
+use App\Http\Model\CustModel_tianmen_ready;
 use App\Http\Model\LevelModel;
 use App\Http\Model\LogModel;
 use App\Http\Model\OnlyTianMenModel;
@@ -630,41 +631,48 @@ class DataController extends Controller
                         //手机号码（年审号）
                         if ($row['name']=='cust_review_num')
                         {
-                            if (!$this->check_something($row['value'],'phonenumber',null))
+                            //如果年审号是空，就把客户放到临时表里，zbxl_customer_info_ready_tianmen
+                            if (trim($row['value'])=='')
                             {
-                                return ['error'=>'1','msg'=>'手机号码输入不正确'];
-                            }
-
-                            //验证一下数据库中是否有相同的项
-                            if (count(CustModel::where(['cust_review_num'=>$row['value']])->get()->toArray())>='2')
-                            {
-                                return ['error'=>'1','msg'=>'此手机号（年审号）已经存在，不能添加了'];
+                                $cust_info['cust_review_num']=trim($row['value']);
                             }else
                             {
-                                //添加A类的时候查找一下B类有没有这个电话，如果有，则添加失败
-                                if (Input::get('cust_type')=='A')
+                                if (!$this->check_something($row['value'],'phonenumber',null))
                                 {
-                                    $cust_type='B';
+                                    return ['error'=>'1','msg'=>'手机号码输入不正确'];
+                                }
+
+                                //验证一下数据库中是否有相同的项
+                                if (count(CustModel::where(['cust_review_num'=>$row['value']])->get()->toArray())>='2')
+                                {
+                                    return ['error'=>'1','msg'=>'此手机号（年审号）已经存在，不能添加了'];
                                 }else
                                 {
-                                    $cust_type='A';
-                                }
-                                if (!empty(count(CustModel::where(['cust_review_num'=>$row['value'],'cust_type'=>$cust_type])->get()->toArray())))
-                                {
-                                    return ['error'=>'1','msg'=>'此手机号（年审号）不属于当前客户类型，不能添加了'];
-                                }
-
-                                //检查一下是否已经添加过相同的第一年审人了
-                                if (Input::get('cust_review_flag')=='1')
-                                {
-                                    if (!empty(count(CustModel::where(['cust_review_num'=>$row['value'],'cust_review_flag'=>Input::get('cust_review_flag')])->get()->toArray())))
+                                    //添加A类的时候查找一下B类有没有这个电话，如果有，则添加失败
+                                    if (Input::get('cust_type')=='A')
                                     {
-                                        return ['error'=>'1','msg'=>'此手机号（年审号）已经添加过第一年审人，不能添加了'];
+                                        $cust_type='B';
+                                    }else
+                                    {
+                                        $cust_type='A';
+                                    }
+                                    if (!empty(count(CustModel::where(['cust_review_num'=>$row['value'],'cust_type'=>$cust_type])->get()->toArray())))
+                                    {
+                                        return ['error'=>'1','msg'=>'此手机号（年审号）不属于当前客户类型，不能添加了'];
+                                    }
+
+                                    //检查一下是否已经添加过相同的第一年审人了
+                                    if (Input::get('cust_review_flag')=='1')
+                                    {
+                                        if (!empty(count(CustModel::where(['cust_review_num'=>$row['value'],'cust_review_flag'=>Input::get('cust_review_flag')])->get()->toArray())))
+                                        {
+                                            return ['error'=>'1','msg'=>'此手机号（年审号）已经添加过第一年审人，不能添加了'];
+                                        }
                                     }
                                 }
-                            }
 
-                            $cust_info['cust_review_num']=$row['value'];
+                                $cust_info['cust_review_num']=$row['value'];
+                            }
                         }
 
                         //备用手机号
@@ -757,15 +765,31 @@ class DataController extends Controller
 
                     if ($need_update)
                     {
-                        $model=CustModel::create($cust_info);
+                        if ($cust_info['cust_review_num']=='')
+                        {
+                            $model=CustModel_tianmen_ready::create($cust_info);
 
-                        //把第一年审人和第二年审人关联起来
-                        $first=CustModel::find(Input::get('cust_relation_flag'));
-                        $first->update(['cust_relation_flag'=>$model->cust_num]);
+                            //把第一年审人和第二年审人关联起来
+                            $first=CustModel_tianmen_ready::find(Input::get('cust_relation_flag'));
+                            $first->update(['cust_relation_flag'=>$model->cust_num]);
+                        }else
+                        {
+                            $model=CustModel::create($cust_info);
+
+                            //把第一年审人和第二年审人关联起来
+                            $first=CustModel::find(Input::get('cust_relation_flag'));
+                            $first->update(['cust_relation_flag'=>$model->cust_num]);
+                        }
 
                     }else
                     {
-                        $model=CustModel::create($cust_info);
+                        if ($cust_info['cust_review_num']=='')
+                        {
+                            $model=CustModel_tianmen_ready::create($cust_info);
+                        }else
+                        {
+                            $model=CustModel::create($cust_info);
+                        }
                     }
 
                     //储存用户的身份证头像
@@ -775,11 +799,14 @@ class DataController extends Controller
                     CustBankNumModel::create(['cust_id'=>$model->cust_id,'cust_bank_num'=>$cust_bank_num]);
 
                     //修改一下天门基础表的信息
-                    $model_base=OnlyTianMenModel::find($this_customer_pid);
-                    $model_base->id_in_mysql=$model->cust_num;
-                    $model_base->cust_type=Input::get('cust_type');
-                    $model_base->is_register='1';
-                    $model_base->save();
+                    if (isset($this_customer_pid))
+                    {
+                        $model_base=OnlyTianMenModel::find($this_customer_pid);
+                        $model_base->id_in_mysql=$model->cust_num;
+                        $model_base->cust_type=Input::get('cust_type');
+                        $model_base->is_register='1';
+                        $model_base->save();
+                    }
 
                     $this->system_log('添加新用户','姓名:'.$cust_info['cust_name'].'年审号:'.$cust_info['cust_review_num']);
 
@@ -1159,12 +1186,25 @@ class DataController extends Controller
                     {
                         if (trim($row['value'])!='')
                         {
-                            $select_info['cust_review_num']=trim($row['value']);
+                            if ($this->check_something(trim($row['value']),'phonenumber',null))
+                            {
+                                $select_info['cust_review_num']=trim($row['value']);
+                            }else
+                            {
+                                $select_info['cust_id']=trim($row['value']);
+                            }
+
                             $select_info['cust_type']='A';
+
                         }else
                         {
-                            return ['error'=>'1','msg'=>'必须输入年审号码'];
+                            return ['error'=>'1','msg'=>'输入查询条件'];
                         }
+                    }
+
+                    if ($row['name']=='which_table')
+                    {
+                        $which_table=$row['value'];
                     }
                 }
 
@@ -1203,9 +1243,26 @@ class DataController extends Controller
 
                 $proj=$proj_all;
 
-                $model=CustModel::where($select_info)->whereIn('cust_project',$proj)
-                    ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')
-                    ->get($get)->toArray();
+                if (Config::get('constant.app_edition')=='1')
+                {
+                    if ($which_table=='cust_ready')
+                    {
+                        $model=CustModel_tianmen_ready::where($select_info)->whereIn('cust_project',$proj)
+                            ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')
+                            ->get($get)->toArray();
+                    }elseif ($which_table=='cust_a')
+                    {
+                        $model=CustModel::where($select_info)->whereIn('cust_project',$proj)
+                            ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')
+                            ->get($get)->toArray();
+                    }else
+                    {}
+                }else
+                {
+                    $model=CustModel::where($select_info)->whereIn('cust_project',$proj)
+                        ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')
+                        ->get($get)->toArray();
+                }
 
                 //把查询到的数据中，数字转换成中文
                 foreach ($model as &$row)
@@ -1221,7 +1278,7 @@ class DataController extends Controller
 
                     unset($row['cust_death_flag']);
 
-                    //如果是该行数据是第一年审人，则暂存起来
+                    //如果该行数据是第一年审人，则暂存起来
                     if ($row['cust_review_flag']=='1')
                     {
                         unset($row['cust_review_flag']);
@@ -1240,9 +1297,12 @@ class DataController extends Controller
                     $tmp_one[0]['cust_relation_flag']=$tmp_two;
                 }
 
-                $model=$tmp_one;
+                if (!isset($tmp_one))
+                {
+                    return ['error'=>'1','msg'=>'无匹配数据'];
+                }
 
-                //dd($model);
+                $model=$tmp_one;
 
                 return ['error'=>'0','msg'=>'查询成功','data'=>$model];
 
@@ -3422,6 +3482,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 {
                     //是空
                     return ['error'=>'1','msg'=>'查询条件不能是空'];
+
                 }elseif ($this->check_something($cond,'phonenumber',null))
                 {
                     //是手机号
@@ -3554,6 +3615,149 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
+            case 'modify_info_tianmen':
+
+                $cond=trim(Input::get('cond1'));
+                $cust_review_flag=Input::get('cond2');
+                $vv_or_fv=Input::get('cond3');
+
+                if ($cond=='')
+                {
+                    //是空
+                    return ['error'=>'1','msg'=>'查询条件不能是空'];
+
+                }elseif ($this->check_something($cond,'phonenumber',null))
+                {
+                    //是手机号
+                    $phone=$cond;
+                }elseif ($this->is_idcard($cond))
+                {
+                    //是身份证号
+                    $id=$cond;
+                }else
+                {
+                    //非空，但什么也不是
+                    return ['error'=>'1','msg'=>'既不是年审号也不是身份证号'];
+                }
+
+                //判断到底拿到了哪个值
+                if ($vv_or_fv=='1')
+                {
+                    //要查询的是声纹
+                    if (isset($phone))
+                    {
+                        $where=['cust_review_num'=>$phone,'cust_review_flag'=>$cust_review_flag];
+                    }else
+                    {
+                        $where=['cust_id'=>$id,'cust_review_flag'=>$cust_review_flag];
+                    }
+
+                    //开始查询
+                    $res=CustModel_tianmen_ready::where($where)->get()->toArray();
+
+                }elseif ($vv_or_fv=='2')
+                {
+                    //要查询的是指静脉
+                    if (isset($phone))
+                    {
+                        return ['error'=>'1','msg'=>'查询指静脉客户必须用身份证号码'];
+                    }else
+                    {
+                        $where=['cust_id'=>$id];
+                    }
+
+                    //开始查询
+                    $res=CustFVModel::where($where)->get()->toArray();
+
+                }else
+                {
+
+                }
+
+                if (empty($res))
+                {
+                    return ['error'=>'1','msg'=>'查无结果'];
+                }elseif ($vv_or_fv=='1')
+                {
+                    $nbsp='&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp';
+                    $data['客户姓名']='<a id=modify_cust_name>'.$res[0]['cust_name'].'</a>';
+                    $data['身份证号']='<a id=modify_cust_id>'.$res[0]['cust_id'].'</a>';
+                    $data['社保编号']='<a id=modify_cust_si_id>'.$res[0]['cust_si_id'].'</a>';
+                    $data['年审号码']='<a id=modify_cust_review_num>'.$res[0]['cust_review_num'].'</a>';
+                    $data['备用号码']='<a id=modify_cust_phone_num>'.$res[0]['cust_phone_num'].'</a>';
+                    $data['客户地址']='<a id=modify_cust_address>'.$res[0]['cust_address'].'</a>';
+
+                    //组成一下所有父节点都有的地区名称
+                    $place=implode('-',array_reverse($this->select_allproject_parent(ProjectModel::find($res[0]['cust_project'])->project_id)));
+                    $data['所属区域']='<a id=modify_cust_project>'.$place.'</a>';
+
+                    $data['参保类型']='<a id=modify_cust_si_type>'.SiTypeModel::find($res[0]['cust_si_type'])->si_name.'</a>';
+                    $data['认证类型']='<a id=modify_cust_confirm_type>'.ConfirmTypeModel::find($res[0]['cust_confirm_type'])->confirm_name.'</a>';
+                    $data['客户类别']='<a id=modify_cust_type>'.$res[0]['cust_type'].'类客户'.'</a>';
+                    $data['创建时间']='<a id=modify_created_at>'.$res[0]['created_at'].'</a>';
+                    $data['年审人号']='<a id=modify_cust_review_flag>'.'第'.$res[0]['cust_review_flag'].'年审人'.'</a>';
+                    $data['唯一主键']='<a id=modify_pid value='.$res[0]['cust_num'].'>'.$res[0]['cust_num'].'</a>';
+                    if ($res[0]['cust_death_flag']=='1')
+                    {
+                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-info" id=cust_restore_btn>恢复认证状态</a>';
+                    }else
+                    {
+                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-warning" id=cust_death_btn>设成去世状态</a>';
+                    }
+
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$data,'idcard_picture'=>$this->check_idcard_photo(storage_path('app/IDcard_picture/'.$res[0]['cust_id']))];
+
+                }elseif ($vv_or_fv=='2')
+                {
+                    $nbsp='&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp';
+                    $data['客户姓名']='<a id=modify_cust_name>'.$res[0]['cust_name'].'</a>';
+                    $data['身份证号']='<a id=modify_cust_id>'.$res[0]['cust_id'].'</a>';
+                    $data['社保编号']='<a id=modify_cust_si_id>'.$res[0]['cust_si_id'].'</a>';
+                    $data['手机号码']='<a id=modify_cust_phone_num>'.$res[0]['cust_phone_num'].'</a>';
+                    $data['备用号码']='<a id=modify_cust_phone_bku>'.$res[0]['cust_phone_bku'].'</a>';
+
+                    //从mongo中的到客户采集的是哪个手指
+                    $mongo=$this->mymongo();
+                    $mongo_res=$mongo->Finger->CustTemplate->find(['_id'=>$res[0]['cust_num']]);
+                    foreach ($mongo_res as $row)
+                    {
+                        $mongo_res=$row;
+                    }
+                    $collectioned=null;
+                    for ($i=0;$i<=9;$i++)
+                    {
+                        if ($mongo_res['Finger_'.$i]!='')
+                        {
+                            $collectioned.="<span style='width: 100px;margin-left: 2px;' class='btn btn-success btn-sm'>".$this->get_finger_name($i)."</span>";
+                        }
+                    }
+                    $data['已采手指']=$collectioned;
+                    $data['客户地址']='<a id=modify_cust_address>'.$res[0]['cust_address'].'</a>';
+
+                    //组成一下所有父节点都有的地区名称
+                    $place=implode('-',array_reverse($this->select_allproject_parent(ProjectModel::find($res[0]['cust_project'])->project_id)));
+                    $data['所属区域']='<a id=modify_cust_project>'.$place.'</a>';
+
+                    $data['参保类型']='<a id=modify_cust_si_type>'.SiTypeModel::find($res[0]['cust_si_type'])->si_name.'</a>';
+                    $data['创建时间']='<a id=modify_created_at>'.$res[0]['created_at'].'</a>';
+                    $data['唯一主键']='<a id=modify_pid value='.$res[0]['cust_num'].'>'.$res[0]['cust_num'].'</a>';
+                    if ($res[0]['cust_death_flag']=='1')
+                    {
+                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-info" id=cust_restore_btn>恢复认证状态</a>';
+                    }else
+                    {
+                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-warning" id=cust_death_btn>设成去世状态</a>';
+                    }
+
+                    return ['error'=>'0','msg'=>'查询成功','data'=>$data,'idcard_picture'=>$this->check_idcard_photo(file_get_contents(storage_path('app/IDcard_picture/'.$res[0]['cust_id'])))];
+
+                }else
+                {
+
+                }
+
+                break;
+
             case 'modify_cust_name':
 
                 $name=Input::get('key');
@@ -3564,7 +3768,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     if (Input::get('stype')=='1')
                     {
                         //声纹
-                        $res=CustModel::find($pid);
+                        if (Input::get('edit')=='1')
+                        {
+                            $res=CustModel_tianmen_ready::find($pid);
+                        }else
+                        {
+                            $res=CustModel::find($pid);
+                        }
 
                         $res->cust_name=$name;
                         $res->save();
@@ -3611,14 +3821,26 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     if (Input::get('stype')=='1')
                     {
                         //声纹
-                        $res=CustModel::where(['cust_id'=>$id])->get()->toArray();
+                        if (Input::get('edit')=='1')
+                        {
+                            $res=CustModel_tianmen_ready::where(['cust_id'=>$id])->get()->toArray();
+                        }else
+                        {
+                            $res=CustModel::where(['cust_id'=>$id])->get()->toArray();
+                        }
 
                         if (!empty($res))
                         {
                             return ['error'=>'1','msg'=>'身份证已存在，修改失败'];
                         }
 
-                        $res=CustModel::find($pid);
+                        if (Input::get('edit')=='1')
+                        {
+                            $res=CustModel_tianmen_ready::find($pid);
+                        }else
+                        {
+                            $res=CustModel::find($pid);
+                        }
                         $this->system_log('修改声纹客户身份证','主键:'.$pid.'修改内容:'.$res->cust_id.'=>'.$id);
                         $res->cust_id=$id;
                         $res->save();
@@ -3665,7 +3887,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         //声纹
                         if ($id=='')
                         {
-                            $res=CustModel::find($pid);
+                            if (Input::get('edit')=='1')
+                            {
+                                $res=CustModel_tianmen_ready::find($pid);
+                            }else
+                            {
+                                $res=CustModel::find($pid);
+                            }
                             $this->system_log('修改声纹客户社保编号','主键:'.$pid.'修改内容:'.$res->cust_si_id.'=>'.$id);
                             $res->cust_si_id=$id;
                             $res->save();
@@ -3673,14 +3901,27 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             return ['error'=>'0','msg'=>'修改成功'];
                         }else
                         {
-                            $res=CustModel::where(['cust_si_id'=>$id])->get()->toArray();
+                            if (Input::get('edit')=='1')
+                            {
+                                $res=CustModel_tianmen_ready::where(['cust_si_id'=>$id])->get()->toArray();
+                            }else
+                            {
+                                $res=CustModel::where(['cust_si_id'=>$id])->get()->toArray();
+                            }
 
                             if (!empty($res))
                             {
                                 return ['error'=>'1','msg'=>'社保编号已存在，修改失败'];
                             }
 
-                            $res=CustModel::find($pid);
+                            if (Input::get('edit')=='1')
+                            {
+                                $res=CustModel_tianmen_ready::find($pid);
+                            }else
+                            {
+                                $res=CustModel::find($pid);
+                            }
+
                             $this->system_log('修改声纹客户社保编号','主键:'.$pid.'修改内容:'.$res->cust_si_id.'=>'.$id);
                             $res->cust_si_id=$id;
                             $res->save();
@@ -3737,40 +3978,133 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     return ['error'=>'1','msg'=>'手机号码输入不正确'];
                 }
 
-                $res=CustModel::where(['cust_review_num'=>$phone])->get()->toArray();
+                if (Input::get('edit')=='1')
+                {
+                    //$res=CustModel_tianmen_ready::where(['cust_review_num'=>$phone])->get()->toArray();
+                    $res=CustModel::where(['cust_review_num'=>$phone])->get()->toArray();
+                }else
+                {
+                    $res=CustModel::where(['cust_review_num'=>$phone])->get()->toArray();
+                }
 
                 if (!empty($res))
                 {
                     return ['error'=>'1','msg'=>'手机号码已存在，修改失败'];
                 }else
                 {
-                    //修改linux文件名
-                    $this->voice_file_ModifyOrDelete($pid,'modify',['phone'=>$phone]);
-
-                    //修改数据库中的年审号码
-                    $res=CustModel::find($pid);
-                    $this->system_log('修改年审号码','主键:'.$pid.'修改内容:'.$res->cust_review_num.'=>'.$phone);
-                    //保存一下电话号码，修改下一个客户用，如果有的话***********
-                    $old=$res->cust_review_num;
-                    $new=$phone;
-                    //******************************************************
-                    $res->cust_review_num=$phone;
-                    $res->save();
-
-                    //修改另一个客户，如果有的话
-                    $res=CustModel::where(['cust_review_num'=>$old])->first();
-                    if (!empty($res))
+                    if (Input::get('edit')=='1')
                     {
-                        $res->cust_review_num=$new;
-                        $res->save();
-                        $this->system_log('修改年审号码','主键:'.$res->cust_num.'修改内容:'.$old.'=>'.$new);
-                    }
+                        //在临时表里添加年审号，然后把数据放到正规的客户表中
+                        $this_cust=CustModel_tianmen_ready::find($pid);
 
-                    //修改vocalprint表中的数据，把电话号码改成新的
-                    $sql='replace(vp_ivr_url,'.$old.','.$new.')';
-                    \DB::table('vocalprint')->update(['vp_ivr_url'=>\DB::raw($sql)]);
-                    $sql='replace(vp_model_url,'.$old.','.$new.')';
-                    \DB::table('vocalprint')->update(['vp_model_url'=>\DB::raw($sql)]);
+                        if ($this_cust->cust_review_flag=='1')
+                        {
+                            //第一年审人
+                            if ($this_cust->cust_relation_flag=='0')
+                            {
+                                //不含第二年审人
+                                //查看身份证有没有重复
+                                if (!$this->is_idcard($this_cust->cust_id))
+                                {
+                                    return ['error'=>'1','msg'=>'身份证输入不正确'];
+                                }
+
+                                //转换成大写
+                                $cust_id=strtoupper($this_cust->cust_id);
+
+                                //验证一下数据库中是否有相同的项
+                                if (count(CustModel::where(['cust_id'=>$cust_id])->get()->toArray())!='0')
+                                {
+                                    return ['error'=>'1','msg'=>'此身份证号已经存在，不能添加了'];
+                                }
+
+                                $one=$this_cust->toArray();
+                                unset($one['cust_num']);
+                                $one['cust_review_num']=$phone;
+
+                                CustModel::create($one);
+
+                                $this_cust->delete();
+
+                                return ['error'=>'0','msg'=>'修改成功'];
+
+                            }else
+                            {
+                                //含第二年审人
+                                //查看身份证有没有重复
+                                if (!$this->is_idcard($this_cust->cust_id))
+                                {
+                                    return ['error'=>'1','msg'=>'身份证输入不正确'];
+                                }
+
+                                //转换成大写
+                                $cust_id=strtoupper($this_cust->cust_id);
+
+                                //验证一下数据库中是否有相同的项
+                                if (count(CustModel::where(['cust_id'=>$cust_id])->get()->toArray())!='0')
+                                {
+                                    return ['error'=>'1','msg'=>'此身份证号已经存在，不能添加了'];
+                                }
+
+                                $one=$this_cust->toArray();
+                                unset($one['cust_num']);
+                                $one['cust_review_num']=$phone;
+                                $one_data=CustModel::create($one);
+
+                                $two=CustModel_tianmen_ready::find($this_cust->cust_relation_flag);
+                                $twotmp=$two;
+                                $two=$two->toArray();
+                                unset($two['cust_num']);
+                                $two['cust_review_num']=$phone;
+                                $two_data=CustModel::create($two);
+
+                                $one_data->cust_relation_flag=$two_data->cust_num;
+                                $one_data->save();
+
+                                return ['error'=>'0','msg'=>'修改成功'];
+                            }
+
+
+
+
+
+                        }elseif ($this_cust->cust_review_flag=='2')
+                        {
+                            //第二年审人
+
+                        }else
+                        {}
+
+                    }else
+                    {
+                        //修改linux文件名
+                        $this->voice_file_ModifyOrDelete($pid,'modify',['phone'=>$phone]);
+
+                        //修改数据库中的年审号码
+                        $res=CustModel::find($pid);
+                        $this->system_log('修改年审号码','主键:'.$pid.'修改内容:'.$res->cust_review_num.'=>'.$phone);
+                        //保存一下电话号码，修改下一个客户用，如果有的话***********
+                        $old=$res->cust_review_num;
+                        $new=$phone;
+                        //******************************************************
+                        $res->cust_review_num=$phone;
+                        $res->save();
+
+                        //修改另一个客户，如果有的话
+                        $res=CustModel::where(['cust_review_num'=>$old])->first();
+                        if (!empty($res))
+                        {
+                            $res->cust_review_num=$new;
+                            $res->save();
+                            $this->system_log('修改年审号码','主键:'.$res->cust_num.'修改内容:'.$old.'=>'.$new);
+                        }
+
+                        //修改vocalprint表中的数据，把电话号码改成新的
+                        $sql='replace(vp_ivr_url,'.$old.','.$new.')';
+                        \DB::table('vocalprint')->update(['vp_ivr_url'=>\DB::raw($sql)]);
+                        $sql='replace(vp_model_url,'.$old.','.$new.')';
+                        \DB::table('vocalprint')->update(['vp_model_url'=>\DB::raw($sql)]);
+                    }
 
                     return ['error'=>'0','msg'=>'修改成功'];
                 }
@@ -3787,10 +4121,19 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     if (Input::get('stype')=='1')
                     {
                         //声纹
-                        $res=CustModel::find($pid);
-                        $this->system_log('修改声纹客户备用号码','主键:'.$pid.'修改内容:'.$res->cust_phone_num.'=>'.$phone);
-                        $res->cust_phone_num=$phone;
-                        $res->save();
+                        if (Input::get('edit')=='1')
+                        {
+                            $res=CustModel_tianmen_ready::find($pid);
+                            $this->system_log('修改声纹客户备用号码','主键:'.$pid.'修改内容:'.$res->cust_phone_num.'=>'.$phone);
+                            $res->cust_phone_num=$phone;
+                            $res->save();
+                        }else
+                        {
+                            $res=CustModel::find($pid);
+                            $this->system_log('修改声纹客户备用号码','主键:'.$pid.'修改内容:'.$res->cust_phone_num.'=>'.$phone);
+                            $res->cust_phone_num=$phone;
+                            $res->save();
+                        }
 
                         return ['error'=>'0','msg'=>'修改成功'];
 
@@ -3825,10 +4168,19 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     if (Input::get('stype')=='1')
                     {
                         //声纹
-                        $res=CustModel::find($pid);
-                        $this->system_log('修改声纹客户地址','主键:'.$pid.'修改内容:'.$res->cust_address.'=>'.$addr);
-                        $res->cust_address=$addr;
-                        $res->save();
+                        if (Input::get('edit')=='1')
+                        {
+                            $res=CustModel_tianmen_ready::find($pid);
+                            $this->system_log('修改声纹客户地址','主键:'.$pid.'修改内容:'.$res->cust_address.'=>'.$addr);
+                            $res->cust_address=$addr;
+                            $res->save();
+                        }else
+                        {
+                            $res=CustModel::find($pid);
+                            $this->system_log('修改声纹客户地址','主键:'.$pid.'修改内容:'.$res->cust_address.'=>'.$addr);
+                            $res->cust_address=$addr;
+                            $res->save();
+                        }
 
                         return ['error'=>'0','msg'=>'修改成功'];
 
@@ -3882,10 +4234,19 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     if (Input::get('stype')=='1')
                     {
                         //声纹
-                        $res=CustModel::find($pid);
-                        $this->system_log('修改声纹客户属地','主键:'.$pid.'修改内容:'.$res->cust_project.'=>'.$proj);
-                        $res->cust_project=$proj;
-                        $res->save();
+                        if (Input::get('edit')=='1')
+                        {
+                            $res=CustModel_tianmen_ready::find($pid);
+                            $this->system_log('修改声纹客户属地','主键:'.$pid.'修改内容:'.$res->cust_project.'=>'.$proj);
+                            $res->cust_project=$proj;
+                            $res->save();
+                        }else
+                        {
+                            $res=CustModel::find($pid);
+                            $this->system_log('修改声纹客户属地','主键:'.$pid.'修改内容:'.$res->cust_project.'=>'.$proj);
+                            $res->cust_project=$proj;
+                            $res->save();
+                        }
 
                         return ['error'=>'0','msg'=>'修改成功'];
 
@@ -3920,10 +4281,19 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     if (Input::get('stype')=='1')
                     {
                         //声纹
-                        $res=CustModel::find($pid);
-                        $this->system_log('修改声纹客户参保类型','主键:'.$pid.'修改内容:'.$res->cust_si_type.'=>'.$si);
-                        $res->cust_si_type=$si;
-                        $res->save();
+                        if (Input::get('edit')=='1')
+                        {
+                            $res=CustModel_tianmen_ready::find($pid);
+                            $this->system_log('修改声纹客户参保类型','主键:'.$pid.'修改内容:'.$res->cust_si_type.'=>'.$si);
+                            $res->cust_si_type=$si;
+                            $res->save();
+                        }else
+                        {
+                            $res=CustModel::find($pid);
+                            $this->system_log('修改声纹客户参保类型','主键:'.$pid.'修改内容:'.$res->cust_si_type.'=>'.$si);
+                            $res->cust_si_type=$si;
+                            $res->save();
+                        }
 
                         return ['error'=>'0','msg'=>'修改成功'];
 
@@ -3953,10 +4323,19 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $confirm=Input::get('key');
                 $pid=Input::get('pid');
 
-                $res=CustModel::find($pid);
-                $this->system_log('修改认证类型','主键:'.$pid.'修改内容:'.$res->cust_confirm_type.'=>'.$confirm);
-                $res->cust_confirm_type=$confirm;
-                $res->save();
+                if (Input::get('edit')=='1')
+                {
+                    $res=CustModel_tianmen_ready::find($pid);
+                    $this->system_log('修改认证类型','主键:'.$pid.'修改内容:'.$res->cust_confirm_type.'=>'.$confirm);
+                    $res->cust_confirm_type=$confirm;
+                    $res->save();
+                }else
+                {
+                    $res=CustModel::find($pid);
+                    $this->system_log('修改认证类型','主键:'.$pid.'修改内容:'.$res->cust_confirm_type.'=>'.$confirm);
+                    $res->cust_confirm_type=$confirm;
+                    $res->save();
+                }
 
                 return ['error'=>'0','msg'=>'修改成功'];
 
@@ -3997,7 +4376,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     if (Input::get('stype')=='1')
                     {
                         //声纹
-                        $res=CustModel::find($pid);
+                        if (Input::get('edit')=='1')
+                        {
+                            $res=CustModel_tianmen_ready::find($pid);
+                        }else
+                        {
+                            $res=CustModel::find($pid);
+                        }
 
                         //第一年审人不能直接删除，必须先删除第二年审人
                         if ($res->cust_relation_flag!='0')
@@ -4005,7 +4390,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             try
                             {
                                 //查询是否存在第二年审人
-                                CustModel::findOrFail($res->cust_relation_flag);
+                                if (Input::get('edit')=='1')
+                                {
+                                    CustModel_tianmen_ready::findOrFail($res->cust_relation_flag);
+                                }else
+                                {
+                                    CustModel::findOrFail($res->cust_relation_flag);
+                                }
 
                                 return ['error'=>'1','msg'=>'不可以直接删除第一年审人'];
                             }catch (ModelNotFoundException $exception)
@@ -4017,7 +4408,14 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             //如果等于0，说明是删除的第二年审人，或者，还没有添加第二年审人的第一年审人
                             //可以直接删除
                             //需要把第一年审人的cust_relation_flag改为0
-                            $a=CustModel::where(['cust_relation_flag'=>$pid])->first();
+                            if (Input::get('edit')=='1')
+                            {
+                                $a=CustModel_tianmen_ready::where(['cust_relation_flag'=>$pid])->first();
+                            }else
+                            {
+                                $a=CustModel::where(['cust_relation_flag'=>$pid])->first();
+                            }
+
 
                             if ($a!=null)
                             {
@@ -4026,15 +4424,21 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             }
                         }
 
-                        $this->voice_file_ModifyOrDelete($pid,'delete');
+                        if (Input::get('edit')=='1')
+                        {
+                            $res->delete();
+                        }else
+                        {
+                            $this->voice_file_ModifyOrDelete($pid,'delete');
 
-                        $this->system_log('删除声纹客户信息','主键:'.$pid);
+                            $this->system_log('删除声纹客户信息','主键:'.$pid);
 
-                        CustDeleteModel::create($res->toArray());
+                            CustDeleteModel::create($res->toArray());
 
-                        $res->delete();
+                            $res->delete();
 
-                        VocalPrintModel::where(['vp_id'=>$pid])->delete();
+                            VocalPrintModel::where(['vp_id'=>$pid])->delete();
+                        }
 
                         return ['error'=>'0','msg'=>'删除成功'];
 
@@ -4070,7 +4474,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         //声纹
                         $pid=Input::get('pid');
 
-                        $res=CustModel::find($pid);
+                        if (Input::get('edit')=='1')
+                        {
+                            $res=CustModel_tianmen_ready::find($pid);
+                        }else
+                        {
+                            $res=CustModel::find($pid);
+                        }
 
                         $res->cust_death_flag='1';
                         $res->save();
@@ -4113,7 +4523,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         //声纹
                         $pid=Input::get('pid');
 
-                        $res=CustModel::find($pid);
+                        if (Input::get('edit')=='1')
+                        {
+                            $res=CustModel_tianmen_ready::find($pid);
+                        }else
+                        {
+                            $res=CustModel::find($pid);
+                        }
 
                         $res->cust_death_flag='0';
                         $res->save();
@@ -5700,6 +6116,8 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
             case 'add_second_for_first_only_tianmen':
 
+                $cust_info=null;
+
                 foreach (Input::get('key') as $row)
                 {
                     if ($row['name']=='first_id')
@@ -5709,7 +6127,16 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     if ($row['name']=='cust_name')
                     {
-                        $second_id=$row['value'];
+                        if (!$this->check_chinese_word($row['value']))
+                        {
+                            $second_id=['pid'=>$row['value']];
+                            $a=OnlyTianMenModel::find($row['value']);
+                            $cust_info['cust_name']=$a->p_name;
+                        }else
+                        {
+                            $second_id=['name'=>$row['value']];
+                            $cust_info['cust_name']=$row['value'];
+                        }
                     }
 
                     if ($row['name']=='error_info')
@@ -5719,10 +6146,66 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     {
                         $is_error_info='no';
                     }
+
+                    if ($row['name']=='cust_review_num')
+                    {
+                        $cust_info['cust_review_num']=$row['value'];
+                    }
+
+                    if ($row['name']=='cust_bank_num')
+                    {
+                        $cust_bank_num=$row['value'];
+                    }
+
+                    if ($row['name']=='cust_id')
+                    {
+                        $cust_info['cust_id']=$row['value'];
+                    }
+
+                    if ($row['name']=='cust_phone_num')
+                    {
+                        $cust_info['cust_phone_num']=$row['value'];
+                    }
+
+                    if ($row['name']=='cust_address')
+                    {
+                        $cust_info['cust_address']=$row['value'];
+                    }
+
+                    if ($row['name']=='cust_si_id')
+                    {
+                        $cust_info['cust_si_id']=$row['value'];
+                    }
+
+                }
+
+                //如果是从临时表中添加第二年神人
+                if (Redis::get('which_table_'.$this->get_data_in_session('staff_num'))=='cust_ready')
+                {
+                    $first_model=CustModel_tianmen_ready::find($first_id);
+                    $cust_info['cust_project']=$first_model->cust_project;
+                    $cust_info['cust_si_type']=$first_model->cust_si_type;
+                    $cust_info['cust_confirm_type']=$first_model->cust_confirm_type;
+                    $cust_info['cust_type']=$first_model->cust_type;
+                    $cust_info['cust_review_flag']='2';
+                    $cust_info['cust_register_flag']='0';
+                    $cust_info['cust_relation_flag']='0';
+                    $cust_info['cust_death_flag']='0';
+
+                    //客户数据已经准备好，下面开始插入数据库
+                    $res=CustModel_tianmen_ready::create($cust_info);
+
+                    $first_model->cust_relation_flag=$res->cust_num;
+                    $first_model->save();
+
+                    //添加银行账户进入mysql
+                    CustBankNumModel::create(['cust_id'=>$res->cust_id,'cust_bank_num'=>$cust_bank_num]);
+
+                    return ['error'=>'0','msg'=>'添加成功'];
                 }
 
                 $first_model=OnlyTianMenModel::find($first_id);
-                $secon_model=OnlyTianMenModel::find($second_id);
+                $secon_model=OnlyTianMenModel::find($second_id['pid']);
 
                 if ($first_model->is_second_reviewnum!='')
                 {
@@ -5756,6 +6239,12 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $secon_model->save();
 
                 return ['error'=>'0','msg'=>'添加成功'];
+
+                break;
+
+            case 'set_which_table_in_redis':
+
+                $this->redis_set('which_table_'.$this->get_data_in_session('staff_num'),Input::get('key'));
 
                 break;
         }

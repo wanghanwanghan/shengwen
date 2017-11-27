@@ -19,19 +19,19 @@
             <table class="table table-bordered">
                 <tbody>
                 <tr height="50px">
-                    <td style="width: 190px;">
+                    <td style="width: 220px;">
                         <div id="duoren_div_1">
                             <input type="text" class="form-control" id="personName" name="cust_name" placeholder="姓名">
                         </div>
                     </td>
                     <td style="width: 190px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_review_num" placeholder="手机号码">
+                            <input type="text" class="form-control" name="cust_review_num" placeholder="认证号码">
                         </div>
                     </td>
                     <td style="width: 190px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_bank_num" placeholder="银行卡号">
+                            <input type="text" class="form-control" name="cust_si_id" placeholder="社保编号">
                         </div>
                     </td>
                     <td style="width: 190px;">
@@ -55,7 +55,7 @@
 
 
                 <tr height="50px">
-                    <td style="width: 190px;">
+                    <td style="width: 220px;">
                         <div>
                             <input type="text" class="form-control" id="certNumber" name="cust_id" placeholder="身份证号">
                         </div>
@@ -67,7 +67,7 @@
                     </td>
                     <td style="width: 190px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_address" placeholder="常驻地址">
+                            <input type="text" class="form-control" name="cust_sex" placeholder="性别">
                         </div>
                     </td>
                     <td style="width: 190px;">
@@ -89,14 +89,14 @@
 
 
                 <tr height="50px">
-                    <td style="width: 190px;">
+                    <td style="width: 220px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_si_id" placeholder="社保编号">
+                            <input type="text" class="form-control" name="cust_bank_num" placeholder="银行卡号">
                         </div>
                     </td>
                     <td style="width: 190px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_sex" placeholder="性别">
+                            <input type="text" class="form-control" name="cust_address" placeholder="常驻地址">
                         </div>
                     </td>
                     <td style="width: 190px;">
@@ -123,7 +123,7 @@
 
 
                 <tr height="1px">
-                    <td style="width: 190px;" align="center">
+                    <td style="width: 220px;" align="center">
                         <div class="checkbox">
                             <a style="width: 100px;" id="button_readID" onclick="new Device().startFun();" class="btn btn-block btn-primary btn-sm">读取身份证</a>
                         </div>
@@ -164,9 +164,24 @@
         </tr>
         <form id="myform2">
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="which_table" value="cust_a">
             <tr>
             <td height="53" colspan="8" align="center">
-                <input style="text-align: center" name="cust_review_num" class="input" size="15" type="text" placeholder="年审手机">
+
+                <div class="input-group">
+                    <div class="input-group-btn">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                            <span id="table_chinese_name">客户表</span>
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a onclick="change_select_table('cust_a');">客户表</a></li>
+                            <li><a onclick="change_select_table('cust_ready');">临时表</a></li>
+                        </ul>
+                    </div>
+                    <input style="text-align: center" name="cust_review_num" class="form-control" type="text" placeholder="手机或身份证">
+                </div>
+
                 <br><br><button style="width: 100px;" type="button" onclick="select_data_A();" class="btn btn-block btn-primary btn-sm">查询</button>
             </td>
         </tr>
@@ -192,6 +207,30 @@
     </div>
 
     <script>
+
+        function change_select_table(mytable) {
+
+            $("input[name=which_table]").attr('value',mytable);
+
+            if (mytable=='cust_a')
+            {
+                $("#table_chinese_name").html('客户表');
+            }else
+            {
+                $("#table_chinese_name").html('临时表');
+            }
+
+            var url ='/data/ajax';
+            var data={
+                _token :$("input[name=_token]").val(),
+                key    :mytable,
+                type   :'set_which_table_in_redis'
+            };
+            $.post(url,data,function (response) {
+                //set一下
+            },'json');
+
+        }
 
         $(function () {
 
@@ -773,6 +812,17 @@
                 },'json');
 
             });
+
+            //每次打开页面，把which_table修改成客户表，在redis里
+            var url ='/data/ajax';
+            var data={
+                _token :$("input[name=_token]").val(),
+                key    :'cust_a',
+                type   :'set_which_table_in_redis'
+            };
+            $.post(url,data,function (response) {
+                //set一下
+            },'json');
 
             var url ='/data/ajax';
             var data={

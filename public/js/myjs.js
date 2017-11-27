@@ -972,7 +972,7 @@ function add_second(id) {
         shadeClose: true, //点击遮罩关闭层
         scrollbar:false,//是否允许显示滚动条
         fixed:true,
-        area:['850px','600px'],
+        area:['1250px','600px'],
         content: '/add/second?id='+id.attr("id")+'&is_ready_cust=no'
     });
 
