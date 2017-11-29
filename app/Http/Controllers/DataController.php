@@ -528,7 +528,7 @@ class DataController extends Controller
                 {
                     if ($user_info[0]['allow_login']!='0')
                     {
-                        return ['error'=>'1','msg'=>'您已被禁止登陆'];
+                        return ['error'=>'1','msg'=>'服务器暂停服务'];
                     }
 
                     Session::put('user',$user_info);
@@ -613,7 +613,7 @@ class DataController extends Controller
                             $row['value']=strtoupper($row['value']);
 
                             //验证一下数据库中是否有相同的项
-                            if (count(CustModel::where(['cust_id'=>$row['value']])->get()->toArray())!='0')
+                            if (count(CustModel::where(['cust_id'=>$row['value']])->get()->toArray())!='0' || count(CustModel_tianmen_ready::where(['cust_id'=>$row['value']])->get()->toArray())!='0')
                             {
                                 return ['error'=>'1','msg'=>'此身份证号已经存在，不能添加了'];
                             }
@@ -643,7 +643,7 @@ class DataController extends Controller
                                 }
 
                                 //验证一下数据库中是否有相同的项
-                                if (count(CustModel::where(['cust_review_num'=>$row['value']])->get()->toArray())>='2')
+                                if (count(CustModel::where(['cust_review_num'=>$row['value']])->get()->toArray())>='2' || count(CustModel_tianmen_ready::where(['cust_review_num'=>$row['value']])->get()->toArray())>='2')
                                 {
                                     return ['error'=>'1','msg'=>'此手机号（年审号）已经存在，不能添加了'];
                                 }else
@@ -664,7 +664,7 @@ class DataController extends Controller
                                     //检查一下是否已经添加过相同的第一年审人了
                                     if (Input::get('cust_review_flag')=='1')
                                     {
-                                        if (!empty(count(CustModel::where(['cust_review_num'=>$row['value'],'cust_review_flag'=>Input::get('cust_review_flag')])->get()->toArray())))
+                                        if (!empty(count(CustModel::where(['cust_review_num'=>$row['value'],'cust_review_flag'=>Input::get('cust_review_flag')])->get()->toArray())) || !empty(count(CustModel_tianmen_ready::where(['cust_review_num'=>$row['value'],'cust_review_flag'=>Input::get('cust_review_flag')])->get()->toArray())))
                                         {
                                             return ['error'=>'1','msg'=>'此手机号（年审号）已经添加过第一年审人，不能添加了'];
                                         }
@@ -735,6 +735,15 @@ class DataController extends Controller
                         if ($row['name']=='cust_bank_num')
                         {
                             $cust_bank_num=trim($row['value']);
+
+                            if ($cust_bank_num=='')
+                            {
+                                return ['error'=>'1','msg'=>'银行卡号不能是空'];
+                            }
+                            if (!empty(CustBankNumModel::where(['cust_bank_num'=>$cust_bank_num])->get()->toArray()))
+                            {
+                                return ['error'=>'1','msg'=>'此银行卡号已经添加过，不能添加了'];
+                            }
                         }
                     }
 
@@ -785,9 +794,11 @@ class DataController extends Controller
                     {
                         if ($cust_info['cust_review_num']=='')
                         {
+                            $cust_belong='1';
                             $model=CustModel_tianmen_ready::create($cust_info);
                         }else
                         {
+                            $cust_belong='2';
                             $model=CustModel::create($cust_info);
                         }
                     }
@@ -799,14 +810,26 @@ class DataController extends Controller
                     CustBankNumModel::create(['cust_id'=>$model->cust_id,'cust_bank_num'=>$cust_bank_num]);
 
                     //修改一下天门基础表的信息
-                    if (isset($this_customer_pid))
+                    if (isset($this_customer_pid) && $cust_belong=='2')
                     {
+                        //有这个$this_customer_pid说明是查询出来的客户
                         $model_base=OnlyTianMenModel::find($this_customer_pid);
                         $model_base->id_in_mysql=$model->cust_num;
                         $model_base->cust_type=Input::get('cust_type');
                         $model_base->is_register='1';
                         $model_base->save();
-                    }
+
+                    }elseif (isset($this_customer_pid) && $cust_belong=='1')
+                    {
+                        //放到临时表中的
+                        $model_base=OnlyTianMenModel::find($this_customer_pid);
+                        $model_base->id_in_ready=$model->cust_num;
+                        $model_base->cust_type=Input::get('cust_type');
+                        $model_base->is_register='1';
+                        $model_base->save();
+
+                    }else
+                    {}
 
                     $this->system_log('添加新用户','姓名:'.$cust_info['cust_name'].'年审号:'.$cust_info['cust_review_num']);
 
@@ -4022,9 +4045,15 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 unset($one['cust_num']);
                                 $one['cust_review_num']=$phone;
 
-                                CustModel::create($one);
+                                $res=CustModel::create($one);
 
-                                $this_cust->delete();
+                                //$res是在a类表中的数据模型，$this_cust是在临时表中的模型
+                                //现在要把天门总表中id_in_mysql修改一下
+                                $tianman_zongbiao_model=OnlyTianMenModel::where(['id_in_ready'=>$this_cust->cust_num])->get();
+                                $tianman_zongbiao_model=$tianman_zongbiao_model[0];
+
+                                $tianman_zongbiao_model->id_in_mysql=$res->cust_num;
+                                $tianman_zongbiao_model->save();
 
                                 return ['error'=>'0','msg'=>'修改成功'];
 
@@ -4061,6 +4090,17 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 $one_data->cust_relation_flag=$two_data->cust_num;
                                 $one_data->save();
 
+                                //$this_cust是临时表中的，$one_data是a类表中的，$twotmp是临时表中的，$two_data是a类表中的
+                                $tianman_zongbiao_model_one=OnlyTianMenModel::where(['id_in_ready'=>$this_cust->cust_num])->get();
+                                $tianman_zongbiao_model_one=$tianman_zongbiao_model_one[0];
+                                $tianman_zongbiao_model_one->id_in_mysql=$one_data->cust_num;
+                                $tianman_zongbiao_model_one->save();
+
+                                $tianman_zongbiao_model_two=OnlyTianMenModel::where(['id_in_ready'=>$twotmp->cust_num])->get();
+                                $tianman_zongbiao_model_two=$tianman_zongbiao_model_two[0];
+                                $tianman_zongbiao_model_two->id_in_mysql=$two_data->cust_num;
+                                $tianman_zongbiao_model_two->save();
+
                                 return ['error'=>'0','msg'=>'修改成功'];
                             }
 
@@ -4071,6 +4111,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         }elseif ($this_cust->cust_review_flag=='2')
                         {
                             //第二年审人
+                            return ['error'=>'1','msg'=>'只能从第一年审人开始修改'];
 
                         }else
                         {}
@@ -6130,8 +6171,8 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         if (!$this->check_chinese_word($row['value']))
                         {
                             $second_id=['pid'=>$row['value']];
-                            $a=OnlyTianMenModel::find($row['value']);
-                            $cust_info['cust_name']=$a->p_name;
+                            $this_is_second_cust_model=OnlyTianMenModel::find($row['value']);
+                            $cust_info['cust_name']=$this_is_second_cust_model->p_name;
                         }else
                         {
                             $second_id=['name'=>$row['value']];
@@ -6154,11 +6195,36 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     if ($row['name']=='cust_bank_num')
                     {
-                        $cust_bank_num=$row['value'];
+                        $cust_bank_num=trim($row['value']);
+
+                        if ($cust_bank_num=='')
+                        {
+                            return ['error'=>'1','msg'=>'银行卡号不能是空'];
+                        }
+                        if (!empty(CustBankNumModel::where(['cust_bank_num'=>$cust_bank_num])->get()->toArray()))
+                        {
+                            return ['error'=>'1','msg'=>'此银行卡号已经添加过，不能添加了'];
+                        }
+
+                        $cust_bank_num=trim($row['value']);
                     }
 
                     if ($row['name']=='cust_id')
                     {
+                        if (!$this->is_idcard($row['value']))
+                        {
+                            return ['error'=>'1','msg'=>'身份证输入不正确'];
+                        }
+
+                        //转换成大写
+                        $row['value']=strtoupper($row['value']);
+
+                        //验证一下数据库中是否有相同的项
+                        if (count(CustModel::where(['cust_id'=>$row['value']])->get()->toArray())!='0' || count(CustModel_tianmen_ready::where(['cust_id'=>$row['value']])->get()->toArray())!='0')
+                        {
+                            return ['error'=>'1','msg'=>'此身份证号已经存在，不能添加了'];
+                        }
+
                         $cust_info['cust_id']=$row['value'];
                     }
 
@@ -6198,10 +6264,52 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $first_model->cust_relation_flag=$res->cust_num;
                     $first_model->save();
 
+                    if (isset($this_is_second_cust_model))
+                    {
+                        $this_is_second_cust_model->id_in_ready=$res->cust_num;
+                        $this_is_second_cust_model->cust_type=$res->cust_type;
+                        $this_is_second_cust_model->is_register='1';
+                        $this_is_second_cust_model->save();
+                    }
+
                     //添加银行账户进入mysql
                     CustBankNumModel::create(['cust_id'=>$res->cust_id,'cust_bank_num'=>$cust_bank_num]);
 
                     return ['error'=>'0','msg'=>'添加成功'];
+
+                }elseif (Redis::get('which_table_'.$this->get_data_in_session('staff_num'))=='cust_a')
+                {
+                    $first_model=CustModel::find($first_id);
+                    $cust_info['cust_project']=$first_model->cust_project;
+                    $cust_info['cust_si_type']=$first_model->cust_si_type;
+                    $cust_info['cust_confirm_type']=$first_model->cust_confirm_type;
+                    $cust_info['cust_type']=$first_model->cust_type;
+                    $cust_info['cust_review_flag']='2';
+                    $cust_info['cust_register_flag']='0';
+                    $cust_info['cust_relation_flag']='0';
+                    $cust_info['cust_death_flag']='0';
+
+                    //客户数据已经准备好，下面开始插入数据库
+                    $res=CustModel::create($cust_info);
+
+                    $first_model->cust_relation_flag=$res->cust_num;
+                    $first_model->save();
+
+                    if (isset($this_is_second_cust_model))
+                    {
+                        $this_is_second_cust_model->id_in_mysql=$res->cust_num;
+                        $this_is_second_cust_model->cust_type=$res->cust_type;
+                        $this_is_second_cust_model->is_register='1';
+                        $this_is_second_cust_model->save();
+                    }
+
+                    //添加银行账户进入mysql
+                    CustBankNumModel::create(['cust_id'=>$res->cust_id,'cust_bank_num'=>$cust_bank_num]);
+
+                    return ['error'=>'0','msg'=>'添加成功'];
+
+                }else
+                {
                 }
 
                 $first_model=OnlyTianMenModel::find($first_id);

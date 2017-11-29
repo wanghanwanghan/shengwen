@@ -303,6 +303,7 @@ class ComposerStaticInit62e1704204c862017a0ea631f195ad22
         'AddColInOnlyTianMenTable1' => __DIR__ . '/../..' . '/database/migrations/2017_11_18_170258_add_col_in_OnlyTianMen_table_1.php',
         'AddColInOnlyTianMenTable2' => __DIR__ . '/../..' . '/database/migrations/2017_11_21_165909_add_col_in_OnlyTianMen_table_2.php',
         'AddColInOnlyTianMenTable3' => __DIR__ . '/../..' . '/database/migrations/2017_11_22_134820_add_col_in_OnlyTianMen_table_3.php',
+        'AddColInOnlyTianMenTable4' => __DIR__ . '/../..' . '/database/migrations/2017_11_29_120701_add_col_in_OnlyTianMen_table_4.php',
         'CreateCustomerBankNumTable' => __DIR__ . '/../..' . '/database/migrations/2017_11_20_144548_create_customer_bank_num_table.php',
         'CreateOnlyTianMenTable' => __DIR__ . '/../..' . '/database/migrations/2017_11_14_152548_create_OnlyTianMen_table.php',
         'DatabaseSeeder' => __DIR__ . '/../..' . '/database/seeds/DatabaseSeeder.php',

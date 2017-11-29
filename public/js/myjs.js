@@ -927,16 +927,16 @@ function add_btw() {
         }else
         {
             $("#add_btw").children().remove();
-            $("#add_btw").append("<input type=text class=form-control name=add_btw placeholder=添加备注>");
+            $("#add_btw").append("<select style='padding-left: 8px' type=text class=form-control name=add_btw><option value='请选择'>请选择</option><option value='有意向办理'>有意向办理</option><option value='在外地'>在外地</option><option value='行动不便'>行动不便</option></select>");
 
-            $("input[name=add_btw]").on('change',function () {
+            $("select[name=add_btw]").on('change',function () {
 
                 var url='/data/ajax';
                 var data={
                     _token :$("input[name=_token]").val(),
                     type   :'add_btw_only_tianmen',
                     key1   :$("#add_second_ready").attr('name'),
-                    key2   :$("input[name=add_btw]").val(),
+                    key2   :$("select[name=add_btw]").val(),
                     key3   :$("input[name=cust_phone_num]").val()
                 };
 

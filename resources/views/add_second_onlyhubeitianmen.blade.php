@@ -72,14 +72,18 @@
                     <table class="table table-bordered">
                         <tbody>
                         <tr height="50px">
-                            <td style="width: 190px;">
+                            <td style="width: 220px;">
                                 <div id="duoren_div_1">
                                     <input type="text" class="form-control" id="personName" name="cust_name" placeholder="姓名">
                                 </div>
                             </td>
                             <td style="width: 190px;">
                                 <div>
-                                    <input type="text" class="form-control" name="cust_review_num" placeholder="手机号码">
+                                    @if(isset($model['cust_review_num']))
+                                        <input type="text" class="form-control" name="cust_review_num" value="{{$model['cust_review_num']}}"/>
+                                    @else
+                                        <input type="text" class="form-control" name="cust_review_num" placeholder="手机号码"/>
+                                    @endif
                                 </div>
                             </td>
                             <td style="width: 190px;">
@@ -102,7 +106,7 @@
 
 
                         <tr height="50px">
-                            <td style="width: 190px;">
+                            <td style="width: 220px;">
                                 <div>
                                     <input type="text" class="form-control" id="certNumber" name="cust_id" placeholder="身份证号">
                                 </div>
@@ -127,7 +131,7 @@
 
 
                         <tr height="50px">
-                            <td style="width: 190px;">
+                            <td style="width: 220px;">
                                 <div>
                                     <input type="text" class="form-control" name="cust_si_id" placeholder="社保编号">
                                 </div>
@@ -152,7 +156,7 @@
 
 
                         <tr height="1px">
-                            <td style="width: 190px;" align="center">
+                            <td style="width: 220px;" align="center">
                                 <div class="checkbox">
                                     <a style="width: 100px;" id="button_readID" onclick="new Device().startFun();" class="btn btn-block btn-primary btn-sm">读取身份证</a>
                                 </div>

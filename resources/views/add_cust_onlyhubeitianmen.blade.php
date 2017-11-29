@@ -142,7 +142,7 @@
                     </td>
                     <td  style="width: 190px;" align="center">
                         <div class="checkbox">
-                            <a style="width: 100px;" id="add_second_ready" name="no_person" onclick="add_second_ready();" class="btn btn-block btn-primary btn-sm">添加二年审人</a>
+                            <a style="width: 100px;display: none;" id="add_second_ready" name="no_person" onclick="add_second_ready();" class="btn btn-block btn-primary btn-sm">添加二年审人</a>
                         </div>
                     </td>
                     <td  style="width: 190px;" align="center">

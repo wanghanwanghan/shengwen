@@ -75,7 +75,17 @@ class WebController extends Controller
             $first_id=Input::get('id');
 
             return view('add_second_onlyhubeitianmen',compact('first_id','model','staff_project','staff_si_type','confirm_type'));
-        }
+
+        }elseif (Input::get('is_ready_cust')=='no' && Redis::get('which_table_'.$this->get_data_in_session('staff_num'))=='cust_a')
+        {
+            //天门专用
+            $model=CustModel::find(Input::get('id'))->toArray();
+            $first_id=Input::get('id');
+
+            return view('add_second_onlyhubeitianmen',compact('first_id','model','staff_project','staff_si_type','confirm_type'));
+
+        }else
+        {}
 
         if (Redis::get('which_table_'.$this->get_data_in_session('staff_num'))=='cust_ready')
         {
