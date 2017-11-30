@@ -88,7 +88,7 @@
                             </td>
                             <td style="width: 190px;">
                                 <div>
-                                    <input type="text" class="form-control" name="cust_bank_num" placeholder="银行卡号">
+                                    <input type="text" class="form-control" name="cust_si_id" placeholder="社保编号">
                                 </div>
                             </td>
                             <td style="width: 190px;">
@@ -118,7 +118,7 @@
                             </td>
                             <td style="width: 190px;">
                                 <div>
-                                    <input type="text" class="form-control" name="cust_address" placeholder="常驻地址">
+                                    <input type="text" class="form-control" name="cust_sex" placeholder="性别">
                                 </div>
                             </td>
                             <td style="width: 190px;">
@@ -133,12 +133,12 @@
                         <tr height="50px">
                             <td style="width: 220px;">
                                 <div>
-                                    <input type="text" class="form-control" name="cust_si_id" placeholder="社保编号">
+                                    <input type="text" class="form-control" name="cust_bank_num" placeholder="银行卡号">
                                 </div>
                             </td>
                             <td style="width: 190px;">
                                 <div>
-                                    <input type="text" class="form-control" name="cust_sex" placeholder="性别">
+                                    <input type="text" class="form-control" name="cust_address" placeholder="常驻地址">
                                 </div>
                             </td>
                             <td style="width: 190px;">

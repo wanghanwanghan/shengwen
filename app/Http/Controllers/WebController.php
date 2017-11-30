@@ -26,6 +26,15 @@ class WebController extends Controller
             $staff_project=$row['staff_project'];
             $staff_si_type=$row['staff_si_type'];
             $staff_level=$row['staff_level'];
+            $staff_name=explode('_',$row['staff_account']);
+        }
+
+        if ($staff_name[0]=='sw' || $staff_name[0]=='zbxl')
+        {
+            $staff_name='yes';
+        }else
+        {
+            $staff_name='no';
         }
 
         $staff_project=explode(',',$staff_project);
@@ -41,7 +50,7 @@ class WebController extends Controller
 
         if (Config::get('constant.app_edition')=='1')
         {
-            return view('add_cust_onlyhubeitianmen',compact('staff_project','staff_si_type','confirm_type'));
+            return view('add_cust_onlyhubeitianmen',compact('staff_project','staff_si_type','confirm_type','staff_name'));
         }else
         {
             return view('add_cust',compact('staff_project','staff_si_type','confirm_type'));

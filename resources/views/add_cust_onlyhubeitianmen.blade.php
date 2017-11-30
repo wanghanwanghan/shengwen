@@ -26,7 +26,12 @@
                     </td>
                     <td style="width: 190px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_review_num" placeholder="认证号码">
+                            @if($staff_name=='yes')
+                                <input type="text" class="form-control" name="cust_review_num" placeholder="认证号码">
+                            @else
+                                <input type="text" disabled class="form-control" placeholder="认证号码">
+                                <input type="text" style="display: none" class="form-control" name="cust_review_num" placeholder="认证号码">
+                            @endif
                         </div>
                     </td>
                     <td style="width: 190px;">
