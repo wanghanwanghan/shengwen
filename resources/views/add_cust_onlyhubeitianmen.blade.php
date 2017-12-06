@@ -176,12 +176,12 @@
                 <div class="input-group">
                     <div class="input-group-btn">
                         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                            <span id="table_chinese_name">客户表</span>
+                            <span id="table_chinese_name">已登记</span>
                             <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a onclick="change_select_table('cust_a');">客户表</a></li>
-                            <li><a onclick="change_select_table('cust_ready');">临时表</a></li>
+                            <li><a onclick="change_select_table('cust_a');">已登记</a></li>
+                            <li><a onclick="change_select_table('cust_ready');">已注册</a></li>
                         </ul>
                     </div>
                     <input style="text-align: center" name="cust_review_num" class="form-control" type="text" placeholder="手机或身份证">
@@ -219,10 +219,10 @@
 
             if (mytable=='cust_a')
             {
-                $("#table_chinese_name").html('客户表');
+                $("#table_chinese_name").html('已登记');
             }else
             {
-                $("#table_chinese_name").html('临时表');
+                $("#table_chinese_name").html('已注册');
             }
 
             var url ='/data/ajax';

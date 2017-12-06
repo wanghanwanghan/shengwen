@@ -85,6 +85,35 @@
 
         function modify_cust_info_click() {
 
+            $('#modify_bank_num').editable({
+                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                title: "",                   //编辑框的标题
+                disabled: false,             //是否禁用编辑
+                emptytext: "空",             //空值的默认文本
+                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                validate: function (value) { //字段验证
+                    //判断是不是空**********************************
+                    if (!$.trim(value)) {
+                        return '不能为空';
+                    }
+                    //*********************************************
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_bank_num',
+                        key   :value,
+                        pid   :$("#modify_pid").html()
+                    };
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
+                }
+            });
+
             $("#cust_delete_btn").click(function () {
                 layer.confirm('确认真的要删除吗', {
                     btn: ['确认','取消'], //按钮

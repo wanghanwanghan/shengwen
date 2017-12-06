@@ -579,6 +579,11 @@ function add_cust_A() {
         {
             layer.msg(response.msg);
 
+            setTimeout(function ()
+            {
+                location.reload();
+            },1000);
+
             //显示这个用户，今日处理过的用户，往日的不显示
             refresh_A();
         }else

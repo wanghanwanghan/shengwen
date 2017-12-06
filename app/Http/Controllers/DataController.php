@@ -1273,11 +1273,13 @@ class DataController extends Controller
                         $model=CustModel_tianmen_ready::where($select_info)->whereIn('cust_project',$proj)
                             ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')
                             ->get($get)->toArray();
+
                     }elseif ($which_table=='cust_a')
                     {
                         $model=CustModel::where($select_info)->whereIn('cust_project',$proj)
                             ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')
                             ->get($get)->toArray();
+
                     }else
                     {}
                 }else
@@ -3523,18 +3525,54 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 //判断到底拿到了哪个值
                 if ($vv_or_fv=='1')
                 {
-                    //要查询的是声纹
-                    if (isset($phone))
+                    //拿到$id和$cust_review_flag
+                    $where1=['cust_id'=>$id,'cust_review_flag'=>'1'];
+                    $where2=['cust_id'=>$id,'cust_review_flag'=>'2'];
+                    $res1=CustModel::where($where1)->get();
+                    $res2=CustModel::where($where2)->get();
+
+                    //找出来传入的$id的第一和第二年审人信息，然后用传入的$cust_review_flag做判断，到底传给前台哪个数据
+                    if (empty($res1->toArray()))
                     {
-                        $where=['cust_review_num'=>$phone,'cust_review_flag'=>$cust_review_flag];
+                        //这个身份证不是第一年审人
+                        if (empty($res2->toArray()))
+                        {
+                            //这个身份证也不是第二年审人
+                            return ['error'=>'1','msg'=>'查无结果'];
+                        }else
+                        {
+                            //是第二年审人
+                            //判断要返回哪个年审人
+                            if ($cust_review_flag=='1')
+                            {
+                                //要第一年审人数据
+                                $res=CustModel::where(['cust_relation_flag'=>$res2[0]->cust_num])->get()->toArray();
+                            }else
+                            {
+                                //要第二年审人数据
+                                $res=$res2->toArray();
+                            }
+                        }
                     }else
                     {
-                        $where=['cust_id'=>$id,'cust_review_flag'=>$cust_review_flag];
+                        //这个身份证是第一年审人
+                        //判断要返回哪个年审人
+                        if ($cust_review_flag=='1')
+                        {
+                            //要第一年审人数据
+                            $res=$res1->toArray();
+                        }else
+                        {
+                            //要第二年审人数据
+                            if ($res1[0]->cust_relation_flag!='0')
+                            {
+                                $res=CustModel::where(['cust_num'=>$res1[0]->cust_relation_flag])->get()->toArray();
+                            }else
+                            {
+                                return ['error'=>'1','msg'=>'未添加第二年审人'];
+                            }
+                        }
                     }
-
-                    //开始查询
-                    $res=CustModel::where($where)->get()->toArray();
-
                 }elseif ($vv_or_fv=='2')
                 {
                     //要查询的是指静脉
@@ -3563,6 +3601,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $data['客户姓名']='<a id=modify_cust_name>'.$res[0]['cust_name'].'</a>';
                     $data['身份证号']='<a id=modify_cust_id>'.$res[0]['cust_id'].'</a>';
                     $data['社保编号']='<a id=modify_cust_si_id>'.$res[0]['cust_si_id'].'</a>';
+
+                    if (Config::get('constant.app_edition')=='1')
+                    {
+                        $bank_num=CustBankNumModel::where(['cust_id'=>$res[0]['cust_id']])->get();
+                        $data['银行账号']='<a id=modify_bank_num>'.$bank_num[0]->cust_bank_num.'</a>';
+                    }
+
                     $data['年审号码']='<a id=modify_cust_review_num>'.$res[0]['cust_review_num'].'</a>';
                     $data['备用号码']='<a id=modify_cust_phone_num>'.$res[0]['cust_phone_num'].'</a>';
                     $data['客户地址']='<a id=modify_cust_address>'.$res[0]['cust_address'].'</a>';
@@ -3670,14 +3715,61 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     if (isset($phone))
                     {
                         $where=['cust_review_num'=>$phone,'cust_review_flag'=>$cust_review_flag];
+
+                        //开始查询
+                        $res=CustModel_tianmen_ready::where($where)->get()->toArray();
+
                     }else
                     {
-                        $where=['cust_id'=>$id,'cust_review_flag'=>$cust_review_flag];
+                        //拿到$id和$cust_review_flag
+                        $where1=['cust_id'=>$id,'cust_review_flag'=>'1'];
+                        $where2=['cust_id'=>$id,'cust_review_flag'=>'2'];
+                        $res1=CustModel_tianmen_ready::where($where1)->get();
+                        $res2=CustModel_tianmen_ready::where($where2)->get();
+
+                        //找出来传入的$id的第一和第二年审人信息，然后用传入的$cust_review_flag做判断，到底传给前台哪个数据
+                        if (empty($res1->toArray()))
+                        {
+                            //这个身份证不是第一年审人
+                            if (empty($res2->toArray()))
+                            {
+                                //这个身份证也不是第二年审人
+                                return ['error'=>'1','msg'=>'查无结果'];
+                            }else
+                            {
+                                //是第二年审人
+                                //判断要返回哪个年审人
+                                if ($cust_review_flag=='1')
+                                {
+                                    //要第一年审人数据
+                                    $res=CustModel_tianmen_ready::where(['cust_relation_flag'=>$res2[0]->cust_num])->get()->toArray();
+                                }else
+                                {
+                                    //要第二年审人数据
+                                    $res=$res2->toArray();
+                                }
+                            }
+                        }else
+                        {
+                            //这个身份证是第一年审人
+                            //判断要返回哪个年审人
+                            if ($cust_review_flag=='1')
+                            {
+                                //要第一年审人数据
+                                $res=$res1->toArray();
+                            }else
+                            {
+                                //要第二年审人数据
+                                if ($res1[0]->cust_relation_flag!='0')
+                                {
+                                    $res=CustModel_tianmen_ready::where(['cust_num'=>$res1[0]->cust_relation_flag])->get()->toArray();
+                                }else
+                                {
+                                    return ['error'=>'1','msg'=>'未添加第二年审人'];
+                                }
+                            }
+                        }
                     }
-
-                    //开始查询
-                    $res=CustModel_tianmen_ready::where($where)->get()->toArray();
-
                 }elseif ($vv_or_fv=='2')
                 {
                     //要查询的是指静脉
@@ -3706,6 +3798,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $data['客户姓名']='<a id=modify_cust_name>'.$res[0]['cust_name'].'</a>';
                     $data['身份证号']='<a id=modify_cust_id>'.$res[0]['cust_id'].'</a>';
                     $data['社保编号']='<a id=modify_cust_si_id>'.$res[0]['cust_si_id'].'</a>';
+
+                    if (Config::get('constant.app_edition')=='1')
+                    {
+                        $bank_num=CustBankNumModel::where(['cust_id'=>$res[0]['cust_id']])->get();
+                        $data['银行账号']='<a id=modify_bank_num>'.$bank_num[0]->cust_bank_num.'</a>';
+                    }
+
                     $data['年审号码']='<a id=modify_cust_review_num>'.$res[0]['cust_review_num'].'</a>';
                     $data['备用号码']='<a id=modify_cust_phone_num>'.$res[0]['cust_phone_num'].'</a>';
                     $data['客户地址']='<a id=modify_cust_address>'.$res[0]['cust_address'].'</a>';
@@ -4152,6 +4251,38 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
+            case 'modify_bank_num':
+
+                $new_bank_num=Input::get('key');
+                $pid=Input::get('pid');
+
+                if (Input::get('edit')=='1')
+                {
+                    //ready表中
+                    $model=CustModel_tianmen_ready::find($pid);
+                }else
+                {
+                    //a类表中
+                    $model=CustModel::find($pid);
+                }
+
+                $res=CustBankNumModel::where(['cust_bank_num'=>$new_bank_num])->get()->toArray();
+
+                if (!empty($res))
+                {
+                    return ['error'=>'1','msg'=>'银行账号已存在，修改失败'];
+                }else
+                {
+                    $res=CustBankNumModel::where(['cust_id'=>$model->cust_id])->get();
+                    $res=$res[0];
+                    $res->cust_bank_num=$new_bank_num;
+                    $res->save();
+
+                    return ['error'=>'0','msg'=>'修改成功'];
+                }
+
+                break;
+
             case 'modify_cust_phone_num':
 
                 $phone=Input::get('key');
@@ -4456,20 +4587,45 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             {
                                 $a=CustModel::where(['cust_relation_flag'=>$pid])->first();
                             }
-
-
-                            if ($a!=null)
-                            {
-                                $a->cust_relation_flag='0';
-                                $a->save();
-                            }
                         }
 
                         if (Input::get('edit')=='1')
                         {
+                            //情况1：在a类表，也在ready表
+                            //必须先删除a类表中数据，才能删除ready表中数据
+                            //情况2：不在a类表，在ready表
+                            //直接删除ready表中数据
+                            $data_in_base_table=OnlyTianMenModel::where(['id_in_ready'=>$pid])->get();
+                            $data_in_base_table=$data_in_base_table[0];
+
+                            if ($data_in_base_table->id_in_mysql!='0')
+                            {
+                                return ['error'=>'1','msg'=>'此人已是登记客户，不能删除'];
+                            }
+
+                            //base表的关联字段清空
+                            $data_in_base_table->id_in_ready='';
+                            $data_in_base_table->save();
+
+                            //处理银行账号表中的数据
+                            $custbank=CustBankNumModel::where(['cust_id'=>$res->cust_id])->get();
+                            foreach ($custbank as $rowrow)
+                            {
+                                $rowrow->delete();
+                            }
+
                             $res->delete();
+
                         }else
                         {
+                            if (Config::get('constant.app_edition')=='1')
+                            {
+                                $cust=OnlyTianMenModel::where(['id_in_mysql'=>$pid])->get();
+                                $cust=$cust[0];
+                                $cust->id_in_mysql='0';
+                                $cust->save();
+                            }
+
                             $this->voice_file_ModifyOrDelete($pid,'delete');
 
                             $this->system_log('删除声纹客户信息','主键:'.$pid);
@@ -4479,6 +4635,12 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             $res->delete();
 
                             VocalPrintModel::where(['vp_id'=>$pid])->delete();
+                        }
+
+                        if ($a!=null)
+                        {
+                            $a->cust_relation_flag='0';
+                            $a->save();
                         }
 
                         return ['error'=>'0','msg'=>'删除成功'];
