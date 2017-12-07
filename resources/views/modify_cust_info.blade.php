@@ -20,7 +20,10 @@
                         <div class="col-sm-12">
                             <div class="row">
                                 <div class="col-sm-3">
-                                    <input class="form-control" type="text" id="cond" name="cond" placeholder="输入年审号码或者身份证号码"/>
+                                    <input class="form-control" type="text" id="certNumber" name="cond" placeholder="输入年审号码或者身份证号码"/>
+                                </div>
+                                <div class="col-sm-2">
+                                    <a style="width: 134px;height: 34px;padding-top: 8px;" id="button_readID" onclick="new Device().startFun();" class="btn btn-block btn-primary btn-sm">读取身份证</a>
                                 </div>
                                 <div class="col-sm-2">
                                     <select style="padding-left: 8px" name="cust_review_flag" class="form-control">
@@ -481,7 +484,7 @@
             var url ='/data/ajax';
             var data={
                 _token:$("input[name=_token]").val(),
-                cond1   :$("#cond").val(),
+                cond1   :$("input[name=cond]").val(),
                 cond2   :$('select[name=cust_review_flag]').val(),
                 cond3   :$('select[name=vv_or_fv]').val(),
                 type  :'modify_info'
@@ -529,7 +532,7 @@
 
         }
 
-        $('#cond').change(function () {
+        $("input[name=cond]").change(function () {
             all();
         });
 

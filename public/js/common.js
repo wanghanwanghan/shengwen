@@ -60,6 +60,9 @@ function setCertificateData(result)
 	//20170816 12:13修改
 	//触发身份证查询，看看社保数据里有没有此人
     $("input[name=cust_id]").change();
+    //20171207 08:55修改
+    //触发身份证查询，看看社保数据里有没有此人
+    $("input[name=cond]").change();
 }
 	
 function getRandomNum() 

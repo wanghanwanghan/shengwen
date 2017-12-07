@@ -1483,7 +1483,19 @@ class DataController extends Controller
                     //取得所属地区
                     if ($row['name']=='cust_project')
                     {
-                        $select_info['cust_project']=$row['value'];
+                        if (empty($this->get_all_children($row['value'])))
+                        {
+                            $cust_project=[$row['value']];
+                        }else
+                        {
+                            foreach ($this->get_all_children($row['value']) as $rowrow)
+                            {
+                                $cust_project[]=$rowrow['project_id'];
+                            }
+                            $cust_project[]=$row['value'];
+                            $cust_project=array_unique($cust_project);
+                        }
+
                     }
 
                     //取得参保类型
@@ -1509,11 +1521,11 @@ class DataController extends Controller
                     'cust_phone_num'
                 ];
 
-                $data=CustModel::where($select_info)->wherebetween('created_at',[$start,$stop])
+                $data=CustModel::where($select_info)->whereIn('cust_project',$cust_project)->wherebetween('created_at',[$start,$stop])
                     ->offset($offset)->limit($limit)->get($get)->toArray();
 
                 //总页数
-                $cnt=CustModel::where($select_info)->wherebetween('created_at',[$start,$stop])->count();
+                $cnt=CustModel::where($select_info)->whereIn('cust_project',$cust_project)->wherebetween('created_at',[$start,$stop])->count();
                 $cnt_page=intval(ceil($cnt/$limit));
 
                 //查出来的数据改成中文
@@ -3525,51 +3537,62 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 //判断到底拿到了哪个值
                 if ($vv_or_fv=='1')
                 {
-                    //拿到$id和$cust_review_flag
-                    $where1=['cust_id'=>$id,'cust_review_flag'=>'1'];
-                    $where2=['cust_id'=>$id,'cust_review_flag'=>'2'];
-                    $res1=CustModel::where($where1)->get();
-                    $res2=CustModel::where($where2)->get();
-
-                    //找出来传入的$id的第一和第二年审人信息，然后用传入的$cust_review_flag做判断，到底传给前台哪个数据
-                    if (empty($res1->toArray()))
+                    //要查询的是声纹
+                    if (isset($phone))
                     {
-                        //这个身份证不是第一年审人
-                        if (empty($res2->toArray()))
+                        $where=['cust_review_num'=>$phone,'cust_review_flag'=>$cust_review_flag];
+
+                        //开始查询
+                        $res=CustModel::where($where)->get()->toArray();
+
+                    }else
+                    {
+                        //拿到$id和$cust_review_flag
+                        $where1=['cust_id'=>$id,'cust_review_flag'=>'1'];
+                        $where2=['cust_id'=>$id,'cust_review_flag'=>'2'];
+                        $res1=CustModel::where($where1)->get();
+                        $res2=CustModel::where($where2)->get();
+
+                        //找出来传入的$id的第一和第二年审人信息，然后用传入的$cust_review_flag做判断，到底传给前台哪个数据
+                        if (empty($res1->toArray()))
                         {
-                            //这个身份证也不是第二年审人
-                            return ['error'=>'1','msg'=>'查无结果'];
+                            //这个身份证不是第一年审人
+                            if (empty($res2->toArray()))
+                            {
+                                //这个身份证也不是第二年审人
+                                return ['error'=>'1','msg'=>'查无结果'];
+                            }else
+                            {
+                                //是第二年审人
+                                //判断要返回哪个年审人
+                                if ($cust_review_flag=='1')
+                                {
+                                    //要第一年审人数据
+                                    $res=CustModel::where(['cust_relation_flag'=>$res2[0]->cust_num])->get()->toArray();
+                                }else
+                                {
+                                    //要第二年审人数据
+                                    $res=$res2->toArray();
+                                }
+                            }
                         }else
                         {
-                            //是第二年审人
+                            //这个身份证是第一年审人
                             //判断要返回哪个年审人
                             if ($cust_review_flag=='1')
                             {
                                 //要第一年审人数据
-                                $res=CustModel::where(['cust_relation_flag'=>$res2[0]->cust_num])->get()->toArray();
+                                $res=$res1->toArray();
                             }else
                             {
                                 //要第二年审人数据
-                                $res=$res2->toArray();
-                            }
-                        }
-                    }else
-                    {
-                        //这个身份证是第一年审人
-                        //判断要返回哪个年审人
-                        if ($cust_review_flag=='1')
-                        {
-                            //要第一年审人数据
-                            $res=$res1->toArray();
-                        }else
-                        {
-                            //要第二年审人数据
-                            if ($res1[0]->cust_relation_flag!='0')
-                            {
-                                $res=CustModel::where(['cust_num'=>$res1[0]->cust_relation_flag])->get()->toArray();
-                            }else
-                            {
-                                return ['error'=>'1','msg'=>'未添加第二年审人'];
+                                if ($res1[0]->cust_relation_flag!='0')
+                                {
+                                    $res=CustModel::where(['cust_num'=>$res1[0]->cust_relation_flag])->get()->toArray();
+                                }else
+                                {
+                                    return ['error'=>'1','msg'=>'未添加第二年审人'];
+                                }
                             }
                         }
                     }
