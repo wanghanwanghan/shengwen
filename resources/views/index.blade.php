@@ -1,5 +1,5 @@
 @extends('layouts.dashboard')
-@section('page_heading','欢迎登陆声纹认证系统')
+@section('page_heading','欢迎登陆社会养老保险领取资格认证平台')
 @section('page_heading_small','首页')
 @section('section')
 

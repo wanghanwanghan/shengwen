@@ -1495,7 +1495,6 @@ class DataController extends Controller
                             $cust_project[]=$row['value'];
                             $cust_project=array_unique($cust_project);
                         }
-
                     }
 
                     //取得参保类型
@@ -5229,6 +5228,83 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 //总页数
                 $cnt=StaffModel::count();
                 $cnt_page=intval(ceil($cnt/$limit));
+
+                foreach ($res as &$row1)
+                {
+                    //地区
+                    $wanghan=null;
+
+                    $this_staff_proj=ProjectModel::whereIn('project_id',explode(',',$row1['staff_project']))->get();
+
+                    foreach ($this_staff_proj as $row2)
+                    {
+                        if (count(explode('-',$row2->project_path))=='1')
+                        {
+                            //省级
+                            if ($row2->project_path=='0')
+                            {
+                                $this_staff_proj_path[]=$row2->project_id;
+                            }else
+                            {
+                                $this_staff_proj_path[]=$row2->project_path;
+                            }
+
+                        }elseif (count(explode('-',$row2->project_path))=='2')
+                        {
+                            //市级
+                            $tmp2=explode('-',$row2->project_path);
+                            $this_staff_proj_path[]=$tmp2[1];
+
+                        }elseif (count(explode('-',$row2->project_path))=='3')
+                        {
+                            //县级
+                            $tmp2=explode('-',$row2->project_path);
+                            $this_staff_proj_path[]=$tmp2[1].'-'.$tmp2[2];
+
+                        }elseif (count(explode('-',$row2->project_path))=='4')
+                        {
+                            //村级
+                            $tmp2=explode('-',$row2->project_path);
+                            $this_staff_proj_path[]=$tmp2[1].'-'.$tmp2[2];
+
+                        }else
+                        {}
+                    }
+
+                    $this_staff_proj_path=array_unique($this_staff_proj_path);
+
+                    foreach ($this_staff_proj_path as $row3)
+                    {
+                        if (count(explode('-',$row3))=='1')
+                        {
+                            $wanghan.='<option>'.ProjectModel::find($row3)->project_name.'</option>';
+
+                        }elseif (count(explode('-',$row3))=='2')
+                        {
+                            $tmp=explode('-',$row3);
+                            $place1=ProjectModel::find($tmp[0])->project_name;
+                            $place2=ProjectModel::find($tmp[1])->project_name;
+                            $wanghan.='<option>'.$place1.'-'.$place2.'</option>';
+
+                        }else
+                        {}
+                    }
+
+                    $row1['staff_project']='<select style="padding-left: 8px">'.$wanghan.'</select>';
+
+                    //参保类型
+                    $wanghan=null;
+
+                    $this_staff_si_type=SiTypeModel::whereIn('si_id',explode(',',$row1['staff_si_type']))->get();
+
+                    foreach ($this_staff_si_type as $row4)
+                    {
+                        $wanghan.='<option>'.$row4->si_name.'</option>';
+                    }
+
+                    $row1['staff_si_type']='<select style="padding-left: 8px">'.$wanghan.'</select>';
+
+                }
 
                 return ['error'=>'0','data'=>$res,'pages'=>$cnt_page,'count_data'=>$cnt];
 
