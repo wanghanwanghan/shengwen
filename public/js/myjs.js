@@ -112,6 +112,58 @@ function get_treeview_active() {
     },'json');
 }
 
+function get_staff_level_chinese_name() {
+
+    var url='/data/ajax';
+    var dat={
+        _token :$("input[name=_token]").val(),
+        type   :'get_staff_level_chinese_name'
+    };
+
+    $.post(url,dat,function (response) {
+
+        if (response.error=='0')
+        {
+            if ($.inArray('用户登记',response.data) == -1)
+            {
+                $("#yong_hu_deng_ji_content").children().remove();
+            }
+            if ($.inArray('用户认证',response.data) == -1)
+            {
+                $("#yong_hu_ren_zheng_content").children().remove();
+            }
+            if ($.inArray('客户管理',response.data) == -1)
+            {
+                $("#ke_hu_guan_li_content").children().remove();
+            }
+            if ($.inArray('数据统计',response.data) == -1)
+            {
+                $("#shu_ju_tong_ji_content").children().remove();
+            }
+            if ($.inArray('分析',response.data) == -1)
+            {
+                $("#fen_xi_content").children().remove();
+            }
+            if ($.inArray('操作日志',response.data) == -1)
+            {
+                $("#cao_zuo_ri_zhi_content").children().remove();
+            }
+            if ($.inArray('系统设置',response.data) == -1)
+            {
+                $("#xi_tong_she_zhi_content").children().remove();
+            }
+            if ($.inArray('超级管理员功能',response.data) == -1)
+            {
+                $("#chao_ji_guan_li_yuan_gong_neng_content").children().remove();
+            }
+
+        }else
+        {
+        }
+
+    },'json');
+}
+
 function daochudiqu() {
 
     if ($("#daochudiqu_lable").val()=='xxx')

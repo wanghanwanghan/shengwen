@@ -6616,6 +6616,34 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $this->redis_set('which_table_'.$this->get_data_in_session('staff_num'),Input::get('key'));
 
                 break;
+
+            case 'get_staff_level_chinese_name':
+
+                /*
+                 * 用户登记
+                 * 用户认证
+                 * 客户管理
+                 * 数据统计
+                 * 分析
+                 * 操作日志
+                 * 系统设置
+                 * 超级管理员功能
+                 */
+
+                $str=$this->get_data_in_session('staff_level');
+
+                $str=explode(',',$str);
+
+                $res=LevelModel::whereIn('level_id',$str)->get();
+
+                foreach ($res->toArray() as $row)
+                {
+                    $level_name[]=$row['level_name'];
+                }
+
+                return ['error'=>'0','data'=>$level_name];
+
+                break;
         }
     }
 

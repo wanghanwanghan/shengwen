@@ -196,7 +196,7 @@
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
-                        <ul class="treeview-menu">
+                        <ul class="treeview-menu" id="yong_hu_deng_ji_content">
                             <li><a href="{{url('add/cust')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹登记（A类）</a></li>
                             <li><a href="{{url('add/cust/b')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹登记（B类）</a></li>
                             <li><a href="{{url('add/cust/vena')}}"><i class="fa fa-fw fa-hand-o-right"></i>指静脉登记</a></li>
@@ -209,7 +209,7 @@
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
-                        <ul class="treeview-menu">
+                        <ul class="treeview-menu" id="yong_hu_ren_zheng_content">
                             <li><a href="{{url('fv/match')}}"><i class="fa fa-fw fa-hand-o-right"></i>指静脉认证</a></li>
                             <li><a href="{{url('loop/call')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹轮播认证</a></li>
                         </ul>
@@ -221,7 +221,7 @@
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
-                        <ul class="treeview-menu">
+                        <ul class="treeview-menu" id="ke_hu_guan_li_content">
                             <li><a href="{{url('modify/cust/info')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改已登记客户信息</a></li>
                             @if (\Illuminate\Support\Facades\Config::get('constant.app_edition')=='1')
                                 <li><a href="{{url('modify/cust/info/ready')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改已注册客户信息</a></li>
@@ -239,7 +239,7 @@
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
-                        <ul class="treeview-menu">
+                        <ul class="treeview-menu" id="shu_ju_tong_ji_content">
                             <li><a href="{{url('service/care')}}"><i class="fa fa-fw fa-hand-o-right"></i>认证结果统计</a></li>
                             <li><a href="{{url('import/confirm/result')}}"><i class="fa fa-fw fa-hand-o-right"></i>采集结果统计</a></li>
                         </ul>
@@ -251,7 +251,7 @@
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
-                        <ul class="treeview-menu">
+                        <ul class="treeview-menu" id="fen_xi_content">
                             <li><a href="{{url('statistics')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹登记检查</a></li>
                             <li><a href="{{url('analysis')}}"><i class="fa fa-fw fa-hand-o-right"></i>采集总览</a></li>
                         </ul>
@@ -263,7 +263,7 @@
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
-                        <ul class="treeview-menu">
+                        <ul class="treeview-menu" id="cao_zuo_ri_zhi_content">
                         <!--<li><a href="{{url('select/info')}}"><i class="fa fa-fw fa-hand-o-right"></i>查询用户声纹信息</a></li>-->
                             <li><a href="{{url('ivr/return/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>登记声纹返回信息</a></li>
                             <li><a href="{{url('ivr/return/loop/msg')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹认证返回信息</a></li>
@@ -278,7 +278,7 @@
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
-                        <ul class="treeview-menu">
+                        <ul class="treeview-menu" id="xi_tong_she_zhi_content">
                             <li><a href="{{url('set/staff')}}"><i class="fa fa-fw fa-hand-o-right"></i>添加新的员工</a></li>
                             <li><a href="{{url('set/project')}}"><i class="fa fa-fw fa-hand-o-right"></i>添加属地信息</a></li>
                             <li><a href="{{url('set/si')}}"><i class="fa fa-fw fa-hand-o-right"></i>添加参保类型</a></li>
@@ -293,7 +293,7 @@
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
-                        <ul class="treeview-menu">
+                        <ul class="treeview-menu" id="chao_ji_guan_li_yuan_gong_neng_content">
                             <li><a href="{{url('source/cust/data')}}"><i class="fa fa-fw fa-hand-o-right"></i>导入待采集客户信息</a></li>
                             <li><a href="{{url('edit/config')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改认证配置</a></li>
                             <li><a href="{{url('edit/staff')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改员工信息</a></li>
@@ -397,6 +397,8 @@
             get_ip_address();
 
             get_login_user_name();
+
+            get_staff_level_chinese_name();
 
             $("#yong_hu_deng_ji").on('click',function () {
                 set_treeview_active($(this).attr('id'));

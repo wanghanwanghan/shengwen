@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 @section('page_heading','客户管理')
-@section('page_heading_small','这里可以查询到的客户，都是在mysql临时表里')
+@section('page_heading_small','查询已经注册信息的客户')
 @section('section')
 
 
