@@ -112,6 +112,33 @@ function get_treeview_active() {
     },'json');
 }
 
+function modify_my_passwd() {
+
+    var url='/data/ajax';
+    var dat={
+        _token :$("input[name=_token]").val(),
+        type   :'modify_my_passwd',
+        now    :$("input[name=now]").val(),
+        new    :$("input[name=new]").val(),
+        yes    :$("input[name=yes]").val()
+    };
+
+    $.post(url,dat,function (response) {
+
+        if (response.error=='0')
+        {
+            $('#link_1').css('display','block');
+            $('#modify_my_passwd').css('display','none');
+        }else
+        {
+
+        }
+
+        layer.msg(response.msg);
+
+    },'json');
+}
+
 function get_staff_level_chinese_name() {
 
     var url='/data/ajax';

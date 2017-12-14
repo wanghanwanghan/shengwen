@@ -4788,6 +4788,51 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
+            case 'modify_my_passwd':
+
+                $now=trim(Input::get('now'));
+                $new=trim(Input::get('new'));
+                $yes=trim(Input::get('yes'));
+
+                if ($now=='' || $new=='' || $yes=='')
+                {
+                    return ['error'=>'1','msg'=>'密码不能为空'];
+                }
+
+                if (preg_match_all("/^[a-zA-Z\d_]{5,}$/",$now,$tmp)=='0')
+                {
+                    return ['error'=>'1','msg'=>'原密码中有非法字符，必须大于5位的字母数字下划线'];
+                }
+
+                if (preg_match_all("/^[a-zA-Z\d_]{5,}$/",$new,$tmp)=='0')
+                {
+                    return ['error'=>'1','msg'=>'新密码中有非法字符，必须大于5位的字母数字下划线'];
+                }
+
+                if (preg_match_all("/^[a-zA-Z\d_]{5,}$/",$yes,$tmp)=='0')
+                {
+                    return ['error'=>'1','msg'=>'确认新密码中有非法字符，必须大于5位的字母数字下划线'];
+                }
+
+                $now_passwd=StaffModel::find($this->get_data_in_session('staff_num'));
+
+                if (substr(md5($now),0,24)!=$now_passwd->staff_password)
+                {
+                    return ['error'=>'1','msg'=>'原密码错误，修改失败'];
+                }
+
+                if ($new!=$yes)
+                {
+                    return ['error'=>'1','msg'=>'新密码两次输入不统一，修改失败'];
+                }
+
+                $now_passwd->staff_password=substr(md5($new),0,24);
+                $now_passwd->save();
+
+                return ['error'=>'0','msg'=>'修改成功'];
+
+                break;
+
             case 'edit_staff':
 
                 //遍历参数

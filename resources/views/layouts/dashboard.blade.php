@@ -160,7 +160,7 @@
                         <!-- Control Sidebar Toggle Button -->
                         <li>
                             <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                            <a href="#" onclick="refresh_mail();" data-toggle="control-sidebar"><i class="fa fa-gears"></i></a>
+                            <a href="#" onclick="refresh_mail();" data-toggle="control-sidebar"><i class="fa fa-windows"></i></a>
                         </li>
                     </ul>
                 </div>
@@ -330,11 +330,10 @@
 
         <!-- Control Sidebar -->
         <aside class="control-sidebar control-sidebar-dark">
-            <!-- Create the tabs -->
             <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
                 <li class="active">
                     <a href="#control-sidebar-home-tab" data-toggle="tab">
-                        收件箱
+                        <i class="fa fa-envelope-o"></i>
                     </a>
                 </li>
                 <li>
@@ -344,9 +343,8 @@
                     </a>
                 </li>
             </ul>
-            <!-- Tab panes -->
+
             <div class="tab-content">
-                <!-- Home tab content -->
                 <div class="tab-pane active" id="control-sidebar-home-tab">
                     <ul id="mail_ul" class="control-sidebar-menu">
                         <li>
@@ -362,24 +360,34 @@
                             </a>
                         </li>
                     </ul>
-                    <!-- /.control-sidebar-menu -->
-
                 </div>
-                <!-- /.tab-pane -->
-                <!-- Stats tab content -->
-                <div class="tab-pane" id="control-sidebar-stats-tab">Stats Tab Content</div>
-                <!-- /.tab-pane -->
-                <!-- Settings tab content -->
+
                 <div class="tab-pane" id="control-sidebar-settings-tab">
                     <h3 class="control-sidebar-heading"></h3>
                     <div class="form-group">
-                        <label class="control-sidebar-subheading">
-                        </label>
-                        <p>
-                        </p>
+
+                        <a class="btn btn-block btn-default" id="link_1" onclick="$(this).css('display','none');$('#modify_my_passwd').css('display','block')">修改登陆密码</a>
+
+                        <div id="modify_my_passwd" style="display: none">
+                            <input type="password" class="form-control" name="now" placeholder="原密码">
+                            <input type="password" class="form-control" name="new" placeholder="新密码">
+                            <input type="password" class="form-control" name="yes" placeholder="确认新密码">
+                            <a class="btn btn-block btn-primary" onclick="modify_my_passwd();">确定</a>
+                            <a class="btn btn-block btn-danger" onclick="$('#link_1').css('display','block');$('#modify_my_passwd').css('display','none')">取消</a>
+                        </div>
+
                     </div>
                 </div>
-                <!-- /.tab-pane -->
+
+                {{--<div class="tab-pane" id="control-sidebar-settings-tab">--}}
+                    {{--<h3 class="control-sidebar-heading"></h3>--}}
+                    {{--<div class="form-group">--}}
+                        {{--<label class="control-sidebar-subheading">--}}
+                        {{--</label>--}}
+                        {{--<p>--}}
+                        {{--</p>--}}
+                    {{--</div>--}}
+                {{--</div>--}}
             </div>
         </aside>
         <!-- /.control-sidebar -->
