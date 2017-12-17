@@ -1199,6 +1199,101 @@ class DataController extends Controller
 
                 break;
 
+            case 'refresh_ready':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=5;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                //查询当天的数据
+                $time=date('Y-m-d');
+
+                //查询的字段
+                $get=
+                    [
+                        'cust_num',
+                        'cust_id',
+                        'cust_project',
+                        'cust_si_type',
+                        'cust_name',
+                        'cust_review_num',
+                        'cust_register_flag',
+                        'cust_relation_flag',
+                        'cust_death_flag'
+                    ];
+
+                //得到这个用户可以看见的地区和参保类型
+                foreach (Session::get('user') as $row)
+                {
+                    //$proj=explode(',',$row['staff_project']);
+                    $type=explode(',',$row['staff_si_type']);
+                }
+
+                //得到当前用户的所有地区，因为数据库中只存了一部分
+                $my_tmp=$this->before_insert_check_projectlevel(0,1);
+                $proj=$my_tmp;
+
+                //总页数
+                //$cnt_page=intval(ceil(CustModel_tianmen_ready::where('created_at','like',$time.'%')
+                //        ->where(['cust_review_flag'=>'1','cust_type'=>'A'])
+                //        ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)->count()/$limit));
+                $cnt_page=intval(ceil(CustModel_tianmen_ready::where(['cust_review_flag'=>'1','cust_type'=>'A'])
+                        ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)->count()/$limit));
+
+                //第二个where条件只要第一年审人的数据
+                //$model=CustModel_tianmen_ready::where('created_at','like',$time.'%')
+                //    ->where(['cust_review_flag'=>'1','cust_type'=>'A'])
+                //    ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)
+                //    ->orderBy('cust_num','desc')->offset($offset)->limit($limit)->get($get)->toArray();
+                $model=CustModel_tianmen_ready::where(['cust_review_flag'=>'1','cust_type'=>'A'])
+                    ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)
+                    ->orderBy('cust_num','desc')->offset($offset)->limit($limit)->get($get)->toArray();
+
+                //把查询到的数据中，数字转换成中文
+                foreach ($model as &$row)
+                {
+                    $row['cust_project']=ProjectModel::where(['project_id'=>$row['cust_project']])->first()->project_name;
+                    $row['cust_si_type']=SiTypeModel::where(['si_id'=>$row['cust_si_type']])->first()->si_name;
+
+                    //查看第一年审人有没有被标记为去世
+                    if ($row['cust_death_flag']=='1')
+                    {
+                        $row['cust_register_flag']='3';
+                    }
+
+                    unset($row['cust_death_flag']);
+
+                    //添加上第二年审人信息，如果有的话
+                    if ($row['cust_relation_flag']!='0')
+                    {
+                        $row['cust_relation_flag']=CustModel_tianmen_ready::where(['cust_num'=>$row['cust_relation_flag']])
+                            ->get(['cust_num','cust_name','cust_register_flag','cust_death_flag'])
+                            ->toArray();
+
+                        //查看第二年审人有没有被标记为去世
+                        foreach ($row['cust_relation_flag'] as &$val)
+                        {
+                            if ($val['cust_death_flag']=='1')
+                            {
+                                $val['cust_register_flag']='3';
+                            }
+
+                            unset($val['cust_death_flag']);
+                        }
+                    }
+                }
+
+                //dd($model);
+
+                return ['error'=>'0','msg'=>'数据读取成功','pages'=>$cnt_page,'data'=>$model];
+
+                break;
+
             case 'select_data_A':
 
                 $select_info=[];
@@ -1328,6 +1423,43 @@ class DataController extends Controller
                 }
 
                 $model=$tmp_one;
+
+                if (Config::get('constant.app_edition')=='1' && $which_table=='cust_ready')
+                {
+                    //这种情况是解决显示临时表中的数据时，如果查询的身份证号码是第二年审人的，信息显示不全
+                    if (count($model[0]) > 3)
+                    {
+                        //该数据是第一年审人
+                        if ($model[0]['cust_relation_flag']!='0')
+                        {
+                            $tmp1=CustModel_tianmen_ready::find($model[0]['cust_relation_flag']);
+                            $tmp2=[['cust_num'=>$tmp1->cust_num,'cust_name'=>$tmp1->cust_name,'cust_register_flag'=>$tmp1->cust_register_flag]];
+                            $model[0]['cust_relation_flag']=$tmp2;
+                        }
+                    }else
+                    {
+                        //该数据是第二年审人
+                        $tmp1=array_flatten($model);
+                        $tmp2=CustModel_tianmen_ready::where('cust_relation_flag',$tmp1[0])->get($get)->toArray();
+                        foreach ($tmp2 as &$rowwww)
+                        {
+                            //查看有没有被标记为去世
+                            if ($rowwww['cust_death_flag']=='1')
+                            {
+                                $rowwww['cust_register_flag']='3';
+                            }
+
+                            unset($rowwww['cust_review_flag']);
+                            unset($rowwww['cust_death_flag']);
+
+                            $rowwww['cust_relation_flag']=$model[0]['cust_relation_flag'];
+                        }
+
+                        $model=$tmp2;
+                    }
+                }
+
+                //dd($model);
 
                 return ['error'=>'0','msg'=>'查询成功','data'=>$model];
 

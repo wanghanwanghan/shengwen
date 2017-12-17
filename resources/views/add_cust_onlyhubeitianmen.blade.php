@@ -27,10 +27,10 @@
                     <td style="width: 190px;">
                         <div>
                             @if($staff_name=='yes')
-                                <input type="text" class="form-control" name="cust_review_num" placeholder="认证号码">
+                                <input type="text" class="form-control" name="cust_review_num" placeholder="认证电话">
                             @else
-                                <input type="text" disabled class="form-control" placeholder="认证号码">
-                                <input type="text" style="display: none" class="form-control" name="cust_review_num" placeholder="认证号码">
+                                <input type="text" disabled class="form-control" placeholder="认证电话">
+                                <input type="text" style="display: none" class="form-control" name="cust_review_num" placeholder="认证电话">
                             @endif
                         </div>
                     </td>
@@ -101,7 +101,7 @@
                     </td>
                     <td style="width: 190px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_address" placeholder="常驻地址">
+                            <input type="text" class="form-control" name="cust_address" placeholder="常住地址">
                         </div>
                     </td>
                     <td style="width: 190px;">
@@ -192,7 +192,7 @@
         </tr>
         </form>
         <tr style="background-color: rgb(255, 255, 255);">
-            <th style="text-align: center;">用户编号</th>
+            <th id="custID_or_custNUM" style="text-align: center;">用户编号</th>
             <th style="text-align: center;">所属区域</th>
             <th style="text-align: center;">参保类型</th>
             <th style="text-align: center;">用户姓名</th>
@@ -223,6 +223,7 @@
             }else
             {
                 $("#table_chinese_name").html('已注册');
+                refresh_ready();
             }
 
             var url ='/data/ajax';

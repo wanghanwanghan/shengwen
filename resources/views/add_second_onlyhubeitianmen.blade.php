@@ -138,7 +138,7 @@
                             </td>
                             <td style="width: 190px;">
                                 <div>
-                                    <input type="text" class="form-control" name="cust_address" placeholder="常驻地址">
+                                    <input type="text" class="form-control" name="cust_address" placeholder="常住地址">
                                 </div>
                             </td>
                             <td style="width: 190px;">
@@ -395,6 +395,199 @@
                     type   :'get_wait_register_customer_info_tianmen',
                     key    :$("input[name=cust_bank_num]").val(),
                     tip    :''
+                };
+
+                //need
+                var arr=[
+                    'id','p_name','idcard','si_num','sex','bank','c_name','birthday','c_day','r_day'
+                ];
+
+                $.post(url,data,function (response) {
+
+                    if (response.error=='0')
+                    {
+                        //客户姓名控件
+                        $("#duoren_div_1").children().remove();
+                        var select_input=$("<select style='padding-left: 8px' id=personName name=cust_name class=form-control></select>");
+                        $("#duoren_div_1").append(select_input);
+
+                        //如果多条数据，只遍历出客户姓名，添加到控件
+                        var myi=1;
+
+                        $.each(response.data,function (k1,v1) {
+
+                            $.each(v1,function (k2,v2) {
+
+                                if (myi<=10)
+                                {
+                                    if (k2=='id')
+                                    {
+                                        $("#add_second_ready").attr('name',v2);
+                                    }
+
+                                    if (k2=='p_name')
+                                    {
+                                        $("#personName").append("<option value="+$("#add_second_ready").attr('name')+">"+v2+"</option>");
+                                    }
+
+                                    if (k2=='idcard')
+                                    {
+                                        $("#certNumber").val(v2);
+                                    }
+
+                                    if (k2=='si_num')
+                                    {
+                                        $("input[name=cust_si_id]").val(v2);
+                                    }
+
+                                    if (k2=='sex')
+                                    {
+                                        $("input[name=cust_sex]").val(v2);
+                                    }
+
+                                    if (k2=='bank')
+                                    {
+                                        $("input[name=cust_bank_num]").val(v2);
+                                    }
+
+                                    if (k2=='c_name')
+                                    {
+                                        $("input[name=cust_c_name]").val(v2);
+                                    }
+
+                                    if (k2=='birthday')
+                                    {
+                                        $("input[name=cust_birthday]").val(v2);
+                                    }
+
+                                    if (k2=='c_day')
+                                    {
+                                        $("input[name=cust_c_day]").val(v2);
+                                    }
+
+                                    if (k2=='r_day')
+                                    {
+                                        $("input[name=cust_r_day]").val(v2);
+                                    }
+
+                                    myi++;
+                                }else {
+
+                                    if (k2=='id')
+                                    {
+                                        $("#add_second_ready").attr('other',v2);
+                                    }
+
+                                    if (k2=='p_name')
+                                    {
+                                        $("#personName").append("<option value="+$("#add_second_ready").attr('other')+">"+v2+"</option>");
+                                    }
+
+                                }
+
+                            });
+
+                        });
+
+                        layer.msg(response.msg);
+
+                        //给选择框绑定change事件
+                        $("#personName").change(function () {
+
+                            var url ='/data/ajax';
+                            var data={
+                                _token :$("input[name=_token]").val(),
+                                type   :'get_wait_register_customer_info',
+                                key    :$("#personName").val(),
+                                tip    :'pid'
+                            };
+
+                            $.post(url,data,function (response) {
+
+                                if (response.error=='0')
+                                {
+                                    $.each(response.data,function (k2,v2) {
+
+                                        if (k2=='id')
+                                        {
+                                            $("#add_second_ready").attr('name',v2);
+                                        }
+
+                                        if (k2=='idcard')
+                                        {
+                                            $("#certNumber").val(v2);
+                                        }
+
+                                        if (k2=='si_num')
+                                        {
+                                            $("input[name=cust_si_id]").val(v2);
+                                        }
+
+                                        if (k2=='sex')
+                                        {
+                                            $("input[name=cust_sex]").val(v2);
+                                        }
+
+                                        if (k2=='bank')
+                                        {
+                                            $("input[name=cust_bank_num]").val(v2);
+                                        }
+
+                                        if (k2=='c_name')
+                                        {
+                                            $("input[name=cust_c_name]").val(v2);
+                                        }
+
+                                        if (k2=='birthday')
+                                        {
+                                            $("input[name=cust_birthday]").val(v2);
+                                        }
+
+                                        if (k2=='c_day')
+                                        {
+                                            $("input[name=cust_c_day]").val(v2);
+                                        }
+
+                                        if (k2=='r_day')
+                                        {
+                                            $("input[name=cust_r_day]").val(v2);
+                                        }
+
+                                    });
+
+                                    layer.msg(response.msg);
+                                }
+
+
+                            });
+
+
+
+
+
+
+
+
+                        });
+
+                    }else
+                    {
+                        layer.msg(response.msg);
+                    }
+
+                },'json');
+
+            });
+
+            //给客户姓名绑定change事件
+            $("input[name=cust_name]").on('change',function () {
+
+                var url ='/data/ajax';
+                var data={
+                    _token :$("input[name=_token]").val(),
+                    type   :'get_wait_register_customer_info_tianmen',
+                    key    :$("input[name=cust_name]").val(),
+                    tip    :'cust_name'
                 };
 
                 //need

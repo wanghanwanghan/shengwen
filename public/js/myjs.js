@@ -661,7 +661,7 @@ function add_cust_A() {
             setTimeout(function ()
             {
                 location.reload();
-            },1000);
+            },800);
 
             //显示这个用户，今日处理过的用户，往日的不显示
             refresh_A();
@@ -985,6 +985,117 @@ function refresh_B(curr) {
 
 }
 
+function refresh_ready(curr) {
+
+    $("#add_cust_table tbody").children().remove();
+    $("#custID_or_custNUM").html('身份证号码');
+
+
+    //显示这个用户，今日处理过的用户，往日的不显示
+    var url ='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        page:curr||1,
+        type  :'refresh_ready'
+    };
+
+    $.post(url,data,function (response) {
+
+        if(response.error=='0')
+        {
+            layer.msg(response.msg);
+
+            //遍历返回的数据-表内容
+            for(var i=0;i<response.data.length;i++){
+
+                var tabletr=$("<tr></tr>");
+
+                $.each(response.data[i],function (k,v) {
+
+                    if (k=='cust_register_flag')
+                    {
+                        if (v=='0')
+                        {
+                            //开始注册按钮
+                            tabletr.append('<td align="center">'+'<a class="btn btn-success" onclick=api_register($(this).attr("id")); id='+response.data[i]['cust_num']+'>开始注册</a>'+'</td>');
+                        }else if (v=='3')
+                        {
+                            //客户已去世
+                            tabletr.append('<td align="center">'+'客户已去世'+'</td>');
+                        }else
+                        {
+                            //验证，删除按钮
+                            tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+response.data[i]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice_confirm($(this).attr("id")); id='+response.data[i]['cust_num']+'>删除</a>'+'</td>');
+                        }
+                    }else if (k=='cust_relation_flag')
+                    {
+                        if (v=='0')
+                        {
+                            //还没有添加第二年审人的情况
+                            tabletr.append('<td align="center">'+'<a class="btn btn-warning" onclick="add_second($(this));" id='+response.data[i]['cust_num']+'>添加第二年审人</a>'+'</td>');
+                        }else
+                        {
+                            //显示第二年审人姓名
+                            $.each(v[0],function (key,value) {
+                                if (key=='cust_name')
+                                {
+                                    tabletr.append('<td align="center">'+value+'</td>');
+                                }else if (key=='cust_register_flag')
+                                {
+                                    if (value=='0')
+                                    {
+                                        //开始注册按钮
+                                        tabletr.append('<td align="center">'+'<a class="btn btn-success" onclick=api_register($(this).attr("id")); id='+v[0]['cust_num']+'>开始注册</a>'+'</td>');
+                                    }else if (value=='3')
+                                    {
+                                        //客户已去世
+                                        tabletr.append('<td align="center">'+'客户已去世'+'</td>');
+                                    }else
+                                    {
+                                        //验证，删除按钮
+                                        tabletr.append('<td align="center">'+'<a class="btn btn-info" onclick=api_verify($(this).attr("id")); id='+v[0]['cust_num']+'>验证</a>'+'<a class="btn btn-danger" onclick=delete_cust_voice_confirm($(this).attr("id")); id='+v[0]['cust_num']+'>删除</a>'+'</td>');
+                                    }
+                                }
+                            });
+                        }
+                    }else
+                    {
+                        if (k=='cust_num')
+                        {
+
+                        }else
+                        {
+                            tabletr.append('<td align="center">'+v+'</td>');
+                        }
+                    }
+
+                });
+
+                $("#add_cust_table tbody").append(tabletr);
+
+            }
+
+            //显示分页
+            laypage({
+                cont: 'laypage1', //容器
+                pages: response.pages, //通过后台拿到的总页数
+                curr: curr || 1, //当前页
+                jump: function(obj, first){ //触发分页后的回调
+                    if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
+                        refresh_ready(obj.curr);
+                    }
+                }
+            });
+
+        }else
+        {
+            layer.alert(response.msg);
+        }
+
+    },'json');
+
+}
+
 function delete_cust_voice_confirm(id) {
 
     layer.confirm('确认要删除吗？', {
@@ -1065,6 +1176,8 @@ function add_second(id) {
 function select_data_A() {
 
     $("#add_cust_table tbody").children().remove();
+    $("#laypage1").children().remove();
+    $("#custID_or_custNUM").html('用户编号');
 
     var url ='/data/ajax';
     var data={

@@ -374,6 +374,7 @@
                             <input type="password" class="form-control" name="yes" placeholder="确认新密码">
                             <a class="btn btn-block btn-primary" onclick="modify_my_passwd();">确定</a>
                             <a class="btn btn-block btn-danger" onclick="$('#link_1').css('display','block');$('#modify_my_passwd').css('display','none')">取消</a>
+                            <p class="help-block" style="font-size: 12px;">密码规则：数字字母下划线 最少7位</p>
                         </div>
 
                     </div>
