@@ -5916,14 +5916,17 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
 
                     //查询是否有这个身份证的客户
-                    $res=OnlyTianMenModel::where(['idcard'=>trim(Input::get('key'))])->get();
+                    $res=OnlyTianMenModel::where(['idcard'=>trim(Input::get('key'))])
+                        ->where('id_in_mysql','0')
+                        ->where('id_in_ready',null)
+                        ->get();
 
                     if (!empty($res->toArray()))
                     {
                         return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
                     }else
                     {
-
+                        return ['error'=>'1','msg'=>'未找到数据'];
                     }
 
                 }
@@ -6019,7 +6022,10 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     if (Input::get('tip')=='cust_name')
                     {
-                        $res=OnlyTianMenModel::where(['p_name'=>trim(Input::get('key'))])->get();
+                        $res=OnlyTianMenModel::where(['p_name'=>trim(Input::get('key'))])
+                            ->where('id_in_mysql','0')
+                            ->where('id_in_ready',null)
+                            ->get();
 
                         if (empty($res->toArray()))
                         {
@@ -6030,7 +6036,10 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
 
                     //查询是否有这个身份证的客户
-                    $res=OnlyTianMenModel::where(['bank'=>trim(Input::get('key'))])->get();
+                    $res=OnlyTianMenModel::where(['bank'=>trim(Input::get('key'))])
+                        ->where('id_in_mysql','0')
+                        ->where('id_in_ready',null)
+                        ->get();
 
                     if (!empty($res->toArray()))
                     {

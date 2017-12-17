@@ -30,6 +30,8 @@ function get_ip_address() {
         {
             $("#ip_address").html(response.data['area']);
             $("#ip_network").html(response.data['location']);
+            //$("#ip_address").html('湖北省');
+            //$("#ip_network").html('网络正常');
         }else
         {
             layer.msg(response.msg);

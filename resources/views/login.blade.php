@@ -4,9 +4,10 @@
 	<body>
 	<div class="login-form">
 		<div class="top-login">
-			<span><img style="width: 68px;height: 68px;" src="{{asset('public/img/guohui.jpg')}}" alt=""/></span>
+{{--			<span><img style="width: 68px;height: 68px;" src="{{asset('public/img/guohui.jpg')}}" alt=""/></span>--}}
+			<span><img style="width: 68px;height: 68px;" src="{{asset('public/img/zbxl_big_logo.png')}}" alt=""/></span>
 		</div>
-		<h1>社会养老保险领取资格认证平台</h1>
+		<h1>社会养老保险领取资格综合认证平台</h1>
 		<div class="login-top">
 			{{csrf_field()}}
 			<form id="staff_login_form">
