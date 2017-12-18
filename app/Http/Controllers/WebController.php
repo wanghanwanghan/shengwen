@@ -102,8 +102,6 @@ class WebController extends Controller
             $model=CustModel_tianmen_ready::find(Input::get('id'))->toArray();
             $first_id=Input::get('id');
 
-            //dd($model);
-
             return view('add_second_onlyhubeitianmen',compact('first_id','model','staff_project','staff_si_type','confirm_type'));
         }
 

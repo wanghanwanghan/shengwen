@@ -171,9 +171,8 @@
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
             <input type="hidden" name="which_table" value="cust_a">
             <tr>
-            <td height="53" colspan="8" align="center">
-
-                <div class="input-group">
+                <td height="53" colspan="8" align="center">
+                    <div class="input-group">
                     <div class="input-group-btn">
                         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                             <span id="table_chinese_name">已登记</span>
@@ -184,12 +183,11 @@
                             <li><a onclick="change_select_table('cust_ready');">已注册</a></li>
                         </ul>
                     </div>
-                    <input style="text-align: center" name="cust_review_num" class="form-control" type="text" placeholder="手机或身份证">
-                </div>
-
-                <br><br><button style="width: 100px;" type="button" onclick="select_data_A();" class="btn btn-block btn-primary btn-sm">查询</button>
-            </td>
-        </tr>
+                        <input style="text-align: center" name="cust_review_num" class="form-control" type="text" placeholder="手机或身份证">
+                    </div>
+                    <br><a style="width: 100px;" onclick="select_data_A();" class="btn btn-block btn-primary btn-sm">查询</a>
+                </td>
+            </tr>
         </form>
         <tr style="background-color: rgb(255, 255, 255);">
             <th id="custID_or_custNUM" style="text-align: center;">用户编号</th>

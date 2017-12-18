@@ -80,7 +80,8 @@
                             <td style="width: 190px;">
                                 <div>
                                     @if(isset($model['cust_review_num']))
-                                        <input type="text" class="form-control" name="cust_review_num" value="{{$model['cust_review_num']}}"/>
+                                        <input type="text" style="display: none" class="form-control" name="cust_review_num" value="{{$model['cust_review_num']}}"/>
+                                        <input type="text" disabled class="form-control" value="{{$model['cust_review_num']}}"/>
                                     @else
                                         <input type="text" class="form-control" name="cust_review_num" placeholder="手机号码"/>
                                     @endif

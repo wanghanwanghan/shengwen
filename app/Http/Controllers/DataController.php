@@ -23,6 +23,7 @@ use App\Http\Model\VocalPrintModel;
 use App\Http\Myclass\FingerRegister;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
@@ -1242,17 +1243,49 @@ class DataController extends Controller
                 //$cnt_page=intval(ceil(CustModel_tianmen_ready::where('created_at','like',$time.'%')
                 //        ->where(['cust_review_flag'=>'1','cust_type'=>'A'])
                 //        ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)->count()/$limit));
-                $cnt_page=intval(ceil(CustModel_tianmen_ready::where(['cust_review_flag'=>'1','cust_type'=>'A'])
-                        ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)->count()/$limit));
+                //$cnt_page=intval(ceil(CustModel_tianmen_ready::where(['cust_review_flag'=>'1','cust_type'=>'A'])
+                //        ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)->count()/$limit));
+                $cnt_page=DB::table('customer_info_ready_tianmen')
+                    ->leftJoin('onlytianmen','onlytianmen.id_in_ready','=','customer_info_ready_tianmen.cust_num')
+                    ->where([
+                        'onlytianmen.id_in_mysql'=>'0',
+                        'customer_info_ready_tianmen.cust_review_flag'=>'1',
+                        'customer_info_ready_tianmen.cust_type'=>'A',
+                    ])
+                    ->select('customer_info_ready_tianmen.*')
+                    ->count();
+                $cnt_page=intval(ceil($cnt_page/$limit));
 
                 //第二个where条件只要第一年审人的数据
                 //$model=CustModel_tianmen_ready::where('created_at','like',$time.'%')
                 //    ->where(['cust_review_flag'=>'1','cust_type'=>'A'])
                 //    ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)
                 //    ->orderBy('cust_num','desc')->offset($offset)->limit($limit)->get($get)->toArray();
-                $model=CustModel_tianmen_ready::where(['cust_review_flag'=>'1','cust_type'=>'A'])
-                    ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)
-                    ->orderBy('cust_num','desc')->offset($offset)->limit($limit)->get($get)->toArray();
+                //$model=CustModel_tianmen_ready::where(['cust_review_flag'=>'1','cust_type'=>'A'])
+                //    ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)
+                //    ->orderBy('cust_num','desc')->offset($offset)->limit($limit)->get($get)->toArray();
+                $model=DB::table('customer_info_ready_tianmen')
+                    ->leftJoin('onlytianmen','onlytianmen.id_in_ready','=','customer_info_ready_tianmen.cust_num')
+                    ->where([
+                        'onlytianmen.id_in_mysql'=>'0',
+                        'customer_info_ready_tianmen.cust_review_flag'=>'1',
+                        'customer_info_ready_tianmen.cust_type'=>'A',
+                    ])
+                    ->select(
+                        'customer_info_ready_tianmen.cust_num',
+                        'customer_info_ready_tianmen.cust_id',
+                        'customer_info_ready_tianmen.cust_project',
+                        'customer_info_ready_tianmen.cust_si_type',
+                        'customer_info_ready_tianmen.cust_name',
+                        'customer_info_ready_tianmen.cust_review_num',
+                        'customer_info_ready_tianmen.cust_register_flag',
+                        'customer_info_ready_tianmen.cust_relation_flag',
+                        'customer_info_ready_tianmen.cust_death_flag'
+                    )
+                    ->offset($offset)->limit($limit)
+                    ->get();
+
+                $this->object2array($model);
 
                 //把查询到的数据中，数字转换成中文
                 foreach ($model as &$row)
@@ -1367,8 +1400,22 @@ class DataController extends Controller
                     {
                         $model=CustModel_tianmen_ready::where($select_info)->whereIn('cust_project',$proj)
                             ->whereIn('cust_si_type',$type)->orderBy('cust_num','desc')
-                            ->get($get)->toArray();
+                            ->get($get);
 
+                        if (!empty($model->toArray()))
+                        {
+                            $tmp=OnlyTianMenModel::where('id_in_ready',$model[0]->cust_num)->get();
+                            if ($tmp[0]->id_in_mysql=='0')
+                            {
+                                $model=$model->toArray();
+                            }else
+                            {
+                                $model=[];
+                            }
+                        }else
+                        {
+                            $model=$model->toArray();
+                        }
                     }elseif ($which_table=='cust_a')
                     {
                         $model=CustModel::where($select_info)->whereIn('cust_project',$proj)
