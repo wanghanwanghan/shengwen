@@ -51,8 +51,16 @@ function setCertificateData(result)
 	$("#id_img_pers").attr("src","data:image/jpg;base64,"+imgData);
 	$("#personIdPhoto").val(imgData);
 	$("#personPhoto").val("");
-	
-	$("#personName").val(result.Certificate.Name);
+
+    //20171219 15:06修改
+	if ($.trim($("#personName").val())!='')
+	{
+
+	}else
+	{
+        $("#personName").val(result.Certificate.Name);
+	}
+
 	$("#gender").val(result.Certificate.Sex);
 	$("#nation").val(result.Certificate.Nation);
 	$("#address").val(result.Certificate.Address);

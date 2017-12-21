@@ -41,7 +41,7 @@
                     </td>
                     <td style="width: 190px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_birthday" placeholder="出生年月">
+                            <input type="text" class="form-control" disabled name="cust_birthday" placeholder="出生年月">
                         </div>
                     </td>
                     <td style="width: 190px;" onclick="select_project();">
@@ -72,12 +72,12 @@
                     </td>
                     <td style="width: 190px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_sex" placeholder="性别">
+                            <input type="text" class="form-control" disabled name="cust_sex" placeholder="性别">
                         </div>
                     </td>
                     <td style="width: 190px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_c_day" placeholder="参工年月">
+                            <input type="text" class="form-control" disabled name="cust_c_day" placeholder="参工年月">
                         </div>
                     </td>
                     <td style="width: 190px;">
@@ -106,12 +106,12 @@
                     </td>
                     <td style="width: 190px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_c_name" placeholder="工作单位">
+                            <input type="text" class="form-control" disabled name="cust_c_name" placeholder="工作单位">
                         </div>
                     </td>
                     <td style="width: 190px;">
                         <div>
-                            <input type="text" class="form-control" name="cust_r_day" placeholder="退休年月">
+                            <input type="text" class="form-control" disabled name="cust_r_day" placeholder="退休年月">
                         </div>
                     </td>
                     <td style="width: 190px;">
@@ -218,6 +218,7 @@
             if (mytable=='cust_a')
             {
                 $("#table_chinese_name").html('已登记');
+                location.reload();
             }else
             {
                 $("#table_chinese_name").html('已注册');
@@ -289,6 +290,14 @@
 
                                     if (k2=='si_num')
                                     {
+                                        if (v2=='')
+                                        {
+                                            $("input[name=cust_si_id]").removeAttr('readonly');
+                                        }else
+                                        {
+                                            $("input[name=cust_si_id]").attr('readonly','readonly');
+                                        }
+
                                         $("input[name=cust_si_id]").val(v2);
                                     }
 
@@ -299,6 +308,14 @@
 
                                     if (k2=='bank')
                                     {
+                                        if (v2=='')
+                                        {
+                                            $("input[name=cust_bank_num]").removeAttr('readonly');
+                                        }else
+                                        {
+                                            $("input[name=cust_bank_num]").attr('readonly','readonly');
+                                        }
+
                                         $("input[name=cust_bank_num]").val(v2);
                                     }
 
@@ -482,6 +499,14 @@
 
                                     if (k2=='si_num')
                                     {
+                                        if (v2=='')
+                                        {
+                                            $("input[name=cust_si_id]").removeAttr('readonly');
+                                        }else
+                                        {
+                                            $("input[name=cust_si_id]").attr('readonly','readonly');
+                                        }
+
                                         $("input[name=cust_si_id]").val(v2);
                                     }
 
@@ -492,6 +517,14 @@
 
                                     if (k2=='bank')
                                     {
+                                        if (v2=='')
+                                        {
+                                            $("input[name=cust_bank_num]").removeAttr('readonly');
+                                        }else
+                                        {
+                                            $("input[name=cust_bank_num]").attr('readonly','readonly');
+                                        }
+
                                         $("input[name=cust_bank_num]").val(v2);
                                     }
 
@@ -675,6 +708,14 @@
 
                                     if (k2=='si_num')
                                     {
+                                        if (v2=='')
+                                        {
+                                            $("input[name=cust_si_id]").removeAttr('readonly');
+                                        }else
+                                        {
+                                            $("input[name=cust_si_id]").attr('readonly','readonly');
+                                        }
+
                                         $("input[name=cust_si_id]").val(v2);
                                     }
 
@@ -685,6 +726,14 @@
 
                                     if (k2=='bank')
                                     {
+                                        if (v2=='')
+                                        {
+                                            $("input[name=cust_bank_num]").removeAttr('readonly');
+                                        }else
+                                        {
+                                            $("input[name=cust_bank_num]").attr('readonly','readonly');
+                                        }
+
                                         $("input[name=cust_bank_num]").val(v2);
                                     }
 

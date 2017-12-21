@@ -26,9 +26,11 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-    public function object2array(&$object) {
-        $object =  json_decode( json_encode( $object),true);
-        return  $object;
+    public function object2array(&$object)
+    {
+        $object=json_decode(json_encode($object),true);
+
+        return $object;
     }
 
     //判断身份证照片是否存在

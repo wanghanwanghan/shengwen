@@ -1282,6 +1282,7 @@ class DataController extends Controller
                         'customer_info_ready_tianmen.cust_relation_flag',
                         'customer_info_ready_tianmen.cust_death_flag'
                     )
+                    ->orderBy('customer_info_ready_tianmen.cust_num','desc')
                     ->offset($offset)->limit($limit)
                     ->get();
 

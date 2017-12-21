@@ -10,13 +10,13 @@ use App\Http\Myclass\FingerRegister;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
 class TestController extends Controller
 {
     public function test_1()
     {
-
 
 
 
@@ -111,13 +111,15 @@ class TestController extends Controller
     }
 
     //过滤敏感词
-    public function filterword()
+    public function filterword($black_word,$a)
     {
-        $black_word=['','',''];
+        //黑名单词汇
+        //$black_word=['','',''];
 
         $tmp=array_combine($black_word,array_fill(0,count($black_word),'*'));
 
-        $a='';
+        //需要过滤的句子
+        //$a='';
 
         return strtr($a,$tmp);
     }
