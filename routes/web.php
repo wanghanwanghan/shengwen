@@ -73,6 +73,8 @@ Route::group(['middleware'=>['LoginMiddleware','DataStatisticsMiddleware']],func
     //导出认证结果 => 采集结果统计
     Route::get('import/confirm/result','WebController@import_confirm_result');
 
+    Route::get('export/tianmen/result','WebController@export_tianmen_result');
+
 });
 
 //分析

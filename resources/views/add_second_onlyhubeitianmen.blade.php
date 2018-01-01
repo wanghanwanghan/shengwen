@@ -164,7 +164,7 @@
                             </td>
                             <td style="width: 190px;" align="center">
                                 <div class="checkbox">
-                                    <a style="width: 100px;" onclick="add_second_for_first_only_tianmen();" class="btn btn-block btn-primary btn-sm">添加</a>
+                                    <a style="width: 100px;" onclick="add_second_for_first_only_tianmen();" class="btn btn-block btn-primary btn-sm">登记</a>
                                 </div>
                             </td>
                             <td style="width: 190px;" align="center">

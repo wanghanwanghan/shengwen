@@ -88,34 +88,206 @@
 
         function modify_cust_info_click() {
 
-            $('#modify_bank_num').editable({
-                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
-                title: "",                   //编辑框的标题
-                disabled: false,             //是否禁用编辑
-                emptytext: "空",             //空值的默认文本
-                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
-                validate: function (value) { //字段验证
-                    //判断是不是空**********************************
-                    if (!$.trim(value)) {
-                        return '不能为空';
+            $.ajax({
+                url:'/data/ajax',
+                type:'POST',
+                cache:false,
+                async:false,//true为异步，false为同步
+                dataType:'JSON',
+                data:{
+                    _token:$("input[name=_token]").val(),
+                    type:'get_data_in_session'
+                },
+                success:function(data,textStatus)
+                {
+                    if ($.inArray('11',data.data)==-1)
+                    {
+                        window.staff_level='no';
+                    }else
+                    {
+                        window.staff_level='yes';
                     }
-                    //*********************************************
-                    //修改数据*************************************
-                    var url ='/data/ajax';
-                    var data={
-                        _token:$("input[name=_token]").val(),
-                        type  :'modify_bank_num',
-                        key   :value,
-                        pid   :$("#modify_pid").html()
-                    };
-                    $.post(url,data,function (response) {
-                        if(response.error=='0')
-                        {layer.msg(response.msg);}
-                        else {layer.msg(response.msg);}
-                    },'json');
-                    //*********************************************
+                },
+                error:function(XMLHttpRequest,textStatus,errorThrown)
+                {
+
+                },
+                beforeSend:function(XMLHttpRequest)
+                {
+
+                },
+                complete:function(XMLHttpRequest,textStatus)
+                {
+
                 }
             });
+
+            if (staff_level=='yes')
+            {
+                $('#modify_bank_num').editable({
+                    type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                    title: "",                   //编辑框的标题
+                    disabled: false,             //是否禁用编辑
+                    emptytext: "空",             //空值的默认文本
+                    mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                    validate: function (value) { //字段验证
+                        //判断是不是空**********************************
+                        if (!$.trim(value)) {
+                            return '不能为空';
+                        }
+                        //*********************************************
+                        //修改数据*************************************
+                        var url ='/data/ajax';
+                        var data={
+                            _token:$("input[name=_token]").val(),
+                            type  :'modify_bank_num',
+                            key   :value,
+                            pid   :$("#modify_pid").html()
+                        };
+                        $.post(url,data,function (response) {
+                            if(response.error=='0')
+                            {layer.msg(response.msg);}
+                            else {layer.msg(response.msg);}
+                        },'json');
+                        //*********************************************
+                    }
+                });
+
+                $('#modify_cust_name').editable({
+                    type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                    title: "",                   //编辑框的标题
+                    disabled: false,             //是否禁用编辑
+                    emptytext: "空",             //空值的默认文本
+                    mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                    validate: function (value) { //字段验证
+                        //判断是不是空**********************************
+                        if (!$.trim(value)) {
+                            return '不能为空';
+                        }
+                        //*********************************************
+                        //判断姓名是不是中文****************************
+                        var pattern=/^[\u4E00-\u9FA5]{1,10}$/;
+                        var res=pattern.test(value);
+                        if (res==false) {
+                            return '必须是中文';
+                        }
+                        //*********************************************
+                        //修改数据*************************************
+                        var url ='/data/ajax';
+                        var data={
+                            _token:$("input[name=_token]").val(),
+                            type  :'modify_cust_name',
+                            key   :value,
+                            pid   :$("#modify_pid").html(),
+                            stype :$('select[name=vv_or_fv]').val()
+                        };
+                        $.post(url,data,function (response) {
+                            if(response.error=='0')
+                            {layer.msg(response.msg);}
+                            else {layer.msg(response.msg);}
+                        },'json');
+                        //*********************************************
+                    }
+                });
+
+                $('#modify_cust_id').editable({
+                    type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                    title: "",                   //编辑框的标题
+                    disabled: false,             //是否禁用编辑
+                    emptytext: "空",             //空值的默认文本
+                    mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                    validate: function (value) { //字段验证
+                        //判断是不是空**********************************
+                        if (!$.trim(value)) {
+                            return '不能为空';
+                        }
+                        //*********************************************
+                        //判断身份证号正确性****************************
+                        if (!check_id_card(value)) {
+                            return '号码错误';
+                        }
+                        //*********************************************
+                        //修改数据*************************************
+                        var url ='/data/ajax';
+                        var data={
+                            _token:$("input[name=_token]").val(),
+                            type  :'modify_cust_id',
+                            key   :value,
+                            pid   :$("#modify_pid").html(),
+                            stype :$('select[name=vv_or_fv]').val()
+                        };
+                        $.post(url,data,function (response) {
+                            if(response.error=='0')
+                            {layer.msg(response.msg);}
+                            else {layer.msg(response.msg);}
+                        },'json');
+                        //*********************************************
+                    }
+                });
+
+                $('#modify_cust_si_id').editable({
+                    type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                    title: "",                   //编辑框的标题
+                    disabled: false,             //是否禁用编辑
+                    emptytext: "空",             //空值的默认文本
+                    mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                    validate: function (value) { //字段验证
+                        //判断是不是空**********************************
+                        //可以是空
+                        //*********************************************
+                        //判断社保号正确性******************************
+                        //不判断了
+                        //*********************************************
+                        //修改数据*************************************
+                        var url ='/data/ajax';
+                        var data={
+                            _token:$("input[name=_token]").val(),
+                            type  :'modify_cust_si_id',
+                            key   :$.trim(value),
+                            pid   :$("#modify_pid").html(),
+                            stype :$('select[name=vv_or_fv]').val()
+                        };
+                        $.post(url,data,function (response) {
+                            if(response.error=='0')
+                            {layer.msg(response.msg);}
+                            else {layer.msg(response.msg);}
+                        },'json');
+                        //*********************************************
+                    }
+                });
+
+                $('#modify_cust_address').editable({
+                    type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                    title: "",                   //编辑框的标题
+                    disabled: false,             //是否禁用编辑
+                    emptytext: "空",             //空值的默认文本
+                    mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                    validate: function (value) { //字段验证
+                        //判断是不是空**********************************
+                        //不用判断
+                        //*********************************************
+                        //判断手机号码正确性*****************************
+                        //不用判断
+                        //*********************************************
+                        //修改数据*************************************
+                        var url ='/data/ajax';
+                        var data={
+                            _token:$("input[name=_token]").val(),
+                            type  :'modify_cust_address',
+                            key   :$.trim(value),
+                            pid   :$("#modify_pid").html(),
+                            stype :$('select[name=vv_or_fv]').val()
+                        };
+                        $.post(url,data,function (response) {
+                            if(response.error=='0')
+                            {layer.msg(response.msg);}
+                            else {layer.msg(response.msg);}
+                        },'json');
+                        //*********************************************
+                    }
+                });
+
+            }
 
             $("#cust_delete_btn").click(function () {
                 layer.confirm('确认真的要删除吗', {
@@ -186,109 +358,6 @@
                 });
             });
 
-            $('#modify_cust_name').editable({
-                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
-                title: "",                   //编辑框的标题
-                disabled: false,             //是否禁用编辑
-                emptytext: "空",             //空值的默认文本
-                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
-                validate: function (value) { //字段验证
-                    //判断是不是空**********************************
-                    if (!$.trim(value)) {
-                        return '不能为空';
-                    }
-                    //*********************************************
-                    //判断姓名是不是中文****************************
-                    var pattern=/^[\u4E00-\u9FA5]{1,10}$/;
-                    var res=pattern.test(value);
-                    if (res==false) {
-                        return '必须是中文';
-                    }
-                    //*********************************************
-                    //修改数据*************************************
-                    var url ='/data/ajax';
-                    var data={
-                        _token:$("input[name=_token]").val(),
-                        type  :'modify_cust_name',
-                        key   :value,
-                        pid   :$("#modify_pid").html(),
-                        stype :$('select[name=vv_or_fv]').val()
-                    };
-                    $.post(url,data,function (response) {
-                        if(response.error=='0')
-                        {layer.msg(response.msg);}
-                        else {layer.msg(response.msg);}
-                    },'json');
-                    //*********************************************
-                }
-            });
-
-            $('#modify_cust_id').editable({
-                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
-                title: "",                   //编辑框的标题
-                disabled: false,             //是否禁用编辑
-                emptytext: "空",             //空值的默认文本
-                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
-                validate: function (value) { //字段验证
-                    //判断是不是空**********************************
-                    if (!$.trim(value)) {
-                        return '不能为空';
-                    }
-                    //*********************************************
-                    //判断身份证号正确性****************************
-                    if (!check_id_card(value)) {
-                        return '号码错误';
-                    }
-                    //*********************************************
-                    //修改数据*************************************
-                    var url ='/data/ajax';
-                    var data={
-                        _token:$("input[name=_token]").val(),
-                        type  :'modify_cust_id',
-                        key   :value,
-                        pid   :$("#modify_pid").html(),
-                        stype :$('select[name=vv_or_fv]').val()
-                    };
-                    $.post(url,data,function (response) {
-                        if(response.error=='0')
-                        {layer.msg(response.msg);}
-                        else {layer.msg(response.msg);}
-                    },'json');
-                    //*********************************************
-                }
-            });
-
-            $('#modify_cust_si_id').editable({
-                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
-                title: "",                   //编辑框的标题
-                disabled: false,             //是否禁用编辑
-                emptytext: "空",             //空值的默认文本
-                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
-                validate: function (value) { //字段验证
-                    //判断是不是空**********************************
-                    //可以是空
-                    //*********************************************
-                    //判断社保号正确性******************************
-                    //不判断了
-                    //*********************************************
-                    //修改数据*************************************
-                    var url ='/data/ajax';
-                    var data={
-                        _token:$("input[name=_token]").val(),
-                        type  :'modify_cust_si_id',
-                        key   :$.trim(value),
-                        pid   :$("#modify_pid").html(),
-                        stype :$('select[name=vv_or_fv]').val()
-                    };
-                    $.post(url,data,function (response) {
-                        if(response.error=='0')
-                        {layer.msg(response.msg);}
-                        else {layer.msg(response.msg);}
-                    },'json');
-                    //*********************************************
-                }
-            });
-
             $('#modify_cust_review_num').editable({
                 type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
                 title: "",                   //编辑框的标题
@@ -342,37 +411,6 @@
                     var data={
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_phone_num',
-                        key   :$.trim(value),
-                        pid   :$("#modify_pid").html(),
-                        stype :$('select[name=vv_or_fv]').val()
-                    };
-                    $.post(url,data,function (response) {
-                        if(response.error=='0')
-                        {layer.msg(response.msg);}
-                        else {layer.msg(response.msg);}
-                    },'json');
-                    //*********************************************
-                }
-            });
-
-            $('#modify_cust_address').editable({
-                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
-                title: "",                   //编辑框的标题
-                disabled: false,             //是否禁用编辑
-                emptytext: "空",             //空值的默认文本
-                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
-                validate: function (value) { //字段验证
-                    //判断是不是空**********************************
-                    //不用判断
-                    //*********************************************
-                    //判断手机号码正确性*****************************
-                    //不用判断
-                    //*********************************************
-                    //修改数据*************************************
-                    var url ='/data/ajax';
-                    var data={
-                        _token:$("input[name=_token]").val(),
-                        type  :'modify_cust_address',
                         key   :$.trim(value),
                         pid   :$("#modify_pid").html(),
                         stype :$('select[name=vv_or_fv]').val()

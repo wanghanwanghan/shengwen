@@ -17,6 +17,7 @@ use App\Http\Model\ProjectModel;
 use App\Http\Model\SendMailModel;
 use App\Http\Model\SiTypeModel;
 use App\Http\Model\SocialInsuranceModel;
+use App\Http\Model\StaffAddCustomerModel;
 use App\Http\Model\StaffLoginPlaceModel;
 use App\Http\Model\StaffModel;
 use App\Http\Model\VocalPrintModel;
@@ -679,9 +680,19 @@ class DataController extends Controller
                         //备用手机号
                         if ($row['name']=='cust_phone_num')
                         {
-                            //不验证了
-
-                            $cust_info['cust_phone_num']=trim($row['value']);
+                            if (Config::get('constant.app_edition')=='1')
+                            {
+                                if (trim($row['value'])=='')
+                                {
+                                    return ['error'=>'1','msg'=>'请输入备用手机'];
+                                }else
+                                {
+                                    $cust_info['cust_phone_num']=trim($row['value']);
+                                }
+                            }else
+                            {
+                                $cust_info['cust_phone_num']=trim($row['value']);
+                            }
                         }
 
                         //地址
@@ -778,6 +789,7 @@ class DataController extends Controller
                         if ($cust_info['cust_review_num']=='')
                         {
                             $model=CustModel_tianmen_ready::create($cust_info);
+                            StaffAddCustomerModel::create(['sac_staff_pid'=>$this->get_data_in_session('staff_num'),'sac_customer_pid'=>$model->cust_num,'sac_table_name'=>'customer_info_ready_tianmen']);
 
                             //把第一年审人和第二年审人关联起来
                             $first=CustModel_tianmen_ready::find(Input::get('cust_relation_flag'));
@@ -785,6 +797,7 @@ class DataController extends Controller
                         }else
                         {
                             $model=CustModel::create($cust_info);
+                            StaffAddCustomerModel::create(['sac_staff_pid'=>$this->get_data_in_session('staff_num'),'sac_customer_pid'=>$model->cust_num,'sac_table_name'=>'customer_info']);
 
                             //把第一年审人和第二年审人关联起来
                             $first=CustModel::find(Input::get('cust_relation_flag'));
@@ -797,10 +810,12 @@ class DataController extends Controller
                         {
                             $cust_belong='1';
                             $model=CustModel_tianmen_ready::create($cust_info);
+                            StaffAddCustomerModel::create(['sac_staff_pid'=>$this->get_data_in_session('staff_num'),'sac_customer_pid'=>$model->cust_num,'sac_table_name'=>'customer_info_ready_tianmen']);
                         }else
                         {
                             $cust_belong='2';
                             $model=CustModel::create($cust_info);
+                            StaffAddCustomerModel::create(['sac_staff_pid'=>$this->get_data_in_session('staff_num'),'sac_customer_pid'=>$model->cust_num,'sac_table_name'=>'customer_info']);
                         }
                     }
 
@@ -1006,6 +1021,7 @@ class DataController extends Controller
                 if ($need_update)
                 {
                     $model=CustModel::create($cust_info);
+                    StaffAddCustomerModel::create(['sac_staff_pid'=>$this->get_data_in_session('staff_num'),'sac_customer_pid'=>$model->cust_num,'sac_table_name'=>'customer_info']);
 
                     //把第一年审人和第二年审人关联起来
                     $first=CustModel::find(Input::get('cust_relation_flag'));
@@ -1014,6 +1030,7 @@ class DataController extends Controller
                 }else
                 {
                     $model=CustModel::create($cust_info);
+                    StaffAddCustomerModel::create(['sac_staff_pid'=>$this->get_data_in_session('staff_num'),'sac_customer_pid'=>$model->cust_num,'sac_table_name'=>'customer_info']);
                 }
 
                 //储存用户的身份证头像
@@ -3810,7 +3827,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         $data['银行账号']='<a id=modify_bank_num>'.$bank_num[0]->cust_bank_num.'</a>';
                     }
 
-                    $data['年审号码']='<a id=modify_cust_review_num>'.$res[0]['cust_review_num'].'</a>';
+                    $data['认证电话']='<a id=modify_cust_review_num>'.$res[0]['cust_review_num'].'</a>';
                     $data['备用号码']='<a id=modify_cust_phone_num>'.$res[0]['cust_phone_num'].'</a>';
                     $data['客户地址']='<a id=modify_cust_address>'.$res[0]['cust_address'].'</a>';
 
@@ -4007,7 +4024,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         $data['银行账号']='<a id=modify_bank_num>'.$bank_num[0]->cust_bank_num.'</a>';
                     }
 
-                    $data['年审号码']='<a id=modify_cust_review_num>'.$res[0]['cust_review_num'].'</a>';
+                    $data['认证电话']='<a id=modify_cust_review_num>'.$res[0]['cust_review_num'].'</a>';
                     $data['备用号码']='<a id=modify_cust_phone_num>'.$res[0]['cust_phone_num'].'</a>';
                     $data['客户地址']='<a id=modify_cust_address>'.$res[0]['cust_address'].'</a>';
 
@@ -4161,6 +4178,10 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         if (Input::get('edit')=='1')
                         {
                             $res=CustModel_tianmen_ready::find($pid);
+                            $id_in_bank_table=CustBankNumModel::where(['cust_id'=>$res->cust_id])->get();
+                            $id_in_bank_table=$id_in_bank_table[0];
+                            $id_in_bank_table->cust_id=$id;
+                            $id_in_bank_table->save();
                         }else
                         {
                             $res=CustModel::find($pid);
@@ -4806,7 +4827,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             }
 
                             //base表的关联字段清空
-                            $data_in_base_table->id_in_ready='';
+                            $data_in_base_table->id_in_ready=null;
                             $data_in_base_table->save();
 
                             //处理银行账号表中的数据
@@ -5952,6 +5973,173 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
+            case 'export_tianmen_result':
+
+                //用户传入的页
+                $now_page=Input::get('page');
+
+                //每页显示几条数据
+                $limit=10;
+
+                //从第几条开始显示
+                $offset=($now_page-1)*$limit;
+
+                foreach (Input::get('key') as $row)
+                {
+                    if ($row['name']=='star_date')
+                    {
+                        if (trim($row['value'])=='')
+                        {
+                            return ['error'=>'1','msg'=>'开始时间不能是空'];
+                        }else
+                        {
+                            $start_time=trim($row['value']).' 00:00:00';
+                            $info['start_time']=$start_time;
+                        }
+                    }
+
+                    if ($row['name']=='stop_date')
+                    {
+                        if (trim($row['value'])=='')
+                        {
+                            return ['error'=>'1','msg'=>'结束时间不能是空'];
+                        }else
+                        {
+                            $stop_time=trim($row['value']).' 23:59:59';
+                            $info['stop_time']=$stop_time;
+                        }
+                    }
+
+                    if ($row['name']=='cust_project')
+                    {
+                        $cust_project=trim($row['value']);
+                        $info['cust_project']=$cust_project;
+                    }
+
+                    if ($row['name']=='cust_si_type')
+                    {
+                        $cust_si_type=trim($row['value']);
+                        $info['cust_si_type']=$cust_si_type;
+                    }
+
+                    if ($row['name']=='export_type')
+                    {
+                        $export_type=trim($row['value']);
+                        $info['export_type']=$export_type;
+                    }
+                }
+
+                //得到当前结点的所有子节点
+                foreach ($this->get_all_children($cust_project) as $row)
+                {
+                    $proj[]=$row['project_id'];
+                }
+                $proj[]=$cust_project;
+
+                //要导出什么样的数据
+                if ($export_type=='0')
+                {
+                    //已经注册
+                    $cust_data=DB::table('customer_info_ready_tianmen')
+                        ->leftJoin('onlytianmen','onlytianmen.id_in_ready','=','customer_info_ready_tianmen.cust_num')
+                        ->leftJoin('customer_bank_num','customer_bank_num.cust_id','=','customer_info_ready_tianmen.cust_id')
+                        ->whereBetween('customer_info_ready_tianmen.created_at',[$start_time,$stop_time])
+                        ->where(['customer_info_ready_tianmen.cust_si_type'=>$cust_si_type])
+                        ->whereIn('customer_info_ready_tianmen.cust_project',$proj)
+                        ->select(
+                            'customer_info_ready_tianmen.cust_num',
+                            'customer_info_ready_tianmen.cust_name',
+                            'onlytianmen.idcard',
+                            'customer_info_ready_tianmen.cust_id',
+                            'customer_info_ready_tianmen.cust_si_id',
+                            'customer_info_ready_tianmen.cust_review_num',
+                            'customer_info_ready_tianmen.cust_phone_num',
+                            'onlytianmen.bank',
+                            'customer_bank_num.cust_bank_num',
+                            'onlytianmen.birthday',
+                            'onlytianmen.c_day',
+                            'onlytianmen.r_day',
+                            'customer_info_ready_tianmen.cust_si_type',
+                            'customer_info_ready_tianmen.cust_project'
+                        )
+                        ->orderBy('customer_info_ready_tianmen.cust_num','desc')
+                        ->get();
+
+                    //生物特征设置成空，因为是注册客户，不是采集客户
+                    foreach ($cust_data as &$row)
+                    {
+                        $tmp1=(array)$row;
+
+                        //处理异常身份证和银行卡号
+                        if ($tmp1['idcard']==$tmp1['cust_id'])
+                        {
+                            unset($tmp1['idcard']);
+                        }else
+                        {
+                            $tmp1['cust_id']=$tmp1['idcard'].'||'.$tmp1['cust_id'];
+                            unset($tmp1['idcard']);
+                        }
+                        if ($tmp1['bank']==$tmp1['cust_bank_num'])
+                        {
+                            unset($tmp1['bank']);
+                        }else
+                        {
+                            $tmp1['cust_bank_num']=$tmp1['bank'].'||'.$tmp1['cust_bank_num'];
+                            unset($tmp1['bank']);
+                        }
+
+                        //参保类型变成中文
+                        $tmp1['cust_si_type']=$this->get_si_type_name($tmp1['cust_si_type']);
+
+                        //区域信息变成中文
+                        $tmp1['cust_project']=$this->get_project_name($tmp1['cust_project']);
+
+                        //生物特征设置成空
+                        $tmp1['tezheng']='';
+                        $tmp[]=$tmp1;
+                    }
+
+                    $cust_data=$tmp;
+
+                    //自制分页
+                    for ($i=$offset;$i<=$limit*Input::get('page')-1;$i++)
+                    {
+                        if (!isset($cust_data[$i]))
+                        {
+                            break;
+                        }
+
+                        //一页数据
+                        $data[]=$cust_data[$i];
+                    }
+
+                    //总页数
+                    $cnt_page=intval(ceil(count($cust_data)/$limit));
+
+                }elseif ($export_type=='1')
+                {
+                    //未注册
+
+                }elseif ($export_type=='2')
+                {
+                    //已经登记
+
+                }elseif ($export_type=='3')
+                {
+                    //未登记
+
+                }elseif ($export_type=='4')
+                {
+
+                }else
+                {}
+
+                //dd($data);
+
+                return ['error'=>'0','msg'=>'ok','data'=>$data,'pages'=>$cnt_page,'count_data'=>count($cust_data)];
+
+                break;
+
             case 'get_wait_register_customer_info':
 
                 if (Config::get('constant.app_edition')=='1')
@@ -6378,6 +6566,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $cust_info['cust_last_confirm_date']=date('Y-m-d',time());
 
                 $model=CustFVModel::create($cust_info);
+                StaffAddCustomerModel::create(['sac_staff_pid'=>$this->get_data_in_session('staff_num'),'sac_customer_pid'=>$model->cust_num,'sac_table_name'=>'customer_fv_info']);
 
                 //储存用户的身份证头像
                 Storage::disk('IDcard')->put($model->cust_id,$cust_photo);
@@ -6725,7 +6914,19 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     if ($row['name']=='cust_phone_num')
                     {
-                        $cust_info['cust_phone_num']=$row['value'];
+                        if (Config::get('constant.app_edition')=='1')
+                        {
+                            if (trim($row['value'])=='')
+                            {
+                                return ['error'=>'1','msg'=>'请输入备用手机'];
+                            }else
+                            {
+                                $cust_info['cust_phone_num']=trim($row['value']);
+                            }
+                        }else
+                        {
+                            $cust_info['cust_phone_num']=trim($row['value']);
+                        }
                     }
 
                     if ($row['name']=='cust_address')
@@ -6755,6 +6956,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     //客户数据已经准备好，下面开始插入数据库
                     $res=CustModel_tianmen_ready::create($cust_info);
+                    StaffAddCustomerModel::create(['sac_staff_pid'=>$this->get_data_in_session('staff_num'),'sac_customer_pid'=>$res->cust_num,'sac_table_name'=>'customer_info_ready_tianmen']);
 
                     $first_model->cust_relation_flag=$res->cust_num;
                     $first_model->save();
@@ -6786,6 +6988,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     //客户数据已经准备好，下面开始插入数据库
                     $res=CustModel::create($cust_info);
+                    StaffAddCustomerModel::create(['sac_staff_pid'=>$this->get_data_in_session('staff_num'),'sac_customer_pid'=>$res->cust_num,'sac_table_name'=>'customer_info']);
 
                     $first_model->cust_relation_flag=$res->cust_num;
                     $first_model->save();
@@ -6876,6 +7079,12 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }
 
                 return ['error'=>'0','data'=>$level_name];
+
+                break;
+
+            case 'get_data_in_session':
+
+                return ['error'=>'0','data'=>$this->get_data_in_session('staff_level')];
 
                 break;
         }

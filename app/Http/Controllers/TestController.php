@@ -19,6 +19,9 @@ class TestController extends Controller
     {
 
 
+        dd($this->get_project_name('3'));
+
+
 
 
 

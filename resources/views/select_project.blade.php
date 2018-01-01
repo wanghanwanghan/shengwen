@@ -129,7 +129,7 @@
                 type   :'set_redis',
                 key    :'chose_project',
                 //value:$("#chose_project").val(),
-                time   :36000,
+                time   :360000,
                 proj_id:$("input[name=project_parent]").val()
             };
 

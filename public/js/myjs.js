@@ -1,3 +1,13 @@
+function change_Attr_val(mynode) {
+
+    var myvalue_old=mynode.attr('myvalue');
+    var html_old=mynode.html();
+
+    mynode.html(myvalue_old);
+    mynode.attr('myvalue',html_old);
+
+}
+
 function check_id_card(value){
     var arrExp = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];//加权因子
     var arrValid = [1, 0, "X", 9, 8, 7, 6, 5, 4, 3, 2];//校验码
@@ -769,7 +779,7 @@ function add_second_for_first_only_tianmen() {
 
         if(response.error=='0')
         {
-
+            parent.layer.closeAll();
         }else
         {
 

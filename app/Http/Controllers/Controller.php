@@ -33,6 +33,64 @@ class Controller extends BaseController
         return $object;
     }
 
+    //传入一个区域pid，得到包含此pid区域及其以上区域的中文名称
+    public function get_project_name($pid,$action='create')
+    {
+        //功能说明
+        //此函数用于导出数据时候，解决pid和中文名的转换时间过长
+        //
+        //原理说明
+        //不像之前在foreach里一次一次的查询数据库，此函数思路是没个pid只查询一次，然后放入redis
+        //下次遇到相同的pid，直接从redis里查询出来即可
+        //dd(ProjectModel::distinct()->pluck('project_path')->toArray());
+
+        if (Redis::get('project_chinese_name_string_'.$pid)=='')
+        {
+            //说明缓存里没有这个区域信息
+            $project_path=ProjectModel::find($pid);
+            $tmp=$project_path;//存一个模型
+            $project_path=explode('-',$project_path->project_path);
+
+            if (Redis::get('project_chinese_name_string_'.$project_path[count($project_path)-1])=='')
+            {
+                $name='';
+                for ($i=0;$i<count($project_path);$i++)
+                {
+                    $name.=ProjectModel::find($project_path[$i])->project_name;
+                }
+
+                $this->redis_set(Redis::get('project_chinese_name_string_'.$project_path[count($project_path)-1]),$name);
+
+            }else
+            {
+
+            }
+
+            $name.=$tmp->project_name;
+
+            $this->redis_set('project_chinese_name_string_'.$pid,$name);
+
+            return Redis::get('project_chinese_name_string_'.$pid);
+
+        }else
+        {
+            //有区域信息
+            return Redis::get('project_chinese_name_string_'.$pid);
+        }
+    }
+
+    public function get_si_type_name($pid,$action='create')
+    {
+        if (Redis::get('si_type_chinese_name_string_'.$pid)!='')
+        {
+            return Redis::get('si_type_chinese_name_string_'.$pid);
+        }
+
+        $this->redis_set('si_type_chinese_name_string_'.$pid,SiTypeModel::find($pid)->si_name);
+
+        return Redis::get('si_type_chinese_name_string_'.$pid);
+    }
+
     //判断身份证照片是否存在
     public function check_idcard_photo($url)
     {
