@@ -670,6 +670,61 @@ class ExcelController extends Controller
         })->store('xls')->export('xls');
     }
 
+    //导出天门专用已采集已注册未采集未注册数据
+    public function export8($key)
+    {
+        $i=0;
+
+        //这个key是个队列
+        while (1)
+        {
+            $this->redis_set('wanghantest',$i);
+
+            $i++;
+
+            if ($i=='2000')
+            {
+                break;
+            }
+
+            $one=Redis::rpop($key);
+            if ($one!='')
+            {
+                $data[]=json_decode($one,true);
+            }else
+            {
+                break;
+            }
+        }
+
+        foreach ($data as &$row)
+        {
+            $row=array_values($row);
+        }
+
+        array_unshift($data,[
+            '客户主键',
+            '客户姓名',
+            '身份证号',
+            '社保编号',
+            '认证电话',
+            '备用电话',
+            '银行账号',
+            '出生日期',
+            '参工日期',
+            '退休日期',
+            '参保类型',
+            '所属地区',
+            '生物特征'
+        ]);
+
+        Excel::create($key,function($excel) use ($data){
+            $excel->sheet('score', function($sheet) use ($data){
+                $sheet->rows($data);
+            });
+        })->store('xls')->export('xls');
+    }
+
 
 
 

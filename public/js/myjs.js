@@ -250,7 +250,21 @@ function select_project() {
         content: '/select_project'
     });
 
+}
 
+function select_project_1() {
+
+    layer.open({
+        type: 2,
+        title: '添加地区信息',
+        maxmin:false,//是否显示最大化最小化按钮
+        resize:false,//窗口是否可以拉伸
+        shadeClose: true, //点击遮罩关闭层
+        scrollbar:false,//是否允许显示滚动条
+        fixed:true,
+        area:['850px','600px'],
+        content: '/select_project_1'
+    });
 
 }
 
@@ -1134,7 +1148,7 @@ function add_btw() {
         }else
         {
             $("#add_btw").children().remove();
-            $("#add_btw").append("<select style='padding-left: 8px' type=text class=form-control name=add_btw><option value='请选择'>请选择</option><option value='有意向办理'>有意向办理</option><option value='在外地'>在外地</option><option value='行动不便'>行动不便</option></select>");
+            $("#add_btw").append("<select style='padding-left: 8px' type=text class=form-control name=add_btw><option value='请选择'>请选择</option><option value='有意向办理'>有意向办理</option><option value='在外地'>在外地</option><option value='行动不便'>行动不便</option><option value='新卡用户'>新卡用户</option><option value='老卡用户'>老卡用户</option></select>");
 
             $("select[name=add_btw]").on('change',function () {
 

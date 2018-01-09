@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
     <script src="{{asset('public/bower_components/AdminLTE/plugins/morris/morris.js')}}"></script>
 
+    {{--//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////--}}
     <div class="box box-info">
         <div class="box-header with-border">
 
@@ -23,6 +24,9 @@
                     <select style="padding-left: 8px" name="vv_or_fv" class="form-control">
                         <option value="1">声纹</option>
                         <option value="2">指静脉</option>
+                        @if(\Illuminate\Support\Facades\Config::get('constant.app_edition')=='1')
+                            <option value="3">已注册客户</option>
+                        @endif
                     </select>
                 </div>
             </form>
@@ -43,6 +47,7 @@
             </div>
         </div>
     </div>
+    {{--//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////--}}
 
     <script>
 

@@ -889,6 +889,12 @@ class Controller extends BaseController
     //判断身份证是否正确
     public function is_idcard($id)
     {
+        //15位身份证不让通过
+        if (strlen($id)!='18')
+        {
+            return FALSE;
+        }
+
         $id = strtoupper($id);
         $regx = "/(^\d{15}$)|(^\d{17}([0-9]|X)$)/";
         $arr_split = array();

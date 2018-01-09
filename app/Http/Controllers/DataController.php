@@ -1764,6 +1764,10 @@ class DataController extends Controller
 
                     if ($row['name']=='vv_or_fv')
                     {
+                        if ($row['value']=='3')
+                        {
+                            //天门专用版本，查看已经注册的客户
+                        }
                         $vv_or_fv=$row['value'];
                     }
                 }
@@ -1900,6 +1904,71 @@ class DataController extends Controller
 
                         return ['error'=>'0','msg'=>'成功','data'=>$morris_data,'data_total'=>array_sum(array_count_values($time))];
                     }
+                }elseif ($vv_or_fv=='3')
+                {
+                    //得到年-月
+                    $yearAndmonth=substr($date,0,strlen($date)-3);
+
+                    //得到当前年的当前月有多少天
+                    $unixTime=strtotime($date);
+                    $day=date('t',$unixTime);
+
+                    //从数据库中查询符合条件的数据
+                    $data=CustModel_tianmen_ready::whereIn('cust_project',$id_of_proj)->where('created_at','like',$yearAndmonth.'%')
+                        ->orderBy('created_at','asc')
+                        ->get(['created_at'])
+                        ->toArray();
+
+                    //只要数组中的创建时间
+                    foreach ($data as $row)
+                    {
+                        $tmp[]=$row['created_at'];
+                    }
+
+                    $data=isset($tmp) ? $tmp : null;
+
+                    if (empty($data))
+                    {
+                        return ['error'=>'1','msg'=>'没有匹配到数据'];
+                    }else
+                    {
+                        //上面已经得到当前月的所有数据了
+                        foreach ($data as $row)
+                        {
+                            //只保留年月日
+                            $time[]=substr($row,0,10);
+                        }
+
+                        //制造返回给前端页面的数组
+                        foreach (array_count_values($time) as $k=>$v)
+                        {
+                            $morris_data[]=['y'=>$k,'mytarget'=>$v];
+                        }
+
+                        //得到当前日期的前缀
+                        $prefix=date('Y-m-',$unixTime);
+
+                        //补齐丢失的日期
+                        for ($i=1;$i<=$day;$i++)
+                        {
+                            if (strlen($i)=='1')
+                            {
+                                if (!array_key_exists($prefix.'0'.$i,array_count_values($time)))
+                                {
+                                    $morris_data[]=['y'=>$prefix.'0'.$i,'mytarget'=>'0'];
+                                }
+                            }else
+                            {
+                                if (!array_key_exists($prefix.$i,array_count_values($time)))
+                                {
+                                    $morris_data[]=['y'=>$prefix.$i,'mytarget'=>'0'];
+                                }
+                            }
+                        }
+
+                        return ['error'=>'0','msg'=>'成功','data'=>$morris_data,'data_total'=>array_sum(array_count_values($time))];
+                    }
+
                 }else
                 {
 
@@ -6119,14 +6188,222 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }elseif ($export_type=='1')
                 {
                     //未注册
+                    $cust_data=DB::table('onlytianmen')
+                        ->where(['id_in_ready'=>null])
+                        ->select(
+                            'id',
+                            'p_name',
+                            'idcard',
+                            'si_num',
+                            'is_register',//这个字段无用，用来替换，调整格式
+                            'phone',
+                            'bank',
+                            'birthday',
+                            'c_day',
+                            'r_day'
+                        )
+                        ->orderBy('id','desc')
+                        ->get();
+
+                    //生物特征设置成空，因为是注册客户，不是采集客户
+                    foreach ($cust_data as &$row)
+                    {
+                        $tmp1=(array)$row;
+
+                        //
+                        $tmp1['is_register']='';
+
+                        //参保类型变成中文
+                        $tmp1['cust_si_type']='';
+
+                        //区域信息变成中文
+                        $tmp1['cust_project']='';
+
+                        //生物特征设置成空
+                        $tmp1['tezheng']='';
+                        $tmp[]=$tmp1;
+                    }
+
+                    $cust_data=$tmp;
+
+                    //自制分页
+                    for ($i=$offset;$i<=$limit*Input::get('page')-1;$i++)
+                    {
+                        if (!isset($cust_data[$i]))
+                        {
+                            break;
+                        }
+
+                        //一页数据
+                        $data[]=$cust_data[$i];
+                    }
+
+                    $change_key=[
+                        'p_name'=>'cust_name',
+                        'idcard'=>'cust_id',
+                        'si_num'=>'cust_si_id',
+                        'phone'=>'cust_phone_num',
+                        'bank'=>'cust_bank_num',
+                        'is_register'=>'cust_review_num'
+                    ];
+
+                    $data=$this->change_arr_key($data,$change_key);
+
+                    //总页数
+                    $cnt_page=intval(ceil(count($cust_data)/$limit));
 
                 }elseif ($export_type=='2')
                 {
                     //已经登记
+                    $cust_data=DB::table('customer_info')
+                        ->leftJoin('onlytianmen','onlytianmen.id_in_mysql','=','customer_info.cust_num')
+                        ->leftJoin('customer_bank_num','customer_bank_num.cust_id','=','customer_info.cust_id')
+                        ->whereBetween('customer_info.created_at',[$start_time,$stop_time])
+                        ->where(['customer_info.cust_si_type'=>$cust_si_type])
+                        ->whereIn('customer_info.cust_project',$proj)
+                        ->select(
+                            'customer_info.cust_num',
+                            'customer_info.cust_name',
+                            'onlytianmen.idcard',
+                            'customer_info.cust_id',
+                            'customer_info.cust_si_id',
+                            'customer_info.cust_review_num',
+                            'customer_info.cust_phone_num',
+                            'onlytianmen.bank',
+                            'customer_bank_num.cust_bank_num',
+                            'onlytianmen.birthday',
+                            'onlytianmen.c_day',
+                            'onlytianmen.r_day',
+                            'customer_info.cust_si_type',
+                            'customer_info.cust_project'
+                        )
+                        ->orderBy('customer_info.cust_num','desc')
+                        ->get();
+
+                    //生物特征设置成空，因为是注册客户，不是采集客户
+                    foreach ($cust_data as &$row)
+                    {
+                        $tmp1=(array)$row;
+
+                        //处理异常身份证和银行卡号
+                        if ($tmp1['idcard']==$tmp1['cust_id'])
+                        {
+                            unset($tmp1['idcard']);
+                        }else
+                        {
+                            $tmp1['cust_id']=$tmp1['idcard'].'||'.$tmp1['cust_id'];
+                            unset($tmp1['idcard']);
+                        }
+                        if ($tmp1['bank']==$tmp1['cust_bank_num'])
+                        {
+                            unset($tmp1['bank']);
+                        }else
+                        {
+                            $tmp1['cust_bank_num']=$tmp1['bank'].'||'.$tmp1['cust_bank_num'];
+                            unset($tmp1['bank']);
+                        }
+
+                        //参保类型变成中文
+                        $tmp1['cust_si_type']=$this->get_si_type_name($tmp1['cust_si_type']);
+
+                        //区域信息变成中文
+                        $tmp1['cust_project']=$this->get_project_name($tmp1['cust_project']);
+
+                        //生物特征设置
+                        if (empty(CustFVModel::where(['cust_id'=>$tmp1['cust_id']])->get()->toArray()))
+                        {
+                            $tmp1['tezheng']='声纹';
+                        }else
+                        {
+                            $tmp1['tezheng']='声纹/指静脉';
+                        }
+
+                        $tmp[]=$tmp1;
+                    }
+
+                    $cust_data=$tmp;
+
+                    //自制分页
+                    for ($i=$offset;$i<=$limit*Input::get('page')-1;$i++)
+                    {
+                        if (!isset($cust_data[$i]))
+                        {
+                            break;
+                        }
+
+                        //一页数据
+                        $data[]=$cust_data[$i];
+                    }
+
+                    //总页数
+                    $cnt_page=intval(ceil(count($cust_data)/$limit));
 
                 }elseif ($export_type=='3')
                 {
                     //未登记
+                    $cust_data=DB::table('onlytianmen')
+                        ->where(['id_in_mysql'=>'0'])
+                        ->select(
+                            'id',
+                            'p_name',
+                            'idcard',
+                            'si_num',
+                            'is_register',//这个字段无用，用来替换，调整格式
+                            'phone',
+                            'bank',
+                            'birthday',
+                            'c_day',
+                            'r_day'
+                        )
+                        ->orderBy('id','desc')
+                        ->get();
+
+                    //生物特征设置成空，因为是注册客户，不是采集客户
+                    foreach ($cust_data as &$row)
+                    {
+                        $tmp1=(array)$row;
+
+                        //
+                        $tmp1['is_register']='';
+
+                        //参保类型变成中文
+                        $tmp1['cust_si_type']='';
+
+                        //区域信息变成中文
+                        $tmp1['cust_project']='';
+
+                        //生物特征设置成空
+                        $tmp1['tezheng']='';
+                        $tmp[]=$tmp1;
+                    }
+
+                    $cust_data=$tmp;
+
+                    //自制分页
+                    for ($i=$offset;$i<=$limit*Input::get('page')-1;$i++)
+                    {
+                        if (!isset($cust_data[$i]))
+                        {
+                            break;
+                        }
+
+                        //一页数据
+                        $data[]=$cust_data[$i];
+                    }
+
+                    $change_key=[
+                        'p_name'=>'cust_name',
+                        'idcard'=>'cust_id',
+                        'si_num'=>'cust_si_id',
+                        'phone'=>'cust_phone_num',
+                        'bank'=>'cust_bank_num',
+                        'is_register'=>'cust_review_num'
+                    ];
+
+                    $data=$this->change_arr_key($data,$change_key);
+
+                    //总页数
+                    $cnt_page=intval(ceil(count($cust_data)/$limit));
 
                 }elseif ($export_type=='4')
                 {
@@ -6134,7 +6411,59 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }else
                 {}
 
-                //dd($data);
+                //是否需要导出
+                if (Input::get('is_export')=='1')
+                {
+                    //需要导出
+                    //$cust_data是上面查出来的所有数据
+                    $time=time();
+                    $redis_key='export_'.$this->get_data_in_session('staff_num').'_'.$time;
+
+                    //放入队列
+                    foreach ($cust_data as $myrow)
+                    {
+                        Redis::lpush($redis_key,json_encode($myrow));
+                    }
+                    Redis::expire($redis_key,36000);
+
+                    $excel_file=env('APP_URL').'/storage/exports/'.$redis_key.'.xls';
+
+                    //通知mongo
+                    //$res=$mongo->Finger->CustTemplate->find(['_id'=>$pid]);
+                    //$res->ivrlog->test1->insert([]);
+                    if ($export_type=='0')
+                    {
+                        $export_type='已注册';
+                    }
+                    if ($export_type=='1')
+                    {
+                        $export_type='未注册';
+                    }
+                    if ($export_type=='2')
+                    {
+                        $export_type='已登记';
+                    }
+                    if ($export_type=='3')
+                    {
+                        $export_type='未登记';
+                    }
+                    $mongoOBJ=$this->mymongo();
+                    $mongoOBJ->shengwenlog->export_tianmen_1->insert([
+                        'staff_pid'=>$this->get_data_in_session('staff_num'),
+                        'staff_name'=>$this->get_data_in_session('staff_name'),
+                        'export_time'=>substr($info['start_time'],0,10).'到'.substr($info['stop_time'],0,10),
+                        'export_proj'=>$this->get_project_name($info['cust_project']),
+                        'export_si'=>$this->get_si_type_name($info['cust_si_type']),
+                        'export_type'=>$export_type,
+                        'redis_key'=>$redis_key,
+                        'redis_len'=>count($cust_data),
+                        'filename'=>$excel_file,
+                        'created_at'=>time()
+                    ]);
+
+                    //触发导出路由
+                    file_get_contents(env('APP_URL').'/export8/'.$redis_key);
+                }
 
                 return ['error'=>'0','msg'=>'ok','data'=>$data,'pages'=>$cnt_page,'count_data'=>count($cust_data)];
 
@@ -6162,7 +6491,18 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
                     }else
                     {
-                        return ['error'=>'1','msg'=>'未找到数据'];
+                        $res=OnlyTianMenModel::where(['idcard'=>trim(Input::get('key'))])
+                            ->where('id_in_mysql','<>','0')
+                            ->orWhere('id_in_ready','<>',null)
+                            ->get()->toArray();
+
+                        if (empty($res))
+                        {
+                            return ['error'=>'1','msg'=>'未找到数据'];
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'已经注册'];
+                        }
                     }
 
                 }
@@ -6271,7 +6611,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
                     }
 
-                    //查询是否有这个身份证的客户
+                    //查询是否有这个客户
                     $res=OnlyTianMenModel::where(['bank'=>trim(Input::get('key'))])
                         ->where('id_in_mysql','0')
                         ->where('id_in_ready',null)
@@ -6282,7 +6622,18 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
                     }else
                     {
+                        $res=OnlyTianMenModel::where(['bank'=>trim(Input::get('key'))])
+                            ->where('id_in_mysql','<>','0')
+                            ->orWhere('id_in_ready','<>',null)
+                            ->get()->toArray();
 
+                        if (empty($res))
+                        {
+                            return ['error'=>'1','msg'=>'未找到数据'];
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'已经注册'];
+                        }
                     }
                 }
 

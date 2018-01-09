@@ -18,15 +18,60 @@ class TestController extends Controller
     public function test_1()
     {
 
+        $res=$this->is_idcard('422428460816632');
 
-        dd($this->get_project_name('3'));
+        dd($res);
 
+        $myfile=fopen(public_path('wanghan.txt'),"r") or die("Unable to open file!");
 
+        $wfile=fopen(public_path('wanghan_new.txt'),"w") or die("Unable to open file!");
 
+        while(!feof($myfile))
+        {
+            $template=fgets($myfile);
 
+            $template=str_replace(["\r\n","\n"],'',$template);
 
+            $template=explode(',',$template);
 
+            $template_use_insert=$template;
 
+            $template=[$template[1]];
+
+            $arrayKey1=['c_name','si_num','p_name','idcard','sex','birthday','c_day','r_day','bank'];
+            $arrayKey=['si_num'];
+
+            $template=array_combine($arrayKey,$template);
+
+            $model=OnlyTianMenModel::where($template)->get()->toArray();
+
+            if (empty($model))
+            {
+                $txt=implode(',',$template_use_insert)."\r\n";
+
+                fwrite($wfile,$txt);
+
+                $template_use_insert=array_combine($arrayKey1,$template_use_insert);
+
+                $template_use_insert['id_in_mysql']='0';
+                $template_use_insert['id_in_ready']=null;
+                $template_use_insert['cust_type']='';
+                $template_use_insert['is_register']='';
+                $template_use_insert['is_second_reviewnum']='';
+                $template_use_insert['is_error_info']='';
+                $template_use_insert['phone']=null;
+                $template_use_insert['btw']=null;
+
+            }else
+            {
+
+            }
+        }
+
+        fclose($wfile);
+        fclose($myfile);
+
+        dd('完成');
 
     }
 

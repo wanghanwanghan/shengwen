@@ -43,7 +43,7 @@
                         </div>
 
                         <div class="col-sm-2">
-                            <a style="width: 100px;height: 34px;" onclick="create_excel();" class="btn btn-block btn-primary btn-sm">导出</a>
+                            <a id="btnOFexport" style="width: 100px;height: 34px;" onclick="create_excel();" class="btn btn-block btn-primary btn-sm">导出</a>
                         </div>
 
                     </form>
@@ -88,6 +88,7 @@
                         <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">
                             一共<<span style="color: red;" id="data_total">0</span>>条记录
                             <span id="down_this_excel">
+                                <a href="{{url('download/tianmen/result')}}">打开下载管理页</a>
                             </span>
                         </div>
                     </div>
@@ -121,9 +122,8 @@
         });
 
         //生成表格按钮
-        function create_excel(curr) {
+        function create_excel(curr,is_export) {
 
-            $("#down_this_excel").children().remove();
             $("#export_confirm_result_table tbody").children().remove();
 
             $.ajax({
@@ -136,7 +136,8 @@
                     _token:$("input[name=_token]").val(),
                     type:'export_tianmen_result',
                     key:$("#export_excel_form").serializeArray(),
-                    page  :curr||1
+                    page  :curr||1,
+                    is_export  :is_export||1
                 },
                 success:function(data,textStatus)
                 {
@@ -211,12 +212,24 @@
 
                                 if (k=='cust_si_type')
                                 {
-                                    tabletr.append('<td ondblclick="change_Attr_val($(this));" align="center" myvalue='+v+'>'+'***'+'</td>');
+                                    if (v=='')
+                                    {
+                                        tabletr.append('<td ondblclick="change_Attr_val($(this));" align="center" myvalue='+'空'+'>'+'***'+'</td>');
+                                    }else
+                                    {
+                                        tabletr.append('<td ondblclick="change_Attr_val($(this));" align="center" myvalue='+v+'>'+'***'+'</td>');
+                                    }
                                 }
 
                                 if (k=='cust_project')
                                 {
-                                    tabletr.append('<td ondblclick="change_Attr_val($(this));" align="center" myvalue='+v+'>'+'***'+'</td>');
+                                    if (v=='')
+                                    {
+                                        tabletr.append('<td ondblclick="change_Attr_val($(this));" align="center" myvalue='+'空'+'>'+'***'+'</td>');
+                                    }else
+                                    {
+                                        tabletr.append('<td ondblclick="change_Attr_val($(this));" align="center" myvalue='+v+'>'+'***'+'</td>');
+                                    }
                                 }
 
                                 if (k=='tezheng')
@@ -241,31 +254,23 @@
                             curr: curr || 1, //当前页
                             jump: function(obj, first){ //触发分页后的回调
                                 if(!first){ //点击跳页触发函数自身，并传递当前页：obj.curr
-                                    create_excel(obj.curr);
+                                    create_excel(obj.curr,0);
                                 }
                             }
                         });
-
-                        setTimeout(function ()
-                        {
-                            $("#down_this_excel").children().remove();
-                            var lable_a=$("<a href="+data.filename+" download='导出的数据.xls'>可以下载了</a>");
-                            $("#down_this_excel").append(lable_a);
-                        },5000);
                     }
                 },
                 error:function(XMLHttpRequest,textStatus,errorThrown)
                 {
-                    $("#down_this_excel").children().remove();
-                    $("#down_this_excel").append('<span>导出失败</span>');
+                    layer.msg('导出失败');
                 },
                 beforeSend:function(XMLHttpRequest)
                 {
-                    $("#down_this_excel").append('<img style="width: 25px;height: 25px;" src="{{asset('public/img/loading.gif')}}" alt=""/>');
+                    $("#btnOFexport").html('<img style="width: 25px;height: 25px;" src="{{asset('public/img/loading.gif')}}" alt=""/>');
                 },
                 complete:function(XMLHttpRequest,textStatus)
                 {
-
+                    $("#btnOFexport").html('导出');
                 }
             });
 

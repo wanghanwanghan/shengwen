@@ -662,6 +662,11 @@ class WebController extends Controller
         return view('export_tianmen_result',compact('staff_project','staff_si_type','confirm_type'));
     }
 
+    public function download_tianmen_result()
+    {
+        return view('download_tianmen_result');
+    }
+
     public function upload(Request $request)
     {
         $file=$request->file('表单名');

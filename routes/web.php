@@ -73,7 +73,11 @@ Route::group(['middleware'=>['LoginMiddleware','DataStatisticsMiddleware']],func
     //导出认证结果 => 采集结果统计
     Route::get('import/confirm/result','WebController@import_confirm_result');
 
+    //天门导出
     Route::get('export/tianmen/result','WebController@export_tianmen_result');
+
+    //天门下载管理页
+    Route::get('download/tianmen/result','WebController@download_tianmen_result');
 
 });
 
@@ -273,6 +277,7 @@ Route::get('/export5/{key}','ExcelController@export5');
 Route::get('/export6/{key}','ExcelController@export6');
 Route::get('/export7/{key}','ExcelController@export7');
 
-
+//导出天门专用已采集已注册未采集未注册数据
+Route::get('/export8/{key}','ExcelController@export8');
 
 

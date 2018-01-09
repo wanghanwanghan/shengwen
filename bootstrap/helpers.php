@@ -1,10 +1,10 @@
 <?php
 
-function route_class()
+function func_in_helpers_Get_data_in_session($myinput)
 {
-    return str_replace('.', '-', Route::currentRouteName());
+    $data=\Illuminate\Support\Facades\Session::get('user');
+    return $data[0][$myinput];
 }
-
 
 
 

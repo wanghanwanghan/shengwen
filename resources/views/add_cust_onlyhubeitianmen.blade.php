@@ -441,6 +441,7 @@
 
                     }else
                     {
+                        location.reload();
                         layer.msg(response.msg);
                     }
 
@@ -650,6 +651,7 @@
 
                     }else
                     {
+                        location.reload();
                         layer.msg(response.msg);
                     }
 

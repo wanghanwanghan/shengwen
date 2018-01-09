@@ -243,7 +243,7 @@
                             <li><a href="{{url('service/care')}}"><i class="fa fa-fw fa-hand-o-right"></i>认证结果统计</a></li>
                             <li><a href="{{url('import/confirm/result')}}"><i class="fa fa-fw fa-hand-o-right"></i>采集结果统计</a></li>
                             @if (\Illuminate\Support\Facades\Config::get('constant.app_edition')=='1')
-                                <li><a href="{{url('export/tianmen/result')}}"><i class="fa fa-fw fa-hand-o-right"></i>天门采集导出结果</a></li>
+                                <li><a href="{{url('export/tianmen/result')}}"><i class="fa fa-fw fa-hand-o-right"></i>采集导出结果</a></li>
                             @endif
                         </ul>
                     </li>
