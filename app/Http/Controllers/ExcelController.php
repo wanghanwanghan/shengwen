@@ -673,20 +673,9 @@ class ExcelController extends Controller
     //导出天门专用已采集已注册未采集未注册数据
     public function export8($key)
     {
-        $i=0;
-
         //这个key是个队列
         while (1)
         {
-            $this->redis_set('wanghantest',$i);
-
-            $i++;
-
-            if ($i=='2000')
-            {
-                break;
-            }
-
             $one=Redis::rpop($key);
             if ($one!='')
             {
@@ -718,11 +707,11 @@ class ExcelController extends Controller
             '生物特征'
         ]);
 
-        Excel::create($key,function($excel) use ($data){
+        Excel::create('export_1_1515550488',function($excel) use ($data){
             $excel->sheet('score', function($sheet) use ($data){
                 $sheet->rows($data);
             });
-        })->store('xls')->export('xls');
+        })->store('xlsx')->export('xlsx');
     }
 
 

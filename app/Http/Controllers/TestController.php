@@ -12,10 +12,27 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
+use Mockery\Exception;
 
 class TestController extends Controller
 {
     public function test_1()
+    {
+
+
+        $rds=CustModel::where(['cust_name'=>'dfdf'])->first();
+
+        dd($rds);
+
+
+
+
+
+
+
+
+    }
+    public function test_2()
     {
 
         $res=$this->is_idcard('422428460816632');

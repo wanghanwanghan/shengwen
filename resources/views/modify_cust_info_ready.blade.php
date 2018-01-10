@@ -102,7 +102,7 @@
                 {
                     if ($.inArray('11',data.data)==-1)
                     {
-                         window.staff_level='no';
+                        window.staff_level='no';
                     }else
                     {
                         window.staff_level='yes';

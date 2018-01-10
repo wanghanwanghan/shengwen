@@ -4912,10 +4912,20 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         {
                             if (Config::get('constant.app_edition')=='1')
                             {
-                                $cust=OnlyTianMenModel::where(['id_in_mysql'=>$pid])->get();
-                                $cust=$cust[0];
-                                $cust->id_in_mysql='0';
-                                $cust->save();
+                                $cust=OnlyTianMenModel::where(['id_in_mysql'=>$pid])->first();
+
+                                if ($cust=='')
+                                {
+                                    //返回空是说明，这个客户没有在基础表里，可能是直接成为的a类客户
+                                }else
+                                {
+                                    //在基础表里
+                                    $cust->id_in_mysql='0';
+                                    $cust->save();
+                                }
+
+                                $bank=CustBankNumModel::where(['cust_id'=>$res->cust_id])->first();
+                                $bank->delete();
                             }
 
                             $this->voice_file_ModifyOrDelete($pid,'delete');
@@ -6414,6 +6424,13 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 //是否需要导出
                 if (Input::get('is_export')=='1')
                 {
+
+                    $res=Excel::load('storage/exports/export_1_1515550488.xlsx',function ($read){
+
+                        dd($read->all());
+
+                    });
+
                     //需要导出
                     //$cust_data是上面查出来的所有数据
                     $time=time();
@@ -6426,7 +6443,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
                     Redis::expire($redis_key,36000);
 
-                    $excel_file=env('APP_URL').'/storage/exports/'.$redis_key.'.xls';
+                    $excel_file=env('APP_URL').'/storage/exports/'.$redis_key.'.xlsx';
 
                     //通知mongo
                     //$res=$mongo->Finger->CustTemplate->find(['_id'=>$pid]);
@@ -6492,9 +6509,9 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }else
                     {
                         $res=OnlyTianMenModel::where(['idcard'=>trim(Input::get('key'))])
-                            ->where('id_in_mysql','<>','0')
-                            ->orWhere('id_in_ready','<>',null)
-                            ->get()->toArray();
+                            ->where(function ($query){
+                                $query->where('id_in_mysql','<>','0')->orWhere('id_in_ready','<>',null);
+                            })->get()->toArray();
 
                         if (empty($res))
                         {
@@ -6623,9 +6640,9 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }else
                     {
                         $res=OnlyTianMenModel::where(['bank'=>trim(Input::get('key'))])
-                            ->where('id_in_mysql','<>','0')
-                            ->orWhere('id_in_ready','<>',null)
-                            ->get()->toArray();
+                            ->where(function ($query){
+                                $query->where('id_in_mysql','<>','0')->orWhere('id_in_ready','<>',null);
+                            })->get()->toArray();
 
                         if (empty($res))
                         {
