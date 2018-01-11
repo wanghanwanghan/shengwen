@@ -671,8 +671,20 @@ class ExcelController extends Controller
     }
 
     //导出天门专用已采集已注册未采集未注册数据
-    public function export8($key)
+    public function export8()
     {
+        $key=Input::all();
+
+        $this->system_log('添加属地','123123123');
+
+        dd('123123');
+
+
+
+
+
+
+
         //这个key是个队列
         while (1)
         {
@@ -707,7 +719,7 @@ class ExcelController extends Controller
             '生物特征'
         ]);
 
-        Excel::create('export_1_1515550488',function($excel) use ($data){
+        Excel::create($key,function($excel) use ($data){
             $excel->sheet('score', function($sheet) use ($data){
                 $sheet->rows($data);
             });

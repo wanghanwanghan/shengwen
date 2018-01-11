@@ -6424,13 +6424,6 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 //是否需要导出
                 if (Input::get('is_export')=='1')
                 {
-
-                    $res=Excel::load('storage/exports/export_1_1515550488.xlsx',function ($read){
-
-                        dd($read->all());
-
-                    });
-
                     //需要导出
                     //$cust_data是上面查出来的所有数据
                     $time=time();
@@ -6479,7 +6472,9 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     ]);
 
                     //触发导出路由
-                    file_get_contents(env('APP_URL').'/export8/'.$redis_key);
+                    //file_get_contents(env('APP_URL').'/export8/'.$redis_key);
+                    $curl=$this->mycurl(env('APP_URL').'/export8/',$redis_key);
+                    dd($curl);
                 }
 
                 return ['error'=>'0','msg'=>'ok','data'=>$data,'pages'=>$cnt_page,'count_data'=>count($cust_data)];
