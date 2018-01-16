@@ -6436,7 +6436,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
                     Redis::expire($redis_key,36000);
 
-                    $excel_file=env('APP_URL').'/storage/exports/'.$redis_key.'.xlsx';
+                    $excel_file=env('APP_URL').'/storage/exports/'.$redis_key.'.csv';
 
                     //通知mongo
                     //$res=$mongo->Finger->CustTemplate->find(['_id'=>$pid]);
@@ -6471,10 +6471,10 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         'created_at'=>time()
                     ]);
 
+                    $mongoOBJ->shengwenlog->export_tianmen_1->ensureIndex(['staff_pid'=>1]);
+
                     //触发导出路由
-                    //file_get_contents(env('APP_URL').'/export8/'.$redis_key);
-                    $curl=$this->mycurl(env('APP_URL').'/export8/',$redis_key);
-                    dd($curl);
+                    file_get_contents(env('APP_URL').'/export8/'.$redis_key);
                 }
 
                 return ['error'=>'0','msg'=>'ok','data'=>$data,'pages'=>$cnt_page,'count_data'=>count($cust_data)];
@@ -7448,6 +7448,59 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
             case 'get_data_in_session':
 
                 return ['error'=>'0','data'=>$this->get_data_in_session('staff_level')];
+
+                break;
+
+            case 'get_download_info_in_mongo':
+
+                $getMongo=$this->mymongo();
+
+                $model=$getMongo->shengwenlog->export_tianmen_1->find(['staff_pid'=>$this->get_data_in_session('staff_num')])
+                    ->sort(['created_at'=>-1])->limit(20)->skip(0);
+
+                //返回前台的数据
+                $finish=null;
+                $unfinish=null;
+
+                foreach ($model as $row)
+                {
+                    //队列当前长度除以队列总长度
+                    if (Redis::llen($row['redis_key']))
+                    {
+                        //不等于0
+                        $num=($row['redis_len']-Redis::llen($row['redis_key']))/$row['redis_len'];
+                        $schedule=intval(round($num,2)*100);
+                        $filename='请等待';
+
+                        $unfinish[]=[
+                            'staff_name'=>$row['staff_name'],
+                            'export_time'=>$row['export_time'],
+                            'export_proj'=>$row['export_proj'],
+                            'export_si'=>$row['export_si'],
+                            'export_type'=>$row['export_type'],
+                            'schedule'=>$schedule,
+                            'filename'=>$filename
+                        ];
+
+                    }else
+                    {
+                        //等于0
+                        $schedule=100;
+                        $filename=$row['filename'];
+
+                        $finish[]=[
+                            'staff_name'=>$row['staff_name'],
+                            'export_time'=>$row['export_time'],
+                            'export_proj'=>$row['export_proj'],
+                            'export_si'=>$row['export_si'],
+                            'export_type'=>$row['export_type'],
+                            'schedule'=>$schedule,
+                            'filename'=>$filename
+                        ];
+                    }
+                }
+
+                return ['error'=>'0','finish'=>$finish,'unfinish'=>$unfinish];
 
                 break;
         }

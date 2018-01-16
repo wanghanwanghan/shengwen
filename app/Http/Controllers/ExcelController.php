@@ -671,39 +671,10 @@ class ExcelController extends Controller
     }
 
     //导出天门专用已采集已注册未采集未注册数据
-    public function export8()
+    public function export8($key)
     {
-        $key=Input::all();
-
-        $this->system_log('添加属地','123123123');
-
-        dd('123123');
-
-
-
-
-
-
-
-        //这个key是个队列
-        while (1)
-        {
-            $one=Redis::rpop($key);
-            if ($one!='')
-            {
-                $data[]=json_decode($one,true);
-            }else
-            {
-                break;
-            }
-        }
-
-        foreach ($data as &$row)
-        {
-            $row=array_values($row);
-        }
-
-        array_unshift($data,[
+        // 头部标题
+        $csv_header=[
             '客户主键',
             '客户姓名',
             '身份证号',
@@ -717,13 +688,46 @@ class ExcelController extends Controller
             '参保类型',
             '所属地区',
             '生物特征'
-        ]);
+        ];
+        // 内容
+        //这个key是个队列
+        while (1)
+        {
+            $one=Redis::rpop($key);
+            if ($one!='')
+            {
+                $csv_body[]=json_decode($one,true);
+            }else
+            {
+                break;
+            }
+        }
 
-        Excel::create($key,function($excel) use ($data){
-            $excel->sheet('score', function($sheet) use ($data){
-                $sheet->rows($data);
-            });
-        })->store('xlsx')->export('xlsx');
+        /*
+         * 开始生成
+         * 1.首先将数组拆分成以逗号（注意需要英文）分割的字符串
+         * 2.然后加上每行的换行符号，这里建议直接使用PHP的预定义常量PHP_EOL
+         * 3.最后写入文件
+         */
+
+        //打开文件资源，不存在则创建
+        $fp=fopen(storage_path('exports/'.$key.'.csv'),'a');
+        //处理头部标题
+        $header=implode(',', $csv_header).PHP_EOL;
+        //处理内容
+        $content='';
+        foreach ($csv_body as $k => $v)
+        {
+            $content.=implode(',',$v).PHP_EOL;
+        }
+
+        //拼接
+        $csv=$header.$content;
+        //写入并关闭资源
+        fwrite($fp,$csv);
+        fclose($fp);
+
+        return;
     }
 
 

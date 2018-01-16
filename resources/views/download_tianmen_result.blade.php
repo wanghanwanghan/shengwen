@@ -4,9 +4,10 @@
 @section('section')
 
     <div class="box">
+        {{csrf_field()}}
         <div class="box-body no-padding">
             <table class="table table-condensed">
-                <tbody>
+                <thead>
                 <tr>
                     <th style="text-align: center;">员工姓名</th>
                     <th style="text-align: center;">截至时间</th>
@@ -16,65 +17,118 @@
                     <th style="text-align: center;">导出进度</th>
                     <th style="text-align: center;">文件下载</th>
                 </tr>
-
-                <div id="finish">
-
-                </div>
-
-
-
-                <div id="unfinish">
-
-                </div>
-
-
-                <tr>
-                    <td style="text-align: center;">{{func_in_helpers_Get_data_in_session('staff_name')}}</td>
-                    <td style="text-align: center;">2018-01-01至2018-01-08</td>
-                    <td style="text-align: center;">河北省涞源县涞源镇福寿禄扶手村</td>
-                    <td style="text-align: center;">企业养老</td>
-                    <td style="text-align: center;">已采集</td>
-                    <td style="text-align: center;">
-                        <span class="badge bg-green">55%</span>
-                    </td>
-                    <td style="text-align: center;">请等待</td>
-                </tr>
-
-
-
-
-
-
-
-
-
-
+                </thead>
+                <tbody id="kk">
 
                 </tbody>
             </table>
         </div>
     </div>
 
-
-
-
-
-
-
-
-
-
-    <div id="down_confirm_result_laypage" class="pagination pagination-sm no-margin pull-right">
-    </div>
-
-
-
-
-
-
     <script>
 
-    </script>
+        var url ='/data/ajax';
+        var data={
+            _token:$("input[name=_token]").val(),
+            type  :'get_download_info_in_mongo'
+        };
 
+        $.post(url,data,function (response) {
+
+            if(response.error=='0')
+            {
+                $.each(response.unfinish,function(key,value)
+                {
+                    var tabletr=$("<tr></tr>");
+
+                    $.each(response.unfinish[key],function(i,v)
+                    {
+                        if (i=='staff_name')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+v+'</td>');
+                        }
+                        if (i=='export_time')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+v+'</td>');
+                        }
+                        if (i=='export_proj')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+v+'</td>');
+                        }
+                        if (i=='export_si')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+v+'</td>');
+                        }
+                        if (i=='export_type')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+v+'</td>');
+                        }
+                        if (i=='schedule')
+                        {
+                            if (v < 100)
+                            {
+                                tabletr.append('<td style="text-align: center;"><span class="badge bg-yellow">'+v+'%'+'</span></td>');
+                            }else
+                            {
+                                tabletr.append('<td style="text-align: center;"><span class="badge bg-green">'+v+'%'+'</span></td>');
+                            }
+                        }
+                        if (i=='filename')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+v+'</td>');
+                        }
+                    });
+
+                    $("#kk").append(tabletr);
+
+                });
+
+                $.each(response.finish,function(key,value)
+                {
+                    var tabletr=$("<tr></tr>");
+
+                    $.each(response.finish[key],function(i,v)
+                    {
+                        if (i=='staff_name')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+v+'</td>');
+                        }
+                        if (i=='export_time')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+v+'</td>');
+                        }
+                        if (i=='export_proj')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+v+'</td>');
+                        }
+                        if (i=='export_si')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+v+'</td>');
+                        }
+                        if (i=='export_type')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+v+'</td>');
+                        }
+                        if (i=='schedule')
+                        {
+                            tabletr.append('<td style="text-align: center;"><span class="badge bg-green">'+v+'%'+'</span></td>');
+                        }
+                        if (i=='filename')
+                        {
+                            tabletr.append('<td style="text-align: center;">'+'<a href="'+v+'">下载</a>'+'</td>');
+                        }
+                    });
+
+                    $("#kk").append(tabletr);
+
+                });
+            }else
+            {
+                layer.msg('获取失败');
+            }
+
+        },'json');
+
+    </script>
 
 @stop

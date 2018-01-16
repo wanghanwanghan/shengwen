@@ -278,6 +278,6 @@ Route::get('/export6/{key}','ExcelController@export6');
 Route::get('/export7/{key}','ExcelController@export7');
 
 //导出天门专用已采集已注册未采集未注册数据
-Route::post('/export8','ExcelController@export8');
+Route::get('/export8/{key}','ExcelController@export8');
 
 
