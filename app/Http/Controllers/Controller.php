@@ -51,9 +51,10 @@ class Controller extends BaseController
             $tmp=$project_path;//存一个模型
             $project_path=explode('-',$project_path->project_path);
 
+            $name='';
             if (Redis::get('project_chinese_name_string_'.$project_path[count($project_path)-1])=='')
             {
-                $name='';
+                //$name='';
                 for ($i=0;$i<count($project_path);$i++)
                 {
                     $name.=ProjectModel::find($project_path[$i])->project_name;

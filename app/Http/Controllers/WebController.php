@@ -146,6 +146,15 @@ class WebController extends Controller
             $staff_project=$row['staff_project'];
             $staff_si_type=$row['staff_si_type'];
             $staff_level=$row['staff_level'];
+            $staff_name=explode('_',$row['staff_account']);
+        }
+
+        if ($staff_name[0]=='sw' || $staff_name[0]=='zbxl')
+        {
+            $staff_name='yes';
+        }else
+        {
+            $staff_name='no';
         }
 
         $staff_project=explode(',',$staff_project);
@@ -159,7 +168,13 @@ class WebController extends Controller
         $confirm_type=ConfirmTypeModel::get(['confirm_name'])->toArray();
         $confirm_type=array_flatten($confirm_type);
 
-        return view('add_cust_b',compact('staff_project','staff_si_type','confirm_type'));
+        if (Config::get('constant.app_edition')=='1')
+        {
+            return view('add_cust_onlyhubeitianmen_b',compact('staff_project','staff_si_type','confirm_type','staff_name'));
+        }else
+        {
+            return view('add_cust_b',compact('staff_project','staff_si_type','confirm_type'));
+        }
     }
 
     public function add_cust_vena()

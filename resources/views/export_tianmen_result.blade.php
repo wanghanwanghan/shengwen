@@ -68,7 +68,8 @@
                         <table id="export_confirm_result_table" class="table table-bordered table-hover dataTable" role="grid" aria-describedby="example2_info">
                             <thead>
                             <th style="text-align: center">姓名</th>
-                            <th style="text-align: center">身份证</th>
+                            <th style="text-align: center">原身份证</th>
+                            <th style="text-align: center">现身份证</th>
                             <th style="text-align: center">社保编号</th>
                             <th style="text-align: center">认证号码</th>
                             <th style="text-align: center">备用号码</th>
@@ -159,6 +160,17 @@
                                 if (k=='cust_name')
                                 {
                                     tabletr.append('<td align="center">'+v+'</td>');
+                                }
+
+                                if (k=='idcard')
+                                {
+                                    if (v=='')
+                                    {
+                                        tabletr.append('<td ondblclick="change_Attr_val($(this));" align="center" myvalue='+'空'+'>'+'***'+'</td>');
+                                    }else
+                                    {
+                                        tabletr.append('<td ondblclick="change_Attr_val($(this));" align="center" myvalue='+v+'>'+'***'+'</td>');
+                                    }
                                 }
 
                                 if (k=='cust_id')

@@ -677,7 +677,8 @@ class ExcelController extends Controller
         $csv_header=[
             '客户主键',
             '客户姓名',
-            '身份证号',
+            '原身份证',
+            '现身份证',
             '社保编号',
             '认证电话',
             '备用电话',
