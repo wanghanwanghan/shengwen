@@ -197,7 +197,13 @@ class WebController extends Controller
         $confirm_type=ConfirmTypeModel::get(['confirm_name'])->toArray();
         $confirm_type=array_flatten($confirm_type);
 
-        return view('add_cust_vena',compact('staff_project','staff_si_type','confirm_type'));
+        if (Config::get('constant.app_edition')=='1')
+        {
+            return view('add_cust_vena_onlyhubeitianmen',compact('staff_project','staff_si_type','confirm_type'));
+        }else
+        {
+            return view('add_cust_vena',compact('staff_project','staff_si_type','confirm_type'));
+        }
     }
 
     public function fv_match()

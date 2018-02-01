@@ -164,6 +164,11 @@ Route::group(['middleware'=>['LoginMiddleware','RootMiddleware']],function (){
         return view('show_staff_list');
     });
 
+    //查看员工工作量
+    Route::get('show/staff/work/status', function () {
+        return view('show_staff_work_status');
+    });
+
     //查看系统日志
     Route::get('show/system/log', function () {
         return view('show_system_log');

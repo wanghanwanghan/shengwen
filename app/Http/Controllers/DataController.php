@@ -2557,7 +2557,8 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                             //自制分页
                             $data1 = [];
-                            for ($i = $offset; $i <= $limit * Input::get('page') - 1; $i++) {
+                            for ($i = $offset; $i <= $limit * Input::get('page') - 1; $i++)
+                            {
                                 if (!isset($res2[$i])) {
                                     break;
                                 }
@@ -7057,7 +7058,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
                 }
 
-                //设置成为为死亡
+                //设置成为未死亡
                 $cust_info['cust_death_flag']='0';
 
                 //设置最后一次认证成功时间
@@ -7636,6 +7637,109 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }
 
                 return ['error'=>'0','finish'=>$finish,'unfinish'=>$unfinish];
+
+                break;
+
+            case 'select_staff_or_account':
+
+                $staff_name_or_account=trim(Input::get('name_or_account'));
+
+                $res=StaffModel::where('staff_account','like','%'.$staff_name_or_account.'%')
+                    ->Orwhere('staff_name','like','%'.$staff_name_or_account.'%')
+                    ->get(['staff_num','staff_account','staff_name']);
+
+                if (count($res)=='0')
+                {
+                    return [['id'=>'1','value'=>'查无结果']];
+                }
+
+                foreach ($res as $row)
+                {
+                    $one['id']=$row->staff_num;
+                    $one['value']=$row->staff_name.'@'.$row->staff_account;
+                    $data[]=$one;
+                }
+
+                return $data;
+
+                break;
+
+            case 'select_staff_work':
+
+                //用户传入的页
+                $page=Input::get('page');
+                //每页显示几条数据
+                $limit=12;
+                //从第几条开始显示
+                $offset=($page-1)*$limit;
+
+                $cond=Input::get('cond');
+                $star=Input::get('star');
+                $stop=Input::get('stop');
+
+                if (str_replace(["-"],'',$stop) - str_replace(["-"],'',$star) < 0)
+                {
+                    return ['error'=>'1','msg'=>'结束时间必须大于开始时间'];
+                }
+
+                //取得员工主键
+                $account=explode('@',$cond);
+                $account=array_pop($account);
+
+                $pid=StaffModel::where('staff_account',$account)->pluck('staff_num')->toArray();
+                $pid=array_pop($pid);
+
+                //这里要用到自制分页，因为要查询数据库语句要循环很多次，避免性能下降，只查询当前页需要的数据
+                //根据时间跨度来查询
+                //制造时间跨度数组
+                $dt_start=strtotime(str_replace(["-"],'',$star));
+                $dt_end=strtotime(str_replace(["-"],'',$stop));
+                while ($dt_start <= $dt_end)
+                {
+                    $time_array[]=date('Y-m-d',$dt_start);
+                    $dt_start=strtotime('+1 day',$dt_start);
+                }
+
+                for ($i=$offset;$i<=$limit*$page-1;$i++)
+                {
+                    if (!isset($time_array[$i]))
+                    {
+                        break;
+                    }
+
+                    //声纹注册
+                    $vp_register[]=StaffAddCustomerModel::where(['sac_staff_pid'=>$pid,'sac_table_name'=>'customer_info_ready_tianmen'])
+                        ->where('created_at','like',$time_array[$i].'%')->count();
+
+                    //声纹登记
+                    $vp_checkIn[]=StaffAddCustomerModel::where(['sac_staff_pid'=>$pid,'sac_table_name'=>'customer_info'])
+                        ->where('created_at','like',$time_array[$i].'%')->count();
+
+                    //指静脉登记
+                    $fp_checkIn[]=StaffAddCustomerModel::where(['sac_staff_pid'=>$pid,'sac_table_name'=>'customer_fv_info'])
+                        ->where('created_at','like',$time_array[$i].'%')->count();
+
+                    //外呼
+                    $send[]='0';
+
+                    //接听
+                    $receive[]='0';
+
+                    //前台需要显示的时间
+                    $date[]=$time_array[$i];
+                }
+
+                //总页数
+                $cnt_page=intval(ceil(count($time_array)/$limit));
+
+                return ['error'=>'0',
+                    'pages'=>$cnt_page,
+                    'vp_register'=>$vp_register,
+                    'vp_checkIn'=>$vp_checkIn,
+                    'fp_checkIn'=>$fp_checkIn,
+                    'send'=>$send,
+                    'receive'=>$receive,
+                    'date'=>$date];
 
                 break;
         }
