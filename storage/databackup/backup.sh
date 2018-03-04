@@ -50,6 +50,10 @@ mongo_bin_dir='/usr/local/MongoDB/bin/'
 #shengwen
 basedir_for_app='/home/wwwroot/default/shengwen/VoiceAndModel/'
 
+#laravel.log
+laravel_log_file=''
+gzip ${laravel_log_file}
+
 #数据文件不但要在本地存储，还要放到另一个服务器上
 need_send_data='1'
 server_user=root
@@ -103,7 +107,7 @@ chmod 777 `date +%Y%m%d`
 
 mv `date +%Y%m%d`* `date +%Y%m%d` > /dev/null 2>&1
 
-if [ `ls -1t | wc -l` -gt 30 ]; then
+if [ `ls -1t | egrep -v sh | wc -l` -gt 30 ]; then
 	
 	rm -rf `ls -1t | tail -1`
 	

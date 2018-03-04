@@ -27,6 +27,20 @@
 
     <script>
 
+        //标记一下该文件是否被下载
+        function mark_download(filename) {
+
+            var url ='/data/ajax';
+            var data={
+                _token:$("input[name=_token]").val(),
+                type  :'mark_download',
+                key   :filename
+            };
+
+            $.post(url,data,function (response) {},'json');
+
+        }
+
         var url ='/data/ajax';
         var data={
             _token:$("input[name=_token]").val(),
@@ -115,7 +129,7 @@
                         }
                         if (i=='filename')
                         {
-                            tabletr.append('<td style="text-align: center;">'+'<a href="'+v+'">下载</a>'+'</td>');
+                            tabletr.append('<td style="text-align: center;">'+'<a href="'+v+'" onclick=mark_download($(this).attr("href"));>下载</a>'+'</td>');
                         }
                     });
 

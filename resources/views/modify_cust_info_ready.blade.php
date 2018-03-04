@@ -23,6 +23,12 @@
                                     <input class="form-control" type="text" id="certNumber" name="cond" placeholder="输入年审号码或者身份证号码"/>
                                 </div>
                                 <div class="col-sm-2">
+                                    <label>
+                                        <p class="help-block"><input type="checkbox" name="check" onclick="changeSelectType();"> 社保编号查询</p>
+                                        <input type="hidden" id="use_si_id" value="no">
+                                    </label>
+                                </div>
+                                <div class="col-sm-2">
                                     <a style="width: 134px;height: 34px;padding-top: 8px;" id="button_readID" onclick="new Device().startFun();" class="btn btn-block btn-primary btn-sm">读取身份证</a>
                                 </div>
                                 <div class="col-sm-2">
@@ -73,6 +79,17 @@
     </div>
 
     <script>
+
+        function changeSelectType()
+        {
+            if ($("#use_si_id").val()=='no')
+            {
+                $("#use_si_id").val('yes');
+            }else
+            {
+                $("#use_si_id").val('no');
+            }
+        }
 
         $(function () {
 
@@ -539,6 +556,7 @@
                 cond1   :$("input[name=cond]").val(),
                 cond2   :$('select[name=cust_review_flag]').val(),
                 cond3   :$('select[name=vv_or_fv]').val(),
+                cond4   :$("#use_si_id").val(),
                 type  :'modify_info_tianmen'
             };
 
@@ -595,7 +613,6 @@
         $('select[name=vv_or_fv]').change(function () {
             all_tianmen();
         });
-
 
     </script>
 

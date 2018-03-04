@@ -20,16 +20,6 @@ class TestController extends Controller
     {
 
 
-        $rds=CustModel::where(['cust_name'=>'dfdf'])->first();
-
-        dd($rds);
-
-
-
-
-
-
-
 
     }
     public function test_2()
@@ -247,6 +237,69 @@ class TestController extends Controller
         }
 
         return $arr;
+    }
+
+    //遍历文件夹
+    public function my_dir($dir)
+    {
+        $res=[];
+
+        if($handle=opendir($dir))
+        {
+            while(($file=readdir($handle))!==false)
+            {
+                if($file!=".." && $file!=".")
+                {
+                    //排除根目录
+                    if(is_dir($dir."/".$file))
+                    {
+                        //如果是子文件夹，就进行递归
+                        $res[$file]=$this->my_dir($dir."/".$file);
+                    }else
+                    {
+                        //不然就将文件的名字存入数组
+                        $res[]=$file;
+                    }
+                }
+            }
+
+            closedir($handle);
+
+            return $res;
+        }
+    }
+
+    //计算等差为3的数字之和
+    public function arithmetic_3($num)
+    {
+        $is_in_arr=$num%3;
+
+        if ($is_in_arr=='1')
+        {
+            //说明在1-4-7-10-13-16-19-22.....数列中
+            //判断是第几个数字
+            $num_pos=explode('.',$num/3);
+            $num_pos=array_shift($num_pos)+1;
+
+            $tmp=1;
+            $res=$tmp;
+
+            while ($num_pos>1)
+            {
+                $tmp+=3;
+
+                $res+=$tmp;
+
+                $num_pos--;
+            }
+
+            return $res;
+
+        }else
+        {
+            //不在数列
+            return $this->arithmetic_3($num-1);
+        }
     }
 
 

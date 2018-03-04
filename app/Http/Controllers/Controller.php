@@ -1022,8 +1022,15 @@ class Controller extends BaseController
                 return '0';
             }
 
-        }elseif ($type=='w')
+        }elseif ($type=='number')
         {
+            if (is_numeric($str))
+            {
+                return '1';
+            }else
+            {
+                return '0';
+            }
 
         }elseif ($type=='nw' || $type=='wn')
         {

@@ -3866,6 +3866,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $cond=trim(Input::get('cond1'));
                 $cust_review_flag=Input::get('cond2');
                 $vv_or_fv=Input::get('cond3');
+                $use_si_id=Input::get('cond4');
 
                 if ($cond=='')
                 {
@@ -3883,7 +3884,18 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }else
                 {
                     //非空，但什么也不是
-                    return ['error'=>'1','msg'=>'既不是年审号也不是身份证号'];
+                    //也有可能是要通过社保编号查询
+                    if ($use_si_id=='no')
+                    {
+                        return ['error'=>'1','msg'=>'既不是年审号也不是身份证号'];
+                    }else
+                    {
+                        if (!$this->check_something(trim($cond),'number',null))
+                        {
+                            //不是数字
+                            return ['error'=>'1','msg'=>'不是有效的社保编号'];
+                        }
+                    }
                 }
 
                 //判断到底拿到了哪个值
@@ -3897,7 +3909,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         //开始查询
                         $res=CustModel::where($where)->get()->toArray();
 
-                    }else
+                    }elseif (isset($id))
                     {
                         //拿到$id和$cust_review_flag
                         $where1=['cust_id'=>$id,'cust_review_flag'=>'1'];
@@ -3938,6 +3950,45 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             }else
                             {
                                 //要第二年审人数据
+                                if ($res1[0]->cust_relation_flag!='0')
+                                {
+                                    $res=CustModel::where(['cust_num'=>$res1[0]->cust_relation_flag])->get()->toArray();
+                                }else
+                                {
+                                    return ['error'=>'1','msg'=>'未添加第二年审人'];
+                                }
+                            }
+                        }
+                    }else
+                    {
+                        //通过社保编号查询
+                        $where1=['cust_si_id'=>trim($cond),'cust_review_flag'=>'1'];
+                        $where2=['cust_si_id'=>trim($cond),'cust_review_flag'=>'2'];
+                        $res1=CustModel::where($where1)->get();
+                        $res2=CustModel::where($where2)->get();
+
+                        if (empty($res1->toArray()))
+                        {
+                            if (empty($res2->toArray()))
+                            {
+                                return ['error'=>'1','msg'=>'查无结果'];
+                            }else
+                            {
+                                if ($cust_review_flag=='1')
+                                {
+                                    $res=CustModel::where(['cust_relation_flag'=>$res2[0]->cust_num])->get()->toArray();
+                                }else
+                                {
+                                    $res=$res2->toArray();
+                                }
+                            }
+                        }else
+                        {
+                            if ($cust_review_flag=='1')
+                            {
+                                $res=$res1->toArray();
+                            }else
+                            {
                                 if ($res1[0]->cust_relation_flag!='0')
                                 {
                                     $res=CustModel::where(['cust_num'=>$res1[0]->cust_relation_flag])->get()->toArray();
@@ -4063,6 +4114,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $cond=trim(Input::get('cond1'));
                 $cust_review_flag=Input::get('cond2');
                 $vv_or_fv=Input::get('cond3');
+                $use_si_id=Input::get('cond4');
 
                 if ($cond=='')
                 {
@@ -4080,7 +4132,18 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }else
                 {
                     //非空，但什么也不是
-                    return ['error'=>'1','msg'=>'既不是年审号也不是身份证号'];
+                    //也有可能是要通过社保编号查询
+                    if ($use_si_id=='no')
+                    {
+                        return ['error'=>'1','msg'=>'既不是年审号也不是身份证号'];
+                    }else
+                    {
+                        if (!$this->check_something(trim($cond),'number',null))
+                        {
+                            //不是数字
+                            return ['error'=>'1','msg'=>'不是有效的社保编号'];
+                        }
+                    }
                 }
 
                 //判断到底拿到了哪个值
@@ -4094,7 +4157,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         //开始查询
                         $res=CustModel_tianmen_ready::where($where)->get()->toArray();
 
-                    }else
+                    }elseif (isset($id))
                     {
                         //拿到$id和$cust_review_flag
                         $where1=['cust_id'=>$id,'cust_review_flag'=>'1'];
@@ -4144,6 +4207,45 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 }
                             }
                         }
+                    }else
+                    {
+                        //通过社保编号查询
+                        $where1=['cust_si_id'=>trim($cond),'cust_review_flag'=>'1'];
+                        $where2=['cust_si_id'=>trim($cond),'cust_review_flag'=>'2'];
+                        $res1=CustModel_tianmen_ready::where($where1)->get();
+                        $res2=CustModel_tianmen_ready::where($where2)->get();
+
+                        if (empty($res1->toArray()))
+                        {
+                            if (empty($res2->toArray()))
+                            {
+                                return ['error'=>'1','msg'=>'查无结果'];
+                            }else
+                            {
+                                if ($cust_review_flag=='1')
+                                {
+                                    $res=CustModel_tianmen_ready::where(['cust_relation_flag'=>$res2[0]->cust_num])->get()->toArray();
+                                }else
+                                {
+                                    $res=$res2->toArray();
+                                }
+                            }
+                        }else
+                        {
+                            if ($cust_review_flag=='1')
+                            {
+                                $res=$res1->toArray();
+                            }else
+                            {
+                                if ($res1[0]->cust_relation_flag!='0')
+                                {
+                                    $res=CustModel_tianmen_ready::where(['cust_num'=>$res1[0]->cust_relation_flag])->get()->toArray();
+                                }else
+                                {
+                                    return ['error'=>'1','msg'=>'未添加第二年审人'];
+                                }
+                            }
+                        }
                     }
                 }elseif ($vv_or_fv=='2')
                 {
@@ -4177,7 +4279,14 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     if (Config::get('constant.app_edition')=='1')
                     {
                         $bank_num=CustBankNumModel::where(['cust_id'=>$res[0]['cust_id']])->get();
-                        $data['银行账号']='<a id=modify_bank_num>'.$bank_num[0]->cust_bank_num.'</a>';
+
+                        if (empty($bank_num->toArray()))
+                        {
+                            $data['银行账号']='<a id=modify_bank_num>'.'查无结果'.'</a>';
+                        }else
+                        {
+                            $data['银行账号']='<a id=modify_bank_num>'.$bank_num[0]->cust_bank_num.'</a>';
+                        }
                     }
 
                     $data['认证电话']='<a id=modify_cust_review_num>'.$res[0]['cust_review_num'].'</a>';
@@ -7740,6 +7849,31 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     'send'=>$send,
                     'receive'=>$receive,
                     'date'=>$date];
+
+                break;
+
+            case 'mark_download':
+
+                $filename=explode('/',Input::get('key'));
+                $filename=array_pop($filename);
+
+                $redis_key=explode('.',$filename);
+                $redis_key=array_shift($redis_key);
+
+                $redis_data=Redis::get($redis_key);
+
+                //第一次添加，null
+                if ($redis_data==null)
+                {
+                    $this->redis_set($redis_key,json_encode([time()]));
+                }else
+                {
+                    $redis_data=json_decode($redis_data,true);
+
+                    array_push($redis_data,time());
+
+                    $this->redis_set($redis_key,json_encode($redis_data));
+                }
 
                 break;
         }
