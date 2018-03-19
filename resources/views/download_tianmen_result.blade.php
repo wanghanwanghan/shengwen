@@ -27,20 +27,6 @@
 
     <script>
 
-        //标记一下该文件是否被下载
-        function mark_download(filename) {
-
-            var url ='/data/ajax';
-            var data={
-                _token:$("input[name=_token]").val(),
-                type  :'mark_download',
-                key   :filename
-            };
-
-            $.post(url,data,function (response) {},'json');
-
-        }
-
         var url ='/data/ajax';
         var data={
             _token:$("input[name=_token]").val(),

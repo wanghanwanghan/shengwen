@@ -298,6 +298,7 @@
                         </a>
                         <ul class="treeview-menu" id="chao_ji_guan_li_yuan_gong_neng_content">
                             <li><a href="{{url('source/cust/data')}}"><i class="fa fa-fw fa-hand-o-right"></i>导入待采集客户信息</a></li>
+                            <li><a href="{{url('choose/basedata/tablename')}}"><i class="fa fa-fw fa-hand-o-right"></i>基础信息与地区关联</a></li>
                             <li><a href="{{url('edit/config')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改认证配置</a></li>
                             <li><a href="{{url('edit/staff')}}"><i class="fa fa-fw fa-hand-o-right"></i>修改员工信息</a></li>
                             <li><a href="{{url('send/staffmail')}}"><i class="fa fa-fw fa-hand-o-right"></i>给员工发邮件</a></li>

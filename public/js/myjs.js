@@ -1,3 +1,15 @@
+//标记一下该文件是否被下载
+function mark_download(filename) {
+
+    var url ='/data/ajax';
+    var data={
+        _token:$("input[name=_token]").val(),
+        type  :'mark_download',
+        key   :filename
+    };
+    $.post(url,data,function (response) {},'json');
+}
+
 function change_Attr_val(mynode) {
 
     var myvalue_old=mynode.attr('myvalue');
@@ -675,7 +687,8 @@ function add_cust_A() {
         cust_review_flag:'1',
         cust_register_flag:'0',
         cust_relation_flag:'0',
-        cust_photo:$("img[name=cust_photo]").attr("src")
+        cust_photo:$("img[name=cust_photo]").attr("src"),
+        project:$("input[name=cust_project]").val()
     };
 
     $.post(url,data,function (response) {
@@ -791,7 +804,8 @@ function add_second_for_first_only_tianmen() {
     var data={
         _token:$("input[name=_token]").val(),
         type  :'add_second_for_first_only_tianmen',
-        key   :$("#add_second_form").serializeArray()
+        key   :$("#add_second_form").serializeArray(),
+        project:$("input[name=cust_project]").val()
     };
 
     $.post(url,data,function (response) {
@@ -1027,7 +1041,8 @@ function refresh_ready(curr) {
     var data={
         _token:$("input[name=_token]").val(),
         page:curr||1,
-        type  :'refresh_ready'
+        type  :'refresh_ready',
+        project:$("input[name=cust_project]").val()
     };
 
     $.post(url,data,function (response) {
@@ -1163,7 +1178,8 @@ function add_btw() {
                     type   :'add_btw_only_tianmen',
                     key1   :$("#add_second_ready").attr('name'),
                     key2   :$("select[name=add_btw]").val(),
-                    key3   :$("input[name=cust_phone_num]").val()
+                    key3   :$("input[name=cust_phone_num]").val(),
+                    project:$("input[name=cust_project]").val()
                 };
 
                 $.post(url,data,function (response) {
@@ -1214,7 +1230,8 @@ function select_data_A() {
     var data={
         _token:$("input[name=_token]").val(),
         type  :'select_data_A',
-        key   :$("#myform2").serializeArray()
+        key   :$("#myform2").serializeArray(),
+        project:$("input[name=cust_project]").val()
     };
 
     layer.msg('正在查询，稍等片刻',{time:3000});

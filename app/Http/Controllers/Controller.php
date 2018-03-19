@@ -762,7 +762,7 @@ class Controller extends BaseController
             $this->redis_set(
                 'all_all_project',
                 json_encode(ProjectModel::get(['project_id','project_name','project_parent'])->toArray()),
-                60
+                15
             );
         }
 

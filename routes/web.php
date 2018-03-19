@@ -144,6 +144,11 @@ Route::group(['middleware'=>['LoginMiddleware','RootMiddleware']],function (){
     //导入待采集客户信息
     Route::get('source/cust/data','WebController@source_cust_data');
 
+    //基础信息与地区关联
+    Route::get('choose/basedata/tablename', function () {
+        return view('choose_basedata_tablename');
+    });
+
     //修改认证配置
     Route::get('edit/config', function () {
         return view('edit_config');

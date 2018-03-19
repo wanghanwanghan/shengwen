@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Model\BaseDataRelationModel;
 use App\Http\Model\ChinaAllPositionModel;
 use App\Http\Model\ConfirmTypeModel;
 use App\Http\Model\CustBankNumModel;
@@ -22,11 +23,14 @@ use App\Http\Model\StaffLoginPlaceModel;
 use App\Http\Model\StaffModel;
 use App\Http\Model\VocalPrintModel;
 use App\Http\Myclass\FingerRegister;
+use App\Http\Myclass\GetBaseDataInMysqlTable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
@@ -579,9 +583,20 @@ class DataController extends Controller
                     {
                         if ($row['name']=='error_info')
                         {
-                            $thiscust=OnlyTianMenModel::find($this_customer_pid);
-                            $thiscust->is_error_info='error';
-                            $thiscust->save();
+                            $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                            if ($nowProj!=null)
+                            {
+                                //$res=DB::table($nowProj->tablename)
+                                //    ->where('id',Input::get('key'))
+                                //    ->get();
+                            }else
+                            {
+                                return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                            }
+
+                            //$thiscust=OnlyTianMenModel::find($this_customer_pid);
+                            //$thiscust->is_error_info='error';
+                            //$thiscust->save();
                         }
 
                         //用户姓名
@@ -591,7 +606,18 @@ class DataController extends Controller
                             {
                                 if (is_numeric($row['value']))
                                 {
-                                    $mycust=OnlyTianMenModel::find($row['value']);
+                                    $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                                    if ($nowProj!=null)
+                                    {
+                                        $mycust=DB::table($nowProj->tablename)
+                                            ->where('id',$row['value'])
+                                            ->first();
+                                    }else
+                                    {
+                                        return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                                    }
+
+                                    //$mycust=OnlyTianMenModel::find($row['value']);
                                     $cust_info['cust_name']=$mycust->p_name;
                                     $this_customer_pid=$row['value'];
                                 }else
@@ -829,21 +855,46 @@ class DataController extends Controller
                     //修改一下天门基础表的信息
                     if (isset($this_customer_pid) && $cust_belong=='2')
                     {
-                        //有这个$this_customer_pid说明是查询出来的客户
-                        $model_base=OnlyTianMenModel::find($this_customer_pid);
-                        $model_base->id_in_mysql=$model->cust_num;
-                        $model_base->cust_type=Input::get('cust_type');
-                        $model_base->is_register='1';
-                        $model_base->save();
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            $tablename='zbxl_'.$nowProj->tablename;
+
+                            $sql="update $tablename set id_in_mysql=?,cust_type=?,is_register=? where id=?";
+
+                            DB::update($sql,[$model->cust_num,Input::get('cust_type'),'1',$this_customer_pid]);
+
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                        }
+                        //$model_base=OnlyTianMenModel::find($this_customer_pid);
+                        //$model_base->id_in_mysql=$model->cust_num;
+                        //$model_base->cust_type=Input::get('cust_type');
+                        //$model_base->is_register='1';
+                        //$model_base->save();
 
                     }elseif (isset($this_customer_pid) && $cust_belong=='1')
                     {
                         //放到临时表中的
-                        $model_base=OnlyTianMenModel::find($this_customer_pid);
-                        $model_base->id_in_ready=$model->cust_num;
-                        $model_base->cust_type=Input::get('cust_type');
-                        $model_base->is_register='1';
-                        $model_base->save();
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            $tablename='zbxl_'.$nowProj->tablename;
+
+                            $sql="update $tablename set id_in_ready=?,cust_type=?,is_register=? where id=?";
+
+                            DB::update($sql,[$model->cust_num,Input::get('cust_type'),'1',$this_customer_pid]);
+
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                        }
+                        //$model_base=OnlyTianMenModel::find($this_customer_pid);
+                        //$model_base->id_in_ready=$model->cust_num;
+                        //$model_base->cust_type=Input::get('cust_type');
+                        //$model_base->is_register='1';
+                        //$model_base->save();
 
                     }else
                     {}
@@ -1334,7 +1385,6 @@ class DataController extends Controller
                 //得到这个用户可以看见的地区和参保类型
                 foreach (Session::get('user') as $row)
                 {
-                    //$proj=explode(',',$row['staff_project']);
                     $type=explode(',',$row['staff_si_type']);
                 }
 
@@ -1342,16 +1392,20 @@ class DataController extends Controller
                 $my_tmp=$this->before_insert_check_projectlevel(0,1);
                 $proj=$my_tmp;
 
-                //总页数
-                //$cnt_page=intval(ceil(CustModel_tianmen_ready::where('created_at','like',$time.'%')
-                //        ->where(['cust_review_flag'=>'1','cust_type'=>'A'])
-                //        ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)->count()/$limit));
-                //$cnt_page=intval(ceil(CustModel_tianmen_ready::where(['cust_review_flag'=>'1','cust_type'=>'A'])
-                //        ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)->count()/$limit));
+                $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                if ($nowProj!=null)
+                {
+                    $tablename=$nowProj->tablename;
+
+                }else
+                {
+                    return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                }
+
                 $cnt_page=DB::table('customer_info_ready_tianmen')
-                    ->leftJoin('onlytianmen','onlytianmen.id_in_ready','=','customer_info_ready_tianmen.cust_num')
+                    ->leftJoin($tablename,$tablename.'.id_in_ready','=','customer_info_ready_tianmen.cust_num')
                     ->where([
-                        'onlytianmen.id_in_mysql'=>'0',
+                        $tablename.'.id_in_mysql'=>'0',
                         'customer_info_ready_tianmen.cust_review_flag'=>'1',
                         'customer_info_ready_tianmen.cust_type'=>'A',
                     ])
@@ -1360,17 +1414,10 @@ class DataController extends Controller
                 $cnt_page=intval(ceil($cnt_page/$limit));
 
                 //第二个where条件只要第一年审人的数据
-                //$model=CustModel_tianmen_ready::where('created_at','like',$time.'%')
-                //    ->where(['cust_review_flag'=>'1','cust_type'=>'A'])
-                //    ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)
-                //    ->orderBy('cust_num','desc')->offset($offset)->limit($limit)->get($get)->toArray();
-                //$model=CustModel_tianmen_ready::where(['cust_review_flag'=>'1','cust_type'=>'A'])
-                //    ->whereIn('cust_project',$proj)->whereIn('cust_si_type',$type)
-                //    ->orderBy('cust_num','desc')->offset($offset)->limit($limit)->get($get)->toArray();
                 $model=DB::table('customer_info_ready_tianmen')
-                    ->leftJoin('onlytianmen','onlytianmen.id_in_ready','=','customer_info_ready_tianmen.cust_num')
+                    ->leftJoin($tablename,$tablename.'.id_in_ready','=','customer_info_ready_tianmen.cust_num')
                     ->where([
-                        'onlytianmen.id_in_mysql'=>'0',
+                        $tablename.'.id_in_mysql'=>'0',
                         'customer_info_ready_tianmen.cust_review_flag'=>'1',
                         'customer_info_ready_tianmen.cust_type'=>'A',
                     ])
@@ -1508,7 +1555,18 @@ class DataController extends Controller
 
                         if (!empty($model->toArray()))
                         {
-                            $tmp=OnlyTianMenModel::where('id_in_ready',$model[0]->cust_num)->get();
+                            $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                            if ($nowProj!=null)
+                            {
+                                $tmp=DB::table($nowProj->tablename)
+                                    ->where('id_in_ready',$model[0]->cust_num)
+                                    ->get();
+                            }else
+                            {
+                                return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                            }
+
+                            //$tmp=OnlyTianMenModel::where('id_in_ready',$model[0]->cust_num)->get();
                             if ($tmp[0]->id_in_mysql=='0')
                             {
                                 $model=$model->toArray();
@@ -4040,7 +4098,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     //组成一下所有父节点都有的地区名称
                     $place=implode('-',array_reverse($this->select_allproject_parent(ProjectModel::find($res[0]['cust_project'])->project_id)));
-                    $data['所属区域']='<a id=modify_cust_project>'.$place.'</a>';
+                    $data['所属区域']='<a id=modify_cust_project name='.$res[0]['cust_project'].'>'.$place.'</a>';
 
                     $data['参保类型']='<a id=modify_cust_si_type>'.SiTypeModel::find($res[0]['cust_si_type'])->si_name.'</a>';
                     $data['认证类型']='<a id=modify_cust_confirm_type>'.ConfirmTypeModel::find($res[0]['cust_confirm_type'])->confirm_name.'</a>';
@@ -4087,7 +4145,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     //组成一下所有父节点都有的地区名称
                     $place=implode('-',array_reverse($this->select_allproject_parent(ProjectModel::find($res[0]['cust_project'])->project_id)));
-                    $data['所属区域']='<a id=modify_cust_project>'.$place.'</a>';
+                    $data['所属区域']='<a id=modify_cust_project name='.$res[0]['cust_project'].'>'.$place.'</a>';
 
                     $data['参保类型']='<a id=modify_cust_si_type>'.SiTypeModel::find($res[0]['cust_si_type'])->si_name.'</a>';
                     $data['创建时间']='<a id=modify_created_at>'.$res[0]['created_at'].'</a>';
@@ -4295,7 +4353,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     //组成一下所有父节点都有的地区名称
                     $place=implode('-',array_reverse($this->select_allproject_parent(ProjectModel::find($res[0]['cust_project'])->project_id)));
-                    $data['所属区域']='<a id=modify_cust_project>'.$place.'</a>';
+                    $data['所属区域']='<a id=modify_cust_project name='.$res[0]['cust_project'].'>'.$place.'</a>';
 
                     $data['参保类型']='<a id=modify_cust_si_type>'.SiTypeModel::find($res[0]['cust_si_type'])->si_name.'</a>';
                     $data['认证类型']='<a id=modify_cust_confirm_type>'.ConfirmTypeModel::find($res[0]['cust_confirm_type'])->confirm_name.'</a>';
@@ -4636,11 +4694,36 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                                 //$res是在a类表中的数据模型，$this_cust是在临时表中的模型
                                 //现在要把天门总表中id_in_mysql修改一下
-                                $tianman_zongbiao_model=OnlyTianMenModel::where(['id_in_ready'=>$this_cust->cust_num])->get();
-                                $tianman_zongbiao_model=$tianman_zongbiao_model[0];
+                                $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                                if ($nowProj!=null)
+                                {
+                                    $tianman_zongbiao_model=DB::table($nowProj->tablename)
+                                        ->where('id_in_ready',$this_cust->cust_num)
+                                        ->first();
+                                }else
+                                {
+                                    return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                                }
 
-                                $tianman_zongbiao_model->id_in_mysql=$res->cust_num;
-                                $tianman_zongbiao_model->save();
+                                $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                                if ($nowProj!=null)
+                                {
+                                    $tablename='zbxl_'.$nowProj->tablename;
+
+                                    $sql="update $tablename set id_in_mysql=? where id=?";
+
+                                    DB::update($sql,[$res->cust_num,$tianman_zongbiao_model->id]);
+
+                                }else
+                                {
+                                    return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                                }
+
+                                //$tianman_zongbiao_model=OnlyTianMenModel::where(['id_in_ready'=>$this_cust->cust_num])->get();
+                                //$tianman_zongbiao_model=$tianman_zongbiao_model[0];
+
+                                //$tianman_zongbiao_model->id_in_mysql=$res->cust_num;
+                                //$tianman_zongbiao_model->save();
 
                                 return ['error'=>'0','msg'=>'修改成功'];
 
@@ -4678,22 +4761,42 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 $one_data->save();
 
                                 //$this_cust是临时表中的，$one_data是a类表中的，$twotmp是临时表中的，$two_data是a类表中的
-                                $tianman_zongbiao_model_one=OnlyTianMenModel::where(['id_in_ready'=>$this_cust->cust_num])->get();
-                                $tianman_zongbiao_model_one=$tianman_zongbiao_model_one[0];
-                                $tianman_zongbiao_model_one->id_in_mysql=$one_data->cust_num;
-                                $tianman_zongbiao_model_one->save();
+                                $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                                if ($nowProj!=null)
+                                {
+                                    $tianman_zongbiao_model_one=DB::table($nowProj->tablename)
+                                        ->where('id_in_ready',$this_cust->cust_num)
+                                        ->first();
 
-                                $tianman_zongbiao_model_two=OnlyTianMenModel::where(['id_in_ready'=>$twotmp->cust_num])->get();
-                                $tianman_zongbiao_model_two=$tianman_zongbiao_model_two[0];
-                                $tianman_zongbiao_model_two->id_in_mysql=$two_data->cust_num;
-                                $tianman_zongbiao_model_two->save();
+                                    $tablename='zbxl_'.$nowProj->tablename;
+                                    $sql="update $tablename set id_in_mysql=? where id=?";
+                                    DB::update($sql,[$one_data->cust_num,$tianman_zongbiao_model_one->id]);
+
+                                    $tianman_zongbiao_model_two=DB::table($nowProj->tablename)
+                                        ->where('id_in_ready',$twotmp->cust_num)
+                                        ->first();
+
+                                    $tablename='zbxl_'.$nowProj->tablename;
+                                    $sql="update $tablename set id_in_mysql=? where id=?";
+                                    DB::update($sql,[$two_data->cust_num,$tianman_zongbiao_model_two->id]);
+
+                                }else
+                                {
+                                    return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                                }
+
+                                //$tianman_zongbiao_model_one=OnlyTianMenModel::where(['id_in_ready'=>$this_cust->cust_num])->get();
+                                //$tianman_zongbiao_model_one=$tianman_zongbiao_model_one[0];
+                                //$tianman_zongbiao_model_one->id_in_mysql=$one_data->cust_num;
+                                //$tianman_zongbiao_model_one->save();
+
+                                //$tianman_zongbiao_model_two=OnlyTianMenModel::where(['id_in_ready'=>$twotmp->cust_num])->get();
+                                //$tianman_zongbiao_model_two=$tianman_zongbiao_model_two[0];
+                                //$tianman_zongbiao_model_two->id_in_mysql=$two_data->cust_num;
+                                //$tianman_zongbiao_model_two->save();
 
                                 return ['error'=>'0','msg'=>'修改成功'];
                             }
-
-
-
-
 
                         }elseif ($this_cust->cust_review_flag=='2')
                         {
@@ -5083,8 +5186,19 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             //必须先删除a类表中数据，才能删除ready表中数据
                             //情况2：不在a类表，在ready表
                             //直接删除ready表中数据
-                            $data_in_base_table=OnlyTianMenModel::where(['id_in_ready'=>$pid])->get();
-                            $data_in_base_table=$data_in_base_table[0];
+                            $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                            if ($nowProj!=null)
+                            {
+                                $data_in_base_table=DB::table($nowProj->tablename)
+                                    ->where('id_in_ready',$pid)
+                                    ->first();
+                            }else
+                            {
+                                return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                            }
+
+                            //$data_in_base_table=OnlyTianMenModel::where(['id_in_ready'=>$pid])->get();
+                            //$data_in_base_table=$data_in_base_table[0];
 
                             if ($data_in_base_table->id_in_mysql!='0')
                             {
@@ -5092,8 +5206,22 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             }
 
                             //base表的关联字段清空
-                            $data_in_base_table->id_in_ready=null;
-                            $data_in_base_table->save();
+                            $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                            if ($nowProj!=null)
+                            {
+                                $tablename='zbxl_'.$nowProj->tablename;
+
+                                $sql="update $tablename set id_in_ready=? where id=?";
+
+                                DB::update($sql,[null,$data_in_base_table->id]);
+
+                            }else
+                            {
+                                return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                            }
+
+                            //$data_in_base_table->id_in_ready=null;
+                            //$data_in_base_table->save();
 
                             //处理银行账号表中的数据
                             $custbank=CustBankNumModel::where(['cust_id'=>$res->cust_id])->get();
@@ -5108,7 +5236,18 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         {
                             if (Config::get('constant.app_edition')=='1')
                             {
-                                $cust=OnlyTianMenModel::where(['id_in_mysql'=>$pid])->first();
+                                $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                                if ($nowProj!=null)
+                                {
+                                    $cust=DB::table($nowProj->tablename)
+                                        ->where('id_in_mysql',$pid)
+                                        ->first();
+                                }else
+                                {
+                                    return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                                }
+
+                                //$cust=OnlyTianMenModel::where(['id_in_mysql'=>$pid])->first();
 
                                 if ($cust=='')
                                 {
@@ -5116,8 +5255,22 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 }else
                                 {
                                     //在基础表里
-                                    $cust->id_in_mysql='0';
-                                    $cust->save();
+                                    $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                                    if ($nowProj!=null)
+                                    {
+                                        $tablename='zbxl_'.$nowProj->tablename;
+
+                                        $sql="update $tablename set id_in_mysql=? where id=?";
+
+                                        DB::update($sql,['0',$cust->id]);
+
+                                    }else
+                                    {
+                                        return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                                    }
+
+                                    //$cust->id_in_mysql='0';
+                                    //$cust->save();
                                 }
 
                                 $bank=CustBankNumModel::where(['cust_id'=>$res->cust_id])->first();
@@ -6732,28 +6885,69 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 {
                     if (Input::get('tip')=='pid')
                     {
-                        $res=OnlyTianMenModel::find(Input::get('key'));
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            $res=DB::table($nowProj->tablename)
+                                ->where('id',Input::get('key'))
+                                ->get();
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                        }
+
+                        //$res=OnlyTianMenModel::find(Input::get('key'));
 
                         return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
                     }
 
+                    //返回表名
+                    $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                    if ($nowProj!=null)
+                    {
+                        //查询是否有这个身份证的客户
+                        $res=DB::table($nowProj->tablename)
+                            ->where(['idcard'=>trim(Input::get('key'))])
+                            ->where('id_in_mysql','0')
+                            ->where('id_in_ready',null)
+                            ->get();
+                    }else
+                    {
+                        return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                    }
+
                     //查询是否有这个身份证的客户
-                    $res=OnlyTianMenModel::where(['idcard'=>trim(Input::get('key'))])
-                        ->where('id_in_mysql','0')
-                        ->where('id_in_ready',null)
-                        ->get();
+                    //$res=OnlyTianMenModel::where(['idcard'=>trim(Input::get('key'))])
+                    //    ->where('id_in_mysql','0')
+                    //    ->where('id_in_ready',null)
+                    //    ->get();
 
                     if (!empty($res->toArray()))
                     {
                         return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
                     }else
                     {
-                        $res=OnlyTianMenModel::where(['idcard'=>trim(Input::get('key'))])
-                            ->where(function ($query){
-                                $query->where('id_in_mysql','<>','0')->orWhere('id_in_ready','<>',null);
-                            })->get()->toArray();
+                        //$res=OnlyTianMenModel::where(['idcard'=>trim(Input::get('key'))])
+                        //    ->where(function ($query){
+                        //        $query->where('id_in_mysql','<>','0')->orWhere('id_in_ready','<>',null);
+                        //    })->get()->toArray();
 
-                        if (empty($res))
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            //查询是否有这个身份证的客户
+                            $res=DB::table($nowProj->tablename)
+                                ->where(['idcard'=>trim(Input::get('key'))])
+                                ->where(function ($query){
+                                    $query->where('id_in_mysql','<>','0')->orWhere('id_in_ready','<>',null);
+                                })
+                                ->get();
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                        }
+
+                        if (empty($res->toArray()))
                         {
                             return ['error'=>'1','msg'=>'未找到数据'];
                         }else
@@ -6848,17 +7042,41 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 {
                     if (Input::get('tip')=='pid')
                     {
-                        $res=OnlyTianMenModel::find(Input::get('key'));
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            $res=DB::table($nowProj->tablename)
+                                ->where('id',Input::get('key'))
+                                ->get();
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                        }
+
+                        //$res=OnlyTianMenModel::find(Input::get('key'));
 
                         return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
                     }
 
                     if (Input::get('tip')=='cust_name')
                     {
-                        $res=OnlyTianMenModel::where(['p_name'=>trim(Input::get('key'))])
-                            ->where('id_in_mysql','0')
-                            ->where('id_in_ready',null)
-                            ->get();
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            $res=DB::table($nowProj->tablename)
+                                ->where(['p_name'=>trim(Input::get('key'))])
+                                ->where('id_in_mysql','0')
+                                ->where('id_in_ready',null)
+                                ->get();
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                        }
+
+                        //$res=OnlyTianMenModel::where(['p_name'=>trim(Input::get('key'))])
+                        //    ->where('id_in_mysql','0')
+                        //    ->where('id_in_ready',null)
+                        //    ->get();
 
                         if (empty($res->toArray()))
                         {
@@ -6869,22 +7087,50 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
 
                     //查询是否有这个客户
-                    $res=OnlyTianMenModel::where(['bank'=>trim(Input::get('key'))])
-                        ->where('id_in_mysql','0')
-                        ->where('id_in_ready',null)
-                        ->get();
+                    $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                    if ($nowProj!=null)
+                    {
+                        $res=DB::table($nowProj->tablename)
+                            ->where(['bank'=>trim(Input::get('key'))])
+                            ->where('id_in_mysql','0')
+                            ->where('id_in_ready',null)
+                            ->get();
+                    }else
+                    {
+                        return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                    }
+
+                    //$res=OnlyTianMenModel::where(['bank'=>trim(Input::get('key'))])
+                    //    ->where('id_in_mysql','0')
+                    //    ->where('id_in_ready',null)
+                    //    ->get();
 
                     if (!empty($res->toArray()))
                     {
                         return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
                     }else
                     {
-                        $res=OnlyTianMenModel::where(['bank'=>trim(Input::get('key'))])
-                            ->where(function ($query){
-                                $query->where('id_in_mysql','<>','0')->orWhere('id_in_ready','<>',null);
-                            })->get()->toArray();
+                        //$res=OnlyTianMenModel::where(['bank'=>trim(Input::get('key'))])
+                        //    ->where(function ($query){
+                        //        $query->where('id_in_mysql','<>','0')->orWhere('id_in_ready','<>',null);
+                        //    })->get()->toArray();
 
-                        if (empty($res))
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            //查询是否有这个身份证的客户
+                            $res=DB::table($nowProj->tablename)
+                                ->where(['bank'=>trim(Input::get('key'))])
+                                ->where(function ($query){
+                                    $query->where('id_in_mysql','<>','0')->orWhere('id_in_ready','<>',null);
+                                })
+                                ->get();
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                        }
+
+                        if (empty($res->toArray()))
                         {
                             return ['error'=>'1','msg'=>'未找到数据'];
                         }else
@@ -7438,10 +7684,24 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
             case 'add_btw_only_tianmen':
 
-                $model=OnlyTianMenModel::find(Input::get('key1'));
-                $model->btw=trim(Input::get('key2'));
-                $model->phone=trim(Input::get('key3'));
-                $model->save();
+                $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                if ($nowProj!=null)
+                {
+                    $tablename='zbxl_'.$nowProj->tablename;
+
+                    $sql="update $tablename set btw=?,phone=? where id=?";
+
+                    DB::update($sql,[trim(Input::get('key2')),trim(Input::get('key3')),Input::get('key1')]);
+
+                }else
+                {
+                    return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                }
+
+                //$model=OnlyTianMenModel::find(Input::get('key1'));
+                //$model->btw=trim(Input::get('key2'));
+                //$model->phone=trim(Input::get('key3'));
+                //$model->save();
 
                 return ['error'=>'0','msg'=>'添加备注成功'];
 
@@ -7463,7 +7723,19 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         if (!$this->check_chinese_word($row['value']))
                         {
                             $second_id=['pid'=>$row['value']];
-                            $this_is_second_cust_model=OnlyTianMenModel::find($row['value']);
+
+                            $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                            if ($nowProj!=null)
+                            {
+                                $this_is_second_cust_model=DB::table($nowProj->tablename)
+                                    ->where('id',$row['value'])
+                                    ->first();
+                            }else
+                            {
+                                return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                            }
+
+                            //$this_is_second_cust_model=OnlyTianMenModel::find($row['value']);
                             $cust_info['cust_name']=$this_is_second_cust_model->p_name;
                         }else
                         {
@@ -7571,10 +7843,23 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     if (isset($this_is_second_cust_model))
                     {
-                        $this_is_second_cust_model->id_in_ready=$res->cust_num;
-                        $this_is_second_cust_model->cust_type=$res->cust_type;
-                        $this_is_second_cust_model->is_register='1';
-                        $this_is_second_cust_model->save();
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            $tablename='zbxl_'.$nowProj->tablename;
+
+                            $sql="update $tablename set id_in_ready=?,cust_type=?,is_register=? where id=?";
+                            DB::update($sql,[$res->cust_num,$res->cust_type,'1',$this_is_second_cust_model->id]);
+
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                        }
+
+                        //$this_is_second_cust_model->id_in_ready=$res->cust_num;
+                        //$this_is_second_cust_model->cust_type=$res->cust_type;
+                        //$this_is_second_cust_model->is_register='1';
+                        //$this_is_second_cust_model->save();
                     }
 
                     //添加银行账户进入mysql
@@ -7603,10 +7888,23 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     if (isset($this_is_second_cust_model))
                     {
-                        $this_is_second_cust_model->id_in_mysql=$res->cust_num;
-                        $this_is_second_cust_model->cust_type=$res->cust_type;
-                        $this_is_second_cust_model->is_register='1';
-                        $this_is_second_cust_model->save();
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            $tablename='zbxl_'.$nowProj->tablename;
+
+                            $sql="update $tablename set id_in_mysql=?,cust_type=?,is_register=? where id=?";
+                            DB::update($sql,[$res->cust_num,$res->cust_type,'1',$this_is_second_cust_model->id]);
+
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                        }
+
+                        //$this_is_second_cust_model->id_in_mysql=$res->cust_num;
+                        //$this_is_second_cust_model->cust_type=$res->cust_type;
+                        //$this_is_second_cust_model->is_register='1';
+                        //$this_is_second_cust_model->save();
                     }
 
                     //添加银行账户进入mysql
@@ -7618,39 +7916,63 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 {
                 }
 
-                $first_model=OnlyTianMenModel::find($first_id);
-                $secon_model=OnlyTianMenModel::find($second_id['pid']);
+                $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                if ($nowProj!=null)
+                {
+                    $first_model=DB::table($nowProj->tablename)
+                        ->where('id',$first_id)
+                        ->first();
+                    $secon_model=DB::table($nowProj->tablename)
+                        ->where('id',$second_id['pid'])
+                        ->first();
+                }else
+                {
+                    return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                }
+
+                //$first_model=OnlyTianMenModel::find($first_id);
+                //$secon_model=OnlyTianMenModel::find($second_id['pid']);
 
                 if ($first_model->is_second_reviewnum!='')
                 {
                     return ['error'=>'1','msg'=>'此第一年审人已经添加第二年审人'];
                 }
 
-//                if (OnlyTianMenModel::where(['is_second_reviewnum'=>$first_id])->first()!=null)
-//                {
-//                    return ['error'=>'1','msg'=>'此第一年审人是别人的第二年审人'];
-//                }
-
                 if ($secon_model->is_second_reviewnum!='')
                 {
                     return ['error'=>'1','msg'=>'此第二年审人已经添加第一年审人'];
                 }
 
-//                if (OnlyTianMenModel::where(['is_second_reviewnum'=>$second_id])->first()!=null)
-//                {
-//                    return ['error'=>'1','msg'=>'此第二年审人是别人的第一年审人'];
-//                }
-
-                $first_model->is_second_reviewnum=$secon_model->id;
-                $first_model->save();
-
-                if ($is_error_info=='yes')
+                //建立数据关系
+                $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                if ($nowProj!=null)
                 {
-                    $secon_model->is_error_info='error';
+                    $tablename='zbxl_'.$nowProj->tablename;
+
+                    $sql="update $tablename set is_second_reviewnum=? where id=?";
+                    DB::update($sql,[$secon_model->id,$first_id]);
+
+                    if ($is_error_info=='yes')
+                    {
+                        $sql="update $tablename set is_error_info=? where id=?";
+                        DB::update($sql,['error',$second_id['pid']]);
+
+                        //$secon_model->is_error_info='error';
+                    }
+
+                    $sql="update $tablename set is_second_reviewnum=? where id=?";
+                    DB::update($sql,['0',$second_id['pid']]);
+
+                }else
+                {
+                    return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
                 }
 
-                $secon_model->is_second_reviewnum='0';
-                $secon_model->save();
+                //$first_model->is_second_reviewnum=$secon_model->id;
+                //$first_model->save();
+
+                //$secon_model->is_second_reviewnum='0';
+                //$secon_model->save();
 
                 return ['error'=>'0','msg'=>'添加成功'];
 
@@ -7858,7 +8180,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $filename=array_pop($filename);
 
                 $redis_key=explode('.',$filename);
-                $redis_key=array_shift($redis_key);
+                $redis_key=array_shift($redis_key).'_csv';
 
                 $redis_data=Redis::get($redis_key);
 
@@ -7874,6 +8196,113 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     $this->redis_set($redis_key,json_encode($redis_data));
                 }
+
+                break;
+
+            case 'relation_save':
+
+                $input=Input::all();
+
+                //Schema::dropIfExists(trim($input['TBN']));
+
+                $arr=$this->get_all_children($input['Node']);
+
+                $res=array_map(function($row) use ($input){
+
+                    return ['tablename'=>trim($input['TBN']),'project'=>$row['project_id']];
+
+                },$arr);
+
+                //$collection=collect([1,2,3,4,5]);
+                //$diff=$collection->diff([2,4,6,8]);
+                //$diff->all();
+                //[1,3,5]
+
+                //数据库中的所有项目id
+                $collection=collect(BaseDataRelationModel::pluck('project')->toArray());
+                //要插入的项目id
+                $diff=$collection->intersect(array_map(function($row) {return $row['project'];},$res));
+
+                //查看是否有交集，有交集的的话，说明交集数组里的项目id已经被插入了
+                if (!empty($diff->all()))
+                {
+                    return ['error'=>'1','msg'=>'关联失败，部分地区已经被关联'];
+                }
+
+                //创建mysql表
+                if (trim($input['TBN'])=='')
+                {
+                    return ['error'=>'1','msg'=>'表名不能为空'];
+                }
+                if(!Schema::hasTable(trim($input['TBN'])))
+                {
+                    Schema::create(trim($input['TBN']),function (Blueprint $table)
+                    {
+                        $table->increments('id');
+                        $table->string('c_name','60')->index();
+                        $table->string('si_num','30')->index();
+                        $table->string('p_name','30')->index();
+                        $table->string('idcard','30')->index();
+                        $table->string('sex','5')->index();
+                        $table->string('birthday','30')->index();
+                        $table->string('c_day','30')->index();
+                        $table->string('r_day','30')->index();
+                        $table->string('bank','30')->index();
+                        $table->integer('id_in_mysql')->unsigned()->index();
+                        $table->integer('id_in_ready')->unsigned()->nullable()->index();
+                        $table->string('cust_type','5')->index();
+                        $table->string('is_register','5');
+                        $table->string('is_second_reviewnum','5');
+                        $table->string('is_error_info','5');
+                        $table->string('phone','20')->nullable();
+                        $table->string('btw','255')->nullable();
+                        $table->timestamps();
+                        $table->engine='innodb';
+                    });
+                }else
+                {
+                    //dd(Input::all());
+                    return ['error'=>'1','msg'=>'表名已存在'];
+                }
+
+                BaseDataRelationModel::insert($res);
+
+                return ['error'=>'0','msg'=>'表名已创建并与地区关联成功'];
+
+                break;
+
+            case 'show_relation':
+
+                $res=BaseDataRelationModel::orderBy('project')->groupBy('tablename')->get(['tablename','project'])->toArray();
+
+                //就显示最后12个地区
+                if (count($res) > '12')
+                {
+                    for ($i=1;$i<=12;$i++)
+                    {
+                        $res_new[]=array_pop($res);
+                    }
+
+                    $res=array_reverse($res_new);
+                }
+
+                //把区域转换成中文
+                foreach ($res as &$row)
+                {
+                    $tmp1=ProjectModel::find($row['project']);
+
+                    if ($tmp1->project_path=='0')
+                    {
+                        $row['project']=$tmp1->project_name;
+                    }else
+                    {
+                        $tmp2=explode('-',$tmp1->project_path);
+                        $tmp3=ProjectModel::whereIn('project_id',$tmp2)->get(['project_name'])->toArray();
+                        $row['project']=implode('-',array_flatten($tmp3));
+                    }
+                }
+
+                return ['error'=>'0','data'=>$res];
 
                 break;
         }

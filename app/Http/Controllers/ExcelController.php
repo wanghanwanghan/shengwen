@@ -110,9 +110,9 @@ class ExcelController extends Controller
                 $table->string('county','20');
                 $table->string('town','20');
                 $table->string('village','20');
-                $table->string('county_id','20')->index();;
-                $table->string('town_id','20')->index();;
-                $table->string('village_id','20')->index();;
+                $table->string('county_id','20')->index();
+                $table->string('town_id','20')->index();
+                $table->string('village_id','20')->index();
                 $table->string('name','6');
                 $table->string('idcard','18')->unique();
                 $table->string('sitype','20')->index();

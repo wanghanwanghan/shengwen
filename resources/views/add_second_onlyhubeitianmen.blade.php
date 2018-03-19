@@ -61,6 +61,7 @@
         <form id="add_second_form">
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
             <input type="hidden" name="first_id" value="{{ $first_id }}">
+            <input type="hidden" name="cust_project" value="{{ $first_project }}">
             <div class="box">
                 <div class="box-header with-border">
                     <h3 class="box-title">以下是第二年审人信息</h3>
@@ -202,7 +203,8 @@
                     _token :$("input[name=_token]").val(),
                     type   :'get_wait_register_customer_info',
                     key    :$("input[name=cust_id]").val(),
-                    tip    :''
+                    tip    :'',
+                    project:$("input[name=cust_project]").val()
                 };
 
                 //need
@@ -323,7 +325,8 @@
                                 _token :$("input[name=_token]").val(),
                                 type   :'get_wait_register_customer_info',
                                 key    :$("#personName").val(),
-                                tip    :'pid'
+                                tip    :'pid',
+                                project:$("input[name=cust_project]").val()
                             };
 
                             $.post(url,data,function (response) {
@@ -411,7 +414,8 @@
                     _token :$("input[name=_token]").val(),
                     type   :'get_wait_register_customer_info_tianmen',
                     key    :$("input[name=cust_bank_num]").val(),
-                    tip    :''
+                    tip    :'',
+                    project:$("input[name=cust_project]").val()
                 };
 
                 //need
@@ -532,7 +536,8 @@
                                 _token :$("input[name=_token]").val(),
                                 type   :'get_wait_register_customer_info',
                                 key    :$("#personName").val(),
-                                tip    :'pid'
+                                tip    :'pid',
+                                project:$("input[name=cust_project]").val()
                             };
 
                             $.post(url,data,function (response) {
@@ -620,7 +625,8 @@
                     _token :$("input[name=_token]").val(),
                     type   :'get_wait_register_customer_info_tianmen',
                     key    :$("input[name=cust_name]").val(),
-                    tip    :'cust_name'
+                    tip    :'cust_name',
+                    project:$("input[name=cust_project]").val()
                 };
 
                 //need
@@ -741,7 +747,8 @@
                                 _token :$("input[name=_token]").val(),
                                 type   :'get_wait_register_customer_info',
                                 key    :$("#personName").val(),
-                                tip    :'pid'
+                                tip    :'pid',
+                                project:$("input[name=cust_project]").val()
                             };
 
                             $.post(url,data,function (response) {

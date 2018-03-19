@@ -247,7 +247,8 @@
                     _token :$("input[name=_token]").val(),
                     type   :'get_wait_register_customer_info',
                     key    :$("input[name=cust_id]").val(),
-                    tip    :''
+                    tip    :'',
+                    project:$("input[name=cust_project]").val()
                 };
 
                 //need
@@ -368,15 +369,16 @@
                                 _token :$("input[name=_token]").val(),
                                 type   :'get_wait_register_customer_info',
                                 key    :$("#personName").val(),
-                                tip    :'pid'
+                                tip    :'pid',
+                                project:$("input[name=cust_project]").val()
+
                             };
 
                             $.post(url,data,function (response) {
 
                                 if (response.error=='0')
                                 {
-                                    $.each(response.data,function (k2,v2) {
-
+                                    $.each(response.data[0],function (k2,v2) {
                                         if (k2=='id')
                                         {
                                             $("#add_second_ready").attr('name',v2);
@@ -456,7 +458,8 @@
                     _token :$("input[name=_token]").val(),
                     type   :'get_wait_register_customer_info_tianmen',
                     key    :$("input[name=cust_bank_num]").val(),
-                    tip    :''
+                    tip    :'',
+                    project:$("input[name=cust_project]").val()
                 };
 
                 //need
@@ -577,14 +580,15 @@
                                 _token :$("input[name=_token]").val(),
                                 type   :'get_wait_register_customer_info',
                                 key    :$("#personName").val(),
-                                tip    :'pid'
+                                tip    :'pid',
+                                project:$("input[name=cust_project]").val()
                             };
 
                             $.post(url,data,function (response) {
 
                                 if (response.error=='0')
                                 {
-                                    $.each(response.data,function (k2,v2) {
+                                    $.each(response.data[0],function (k2,v2) {
 
                                         if (k2=='id')
                                         {
@@ -665,7 +669,8 @@
                     _token :$("input[name=_token]").val(),
                     type   :'get_wait_register_customer_info_tianmen',
                     key    :$("input[name=cust_name]").val(),
-                    tip    :'cust_name'
+                    tip    :'cust_name',
+                    project:$("input[name=cust_project]").val()
                 };
 
                 //need
@@ -786,14 +791,15 @@
                                 _token :$("input[name=_token]").val(),
                                 type   :'get_wait_register_customer_info',
                                 key    :$("#personName").val(),
-                                tip    :'pid'
+                                tip    :'pid',
+                                project:$("input[name=cust_project]").val()
                             };
 
                             $.post(url,data,function (response) {
 
                                 if (response.error=='0')
                                 {
-                                    $.each(response.data,function (k2,v2) {
+                                    $.each(response.data[0],function (k2,v2) {
 
                                         if (k2=='id')
                                         {

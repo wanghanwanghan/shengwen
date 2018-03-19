@@ -60,7 +60,7 @@ return [
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', 'zbxl@2016bj!@#'),
             'charset' => 'utf8',
-            'collation' => 'utf8_unicode_ci',
+            'collation' => 'utf8_general_ci',
             'prefix' => 'zbxl_',
             'strict' => false,//严格模式
             'engine' => null,

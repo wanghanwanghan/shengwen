@@ -22,7 +22,7 @@
                                 <div class="col-sm-3">
                                     <input class="form-control" type="text" id="certNumber" name="cond" placeholder="输入年审号码或者身份证号码"/>
                                 </div>
-                                <div class="col-sm-2">
+                                <div class="col-sm-2" onclick="layer.tips('以社保编号为条件查询，此时输入手机号或身份证会认为无效','input[name=check]',{tips:1});">
                                     <label>
                                         <p class="help-block"><input type="checkbox" name="check" onclick="changeSelectType();"> 社保编号查询</p>
                                         <input type="hidden" id="use_si_id" value="no">
@@ -317,7 +317,8 @@
                         _token:$("input[name=_token]").val(),
                         type  :'modify_cust_delete',
                         pid   :$("#modify_pid").html(),
-                        stype :$('select[name=vv_or_fv]').val()
+                        stype :$('select[name=vv_or_fv]').val(),
+                        project:$("#modify_cust_project").attr('name')
                     };
                     $.post(url,data,function (response) {
                         if(response.error=='0')
