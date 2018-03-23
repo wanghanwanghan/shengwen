@@ -11,6 +11,7 @@ use App\Http\Model\CustDeleteModel;
 use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\CustModel_tianmen_ready;
+use App\Http\Model\FvBaseDataRelationModel;
 use App\Http\Model\LevelModel;
 use App\Http\Model\LogModel;
 use App\Http\Model\OnlyTianMenModel;
@@ -7326,7 +7327,27 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     {
                         if (!$this->check_chinese_word($row['value']))
                         {
-                            return ['error'=>'1','msg'=>'姓名必须是中文'];
+                            if (is_numeric($row['value']))
+                            {
+                                $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                                if ($nowProj!=null)
+                                {
+                                    $mycust=DB::table($nowProj->tablename)
+                                        ->where('id',$row['value'])
+                                        ->first();
+                                }else
+                                {
+                                    return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                                }
+
+                                $cust_info['cust_name']=$mycust->p_name;
+
+                                //当前添加的客户，在基础表中的pid
+                                $this_customer_pid_for_base_data_table=$row['value'];
+                            }else
+                            {
+                                return ['error'=>'1','msg'=>'姓名必须是中文'];
+                            }
                         }
 
                         $cust_info['cust_name']=$row['value'];
@@ -7455,6 +7476,21 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     'FingerPrint_9'=>isset($FingerPrint_9)?$FingerPrint_9:'',
                     'time'=>time()
                 ]);
+
+                //把基础数据和添加的数据关联
+                if (isset($this_customer_pid_for_base_data_table))
+                {
+                    //说明是从基础表中得到的数据
+                    $arr1=[
+                        'tablename'=>$nowProj->tablename,
+                        'base_data_pid'=>$this_customer_pid_for_base_data_table
+                    ];
+                    $arr2=[
+                        'cust_data_pid'=>$model->cust_num
+                    ];
+
+                    FvBaseDataRelationModel::updateOrCreate($arr1,$arr2);
+                }
 
                 return ['error'=>'0','msg'=>'登记成功'];
 
@@ -8261,7 +8297,6 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     });
                 }else
                 {
-                    //dd(Input::all());
                     return ['error'=>'1','msg'=>'表名已存在'];
                 }
 

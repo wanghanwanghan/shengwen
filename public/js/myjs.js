@@ -2605,7 +2605,8 @@ function add_fv_cust() {
         _token :$("input[name=_token]").val(),
         type   :'add_fv_cust',
         key    :{cust_info:$("#add_cust_form").serializeArray(),fv_info:$("#fvId_or_fvTemplate").serializeArray()},
-        cust_photo:$("img[name=cust_photo]").attr("src")
+        cust_photo:$("img[name=cust_photo]").attr("src"),
+        project:$("input[name=cust_project]").val()
     };
     $.post(url,data,function (response) {
 

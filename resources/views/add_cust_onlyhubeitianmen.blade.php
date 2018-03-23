@@ -9,12 +9,12 @@
     <form id="add_cust_form">
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <div class="box">
-        <div class="box-header with-border">
+            <div class="box-header with-border">
             <h3 class="box-title">声纹用户登记&nbsp&nbsp<span style="color: red;border: solid red 1px;">A类</span></h3>
             <button type="button" class="btn btn-box-tool" data-widget="collapse" style="float: right">
                 <i class="fa fa-minus"></i>
             </button>
-        </div>
+            </div>
         <div class="box-body">
             <table class="table table-bordered">
                 <tbody>
