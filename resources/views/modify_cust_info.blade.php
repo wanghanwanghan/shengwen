@@ -119,10 +119,10 @@
                 {
                     if ($.inArray('11',data.data)==-1)
                     {
-                        window.staff_level='no';
+                        window.staff_level='yes';
                     }else
                     {
-                        window.staff_level='yes';
+                        window.staff_level='no';
                     }
                 },
                 error:function(XMLHttpRequest,textStatus,errorThrown)

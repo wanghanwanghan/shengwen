@@ -5304,7 +5304,14 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                         $res->delete();
 
-                        $this->system_log('删除声纹客户信息','主键:'.$pid);
+                        $this->system_log('删除指静脉客户信息','主键:'.$pid);
+
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            $model=FvBaseDataRelationModel::where(['tablename'=>$nowProj->tablename,'cust_data_pid'=>$pid])->first();
+                            $model->delete();
+                        }
 
                         return ['error'=>'0','msg'=>'删除成功'];
 
@@ -6902,6 +6909,24 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
                     }
 
+                    if (Input::get('tip')=='add_fv')
+                    {
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            //找到基础数据的pid
+                            $res=DB::table($nowProj->tablename)
+                                ->where(['idcard'=>trim(Input::get('key'))])
+                                ->get();
+
+                            return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
+
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                        }
+                    }
+
                     //返回表名
                     $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
                     if ($nowProj!=null)
@@ -6958,6 +6983,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     }
 
                 }
+                //天门版本到此完结***************************
 
                 if (!$this->is_idcard(Input::get('key')))
                 {
@@ -7348,9 +7374,10 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             {
                                 return ['error'=>'1','msg'=>'姓名必须是中文'];
                             }
+                        }else
+                        {
+                            $cust_info['cust_name']=$row['value'];
                         }
-
-                        $cust_info['cust_name']=$row['value'];
                     }
 
                     //身份证号

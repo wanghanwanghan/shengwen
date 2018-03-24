@@ -89,7 +89,7 @@
                     <tr height="50px">
                         <td style="width: 220px;">
                             <div>
-                                <input type="text" class="form-control" name="cust_bank_num" placeholder="银行卡号">
+                                <input style="display: none" type="text" class="form-control" name="cust_bank_num" placeholder="银行卡号">
                             </div>
                         </td>
                         <td style="width: 190px;">
@@ -273,7 +273,7 @@
                     _token :$("input[name=_token]").val(),
                     type   :'get_wait_register_customer_info',
                     key    :$("input[name=cust_id]").val(),
-                    tip    :'',
+                    tip    :'add_fv',
                     project:$("input[name=cust_project]").val()
                 };
 
@@ -473,6 +473,12 @@
                     }
 
                 },'json');
+
+                $("#fvId").val('');
+                $("#fvTemplate10").val('');
+                $("#fingerId").val('');
+                $("#fingerTemplate10").val('');
+
                 //***事件一结束*****************************************************************************************
 
                 //***事件二开始*****************************************************************************************
@@ -504,27 +510,6 @@
                 //***事件二结束*****************************************************************************************
 
             });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
