@@ -89,7 +89,7 @@
                     <tr height="50px">
                         <td style="width: 220px;">
                             <div>
-                                <input style="display: none" type="text" class="form-control" name="cust_bank_num" placeholder="银行卡号">
+                                <input type="text" class="form-control" name="cust_bank_num" placeholder="银行卡号">
                             </div>
                         </td>
                         <td style="width: 190px;">

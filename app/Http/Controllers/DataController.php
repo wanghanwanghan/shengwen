@@ -6919,6 +6919,11 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 ->where(['idcard'=>trim(Input::get('key'))])
                                 ->get();
 
+                            if (empty($res->toArray()))
+                            {
+                                return ['error'=>'1','msg'=>'未找到数据'];
+                            }
+
                             return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
 
                         }else
@@ -7171,20 +7176,38 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
             case 'get_wait_register_customer_fv_info':
 
-                if (!$this->is_idcard(Input::get('key')))
+                if (!$this->is_idcard(trim(Input::get('key'))))
                 {
                     return ['error'=>'1','msg'=>'不是一个有效的身份证'];
                 }
 
                 //查询是否有这个人的信息
-                $res=CustFVModel::where('cust_id',Input::get('key'))->get()->toArray();
+                $res=CustFVModel::where('cust_id',Input::get('key'))->first();
 
-                if (empty($res))
+                if ($res==null)
                 {
                     return ['error'=>'1','msg'=>'此人未参加采集'];
                 }else
                 {
-                    return ['error'=>'0','msg'=>'请开始认证'];
+                    $data=null;
+                    foreach ($res->toArray() as $key=>$value)
+                    {
+                        if ($key=='cust_project')
+                        {
+                            $data['cust_project']=implode('-',array_reverse($this->select_allproject_parent(ProjectModel::find($res->cust_project)->project_id)));
+                            continue;
+                        }
+
+                        if ($key=='cust_si_type')
+                        {
+                            $data['cust_si_type']=SiTypeModel::find($res->cust_si_type)->si_name;
+                            continue;
+                        }
+
+                        $data[$key]=$value;
+                    }
+
+                    return ['error'=>'0','msg'=>'请开始认证','data'=>$data];
                 }
 
                 break;

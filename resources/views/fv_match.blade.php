@@ -29,11 +29,8 @@
                                 <input type="text" class="form-control" name="cust_phone_num" placeholder="手机号码">
                             </div>
                         </td>
-                        <td width="25%" onclick="select_project();">
-                            <div>
-                                <span id="parentIframe">redis启动失败</span>
-                                <input type="hidden" name="cust_project">
-                            </div>
+                        <td width="25%">
+                            <span style="font-size: 12px;" id="cust_project">所属地区</span>
                         </td>
                         <td rowspan="4" width="240px">
                             <div id="localImag">
@@ -73,11 +70,7 @@
                         </td>
                         <td>
                             <div>
-                                <select style="padding-left: 8px" name="cust_si_type" class="form-control">
-                                    @foreach($staff_si_type as $v)
-                                        <option>{{$v}}</option>
-                                    @endforeach
-                                </select>
+                                <input type="text" class="form-control" name="cust_si_type" placeholder="参保类型">
                             </div>
                         </td>
                     </tr>
@@ -193,19 +186,6 @@
 
             },500);
 
-            //取得redis中的地区信息
-            var url ='/data/ajax';
-            var data={
-                _token :$("input[name=_token]").val(),
-                type   :'get_redis'
-            };
-            $.post(url,data,function (response) {
-
-                $("#parentIframe").html(response.res);
-                $("input[name=cust_project]").val(response.res1);
-
-            },'json');
-
             //给身份证输入框绑定事件
             $("#certNumber").on('change',function () {
 
@@ -219,6 +199,48 @@
 
                     if (response.error=='0')
                     {
+                        $.each(response.data,function (k,v)
+                        {
+                            if (k=='cust_name')
+                            {
+                                $("#personName").val(v);
+                            }
+                            if (k=='cust_si_id')
+                            {
+                                $("input[name=cust_si_id]").val(v);
+                            }
+                            if (k=='cust_phone_num')
+                            {
+                                if (v!='')
+                                {
+                                    $("input[name=cust_phone_num]").val(v);
+                                }
+                            }
+                            if (k=='cust_phone_bku')
+                            {
+                                if (v!='')
+                                {
+                                    $("input[name=cust_phone_bku]").val(v);
+                                }
+                            }
+                            if (k=='cust_address')
+                            {
+                                if (v!='')
+                                {
+                                    $("input[name=cust_address]").val(v);
+                                }
+                            }
+                            if (k=='cust_project')
+                            {
+                                $("#cust_project").html(v);
+                            }
+                            if (k=='cust_si_type')
+                            {
+                                $("input[name=cust_si_type]").val(v);
+                            }
+
+                        });
+
                         $("#OPENfv").css('display','block');
                         $("#CLOSEfv").css('display','none');
                     }else
