@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\LevelModel;
+use App\Http\Model\OnlyNanLingModel;
 use App\Http\Model\OnlyTianMenModel;
+use App\Http\Model\OnlyZhaoXianModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Myclass\FingerRegister;
 use Illuminate\Support\Facades\Config;
@@ -18,6 +21,24 @@ class TestController extends Controller
 {
     public function test_1()
     {
+        $wfile=fopen(public_path('wanghan_new.txt'),"w") or die("Unable to open file!");
+
+        $res=CustFVModel::get(['cust_name','cust_id','cust_phone_num','cust_project'])->toArray();
+
+        foreach ($res as &$row)
+        {
+            $row['cust_project']=implode('-',array_reverse($this->select_allproject_parent(ProjectModel::find($row['cust_project'])->project_id)));
+
+            $txt=implode(',',$row)."\r\n";
+
+            fwrite($wfile,$txt);
+        }
+
+        fclose($wfile);
+
+
+
+
 
 
 
@@ -26,12 +47,9 @@ class TestController extends Controller
     }
     public function test_2()
     {
+        set_time_limit(0);
 
-        $res=$this->is_idcard('422428460816632');
-
-        dd($res);
-
-        $myfile=fopen(public_path('wanghan.txt'),"r") or die("Unable to open file!");
+        $myfile=fopen(public_path('zhaoxian.txt'),"r") or die("Unable to open file!");
 
         $wfile=fopen(public_path('wanghan_new.txt'),"w") or die("Unable to open file!");
 
@@ -43,44 +61,47 @@ class TestController extends Controller
 
             $template=explode(',',$template);
 
-            $template_use_insert=$template;
+            //$arrayKey=['c_name','si_num','p_name','idcard','sex','birthday','c_day','r_day','bank'];
 
-            $template=[$template[1]];
-
-            $arrayKey1=['c_name','si_num','p_name','idcard','sex','birthday','c_day','r_day','bank'];
-            $arrayKey=['si_num'];
+            //城乡
+            $arrayKey=['p_name','idcard','birthday','sex'];
 
             $template=array_combine($arrayKey,$template);
 
-            $model=OnlyTianMenModel::where($template)->get()->toArray();
+            //城乡
+            $template['c_name']='城乡';
+            $template['c_day']='';
+            $template['r_day']='';
 
-            if (empty($model))
+            $mybankRES='123';
+            while ($mybankRES!=null)
             {
-                $txt=implode(',',$template_use_insert)."\r\n";
-
-                fwrite($wfile,$txt);
-
-                $template_use_insert=array_combine($arrayKey1,$template_use_insert);
-
-                $template_use_insert['id_in_mysql']='0';
-                $template_use_insert['id_in_ready']=null;
-                $template_use_insert['cust_type']='';
-                $template_use_insert['is_register']='';
-                $template_use_insert['is_second_reviewnum']='';
-                $template_use_insert['is_error_info']='';
-                $template_use_insert['phone']=null;
-                $template_use_insert['btw']=null;
-
-            }else
-            {
-
+                $mybank='zhaoxian_'.substr(md5(time().$template['idcard']),0,11);
+                $mybankRES=OnlyZhaoXianModel::where('bank',$mybank)->first();
             }
+
+            $template['bank']=$mybank;
+            $template['si_num']=$mybank;
+
+            //$template['bank']='0';
+            $template['id_in_mysql']='0';
+            $template['id_in_ready']=null;
+            $template['cust_type']='';
+            $template['is_register']='';
+            $template['is_second_reviewnum']='';
+            $template['is_error_info']='';
+            $template['phone']=null;
+            $template['btw']=null;
+
+            $this->insert_something($template['birthday'],[4,6]);
+
+            OnlyZhaoXianModel::create($template);
         }
 
         fclose($wfile);
         fclose($myfile);
 
-        dd('完成');
+        dd('完成oyw');
 
     }
 

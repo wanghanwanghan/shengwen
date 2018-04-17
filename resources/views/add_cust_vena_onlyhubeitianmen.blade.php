@@ -1,6 +1,7 @@
 @extends('layouts.dashboard')
 @section('page_heading','欢迎登陆社会养老保险领取资格认证平台')
-@section('page_heading_small','用户登记页')
+@section('page_heading_small','用户认证页')
+{{--@section('page_heading_small','用户登记页')--}}
 @section('section')
 
     <p id="cert_message" style="display: none;"></p>
@@ -10,7 +11,8 @@
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <div class="box">
             <div class="box-header with-border">
-                <h3 class="box-title">指静脉用户登记</h3>
+                <h3 class="box-title">指静脉用户认证</h3>
+                {{--<h3 class="box-title">指静脉用户登记</h3>--}}
                 <button type="button" class="btn btn-box-tool" data-widget="collapse" style="float: right">
                     <i class="fa fa-minus"></i>
                 </button>
@@ -128,7 +130,8 @@
                         </td>
                         <td style="width: 190px;" align="center">
                             <div class="checkbox">
-                                <a style="width: 100px;" onclick='$("#fvRegister").click();' class="btn btn-block btn-primary btn-sm">采集指静脉</a>
+                                <a style="width: 100px;" onclick="open_fv_page();" class="btn btn-block btn-primary btn-sm">认证指静脉</a>
+                                {{--<a style="width: 100px;" onclick='$("#fvRegister").click();' class="btn btn-block btn-primary btn-sm">采集指静脉</a>--}}
                             </div>
                         </td>
                         <td style="width: 190px;" align="center">
@@ -156,113 +159,68 @@
         </div>
     </form>
 
-    <div class="box">
-        <div class="box-header with-border">
-            <h3 class="box-title">采集指静脉信息</h3>
-            <button type="button" class="btn btn-box-tool" data-widget="collapse" style="float: right">
-                <i class="fa fa-minus"></i>
-            </button>
-        </div>
-        <div class="box-body">
 
-            <div id="fvRegisterDiv" style="display: none;">
-                <a id="fvRegister" onclick='submitFVRegister("指静脉","指静脉数:","确认保存当前修改吗？","驱动下载", false)' title="请安装指静脉驱动或启动该服务" class="showGray" onmouseover="this.className='showGray'">注册</a>
-            </div>
-
-            <div id="bg" style="display: none;"></div>
-
-            <div id="zhijingmai_box" class="zhijingmai_box" style="display: none;">
-                <h2>指静脉登记</h2>
-                <div class="list">
-                    <canvas id="canvas" width="430px" height="450px" style="background: rgb(243, 245, 240)"></canvas>
-                    <input type="hidden" id="whetherModify" name="whetherModify" alt="" value="111" />
-
-                    <div style="position: absolute; left: 310px; top: 325px; width: 70px; height: 28px;">
-                        <button type="button" id="submitButtonId" name="makeSureName" onclick="mysubmitEvent();" class="button-form">确定</button>
-                    </div>
-                    <div style="position: absolute; left: 310px; top: 365px; width: 70px; height: 28px;">
-                        <button class="button-form" type="button" id="closeButton" name="closeButton" onclick='cancelEvent("确认保存当前修改吗?", "指静脉数:");'>取消</button>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <table class="table table-bordered">
-                    <tbody>
-                    <tr>
-                        <td width="15%" style="text-align: center">
-                            已经采集：
-                        </td>
-                        <td id="coldata">
-
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div hidden>
-                <form id="fvId_or_fvTemplate">
-                    <fieldset style="width:130px" id="t">
-                        <legend>三枚指静脉的id</legend>
-                        <textarea rows="1" cols="70" id="fvId" name="my_fvID"></textarea>
-                    </fieldset>
-                    <fieldset style="width:530px" id="te">
-                        <legend>三枚指静脉模板数据</legend>
-                        <textarea rows="1" cols="70" id="fvTemplate10" name="my_fvTemplate"></textarea>
-                    </fieldset>
-
-                    <fieldset style="width:130px" id="t">
-                        <legend>指纹的id</legend>
-                        <textarea rows="1" cols="70" id="fingerId" name="my_fpID"></textarea>
-                    </fieldset>
-                    <fieldset style="width:530px" id="te">
-                        <legend>指纹模板数据</legend>
-                        <textarea rows="1" cols="70" id="fingerTemplate10" name="my_fpTemplate"></textarea>
-                    </fieldset>
-                </form>
-            </div>
-
-        </div>
+    <div style="display: none">
+        <form id="fvId_or_fvTemplate">
+            <textarea id="myFV_0" name="myFV_0"></textarea>
+            <textarea id="myFP_0" name="myFP_0"></textarea>
+            <textarea id="myFV_1" name="myFV_1"></textarea>
+            <textarea id="myFP_1" name="myFP_1"></textarea>
+            <textarea id="myFV_2" name="myFV_2"></textarea>
+            <textarea id="myFP_2" name="myFP_2"></textarea>
+            <textarea id="myFV_3" name="myFV_3"></textarea>
+            <textarea id="myFP_3" name="myFP_3"></textarea>
+            <textarea id="myFV_4" name="myFV_4"></textarea>
+            <textarea id="myFP_4" name="myFP_4"></textarea>
+            <textarea id="myFV_5" name="myFV_5"></textarea>
+            <textarea id="myFP_5" name="myFP_5"></textarea>
+            <textarea id="myFV_6" name="myFV_6"></textarea>
+            <textarea id="myFP_6" name="myFP_6"></textarea>
+            <textarea id="myFV_7" name="myFV_7"></textarea>
+            <textarea id="myFP_7" name="myFP_7"></textarea>
+            <textarea id="myFV_8" name="myFV_8"></textarea>
+            <textarea id="myFP_8" name="myFP_8"></textarea>
+            <textarea id="myFV_9" name="myFV_9"></textarea>
+            <textarea id="myFP_9" name="myFP_9"></textarea>
+        </form>
     </div>
+    {{--@include('layouts.zhijingmai1')--}}
 
     <script>
 
         $(function () {
 
-            myfunction();
-
-            setInterval(function () {
-
-                //修改指静脉登记类中的属性
-                var url ='/data/ajax';
-                var data={
-                    _token :$("input[name=_token]").val(),
-                    type   :'modify_fv_class_attr',
-                    key    :$("#fvId_or_fvTemplate").serializeArray()
-                };
-                $.post(url,data,function (response) {
-
-                    if (response.error=='0')
-                    {
-                        $("#coldata").children().remove();
-
-                        $.each(response.data,function (k,v) {
-
-                            var myspan=$("<span style='width: 100px;margin-left: 2px;' class='btn btn-success btn-sm'></span>");
-                            myspan.html(v);
-                            $("#coldata").append(myspan);
-
-                        });
-
-                    }else
-                    {
-                        $("#coldata").children().remove();
-                    }
-
-                },'json');
-
-            },1500);
+//            setInterval(function () {
+//
+//                //修改指静脉登记类中的属性
+//                var url ='/data/ajax';
+//                var data={
+//                    _token :$("input[name=_token]").val(),
+//                    type   :'modify_fv_class_attr',
+//                    key    :$("#fvId_or_fvTemplate").serializeArray()
+//                };
+//                $.post(url,data,function (response) {
+//
+//                    if (response.error=='0')
+//                    {
+//                        $("#coldata").children().remove();
+//
+//                        $.each(response.data,function (k,v) {
+//
+//                            var myspan=$("<span style='width: 100px;margin-left: 2px;' class='btn btn-success btn-sm'></span>");
+//                            myspan.html(v);
+//                            $("#coldata").append(myspan);
+//
+//                        });
+//
+//                    }else
+//                    {
+//                        $("#coldata").children().remove();
+//                    }
+//
+//                },'json');
+//
+//            },1500);
 
             //给身份证输入框绑定change事件
             $("input[name=cust_id]").on('change',function () {
@@ -533,10 +491,35 @@
             },'json');
 
         });
-        
-        function mysubmitEvent() {
-            submitEvent();
+
+        function open_fv_page() {
+
+            layer.open({
+                type: 2,
+                title: '',
+                maxmin:false,//是否显示最大化最小化按钮
+                resize:false,//窗口是否可以拉伸
+                shadeClose: true, //点击遮罩关闭层
+                scrollbar:false,//是否允许显示滚动条
+                fixed:true,
+                area:['1000px','450px'],
+                content: '/open/fv/page?idcard='+$("#certNumber").val()
+//                cancel: function(index, layero)
+//                {
+//                    alert('wanghan');
+//                    if(confirm('确定要关闭么'))
+//                    {
+//                        //只有当点击confirm框的确定时，该层才会关闭
+//                        layer.close(index)
+//                    }
+//
+//                    return false;
+//                }
+            });
+
         }
+        
+
 
     </script>
 

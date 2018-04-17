@@ -38,38 +38,44 @@ class FingerRegister
     public $FingerPrintTemplateData;
 
     //注册指静脉
-    public function Register(Array $id,Array $template)
+    public function Register($id,Array $template)
     {
         //给指静脉属性赋值
-        for ($i=0;$i<count($id);$i++)
+        while (1)
         {
-            $IdNumber=substr($id[$i],0,1);
-            $this->FingerTemplateData[$IdNumber][]=array_shift($template);
-        }
+            $model=array_shift($template);
 
-        //分配给Finger_[0-9]
-        foreach ($this->FingerTemplateData as $key=>$value)
-        {
-            $AttrName='Finger_'.$key;
-            $this->$AttrName=$value;
+            if ($model=='')
+            {
+                return;
+            }
+
+            $this->FingerTemplateData[$id][]=$model;
+
+            //分配给Finger_[0-9]
+            $AttrName='Finger_'.$id;
+            $this->$AttrName=$this->FingerTemplateData[$id];
         }
     }
 
     //注册指纹
-    public function RegisterFP(Array $id,Array $template)
+    public function RegisterFP($id,Array $template)
     {
         //给指纹属性赋值
-        for ($i=0;$i<count($id);$i++)
+        while (1)
         {
-            $IdNumber=substr($id[$i],0,1);
-            $this->FingerPrintTemplateData[$IdNumber]=array_shift($template);
-        }
+            $model=array_shift($template);
 
-        //分配给FingerPrint_[0-9]
-        foreach ($this->FingerPrintTemplateData as $key=>$value)
-        {
-            $AttrName='FingerPrint_'.$key;
-            $this->$AttrName=$value;
+            if ($model=='')
+            {
+                return;
+            }
+
+            $this->FingerPrintTemplateData[$id][]=$model;
+
+            //分配给FingerPrint_[0-9]
+            $AttrName='FingerPrint_'.$id;
+            $this->$AttrName=$this->FingerPrintTemplateData[$id];
         }
     }
 
@@ -85,7 +91,7 @@ class FingerRegister
             }
         }
 
-        return $HasValue;
+        return isset($HasValue)?$HasValue:null;
     }
 
     public function attrToChinese(FingerRegister $fvObj)
@@ -96,7 +102,7 @@ class FingerRegister
         {
             if ($value=='0')
             {
-                $chinese[]='左手小拇指';
+                $chinese[]='左手小指';
             }
             if ($value=='1')
             {
@@ -112,11 +118,11 @@ class FingerRegister
             }
             if ($value=='4')
             {
-                $chinese[]='左手大拇指';
+                $chinese[]='左手拇指';
             }
             if ($value=='5')
             {
-                $chinese[]='右手大拇指';
+                $chinese[]='右手拇指';
             }
             if ($value=='6')
             {
@@ -132,7 +138,7 @@ class FingerRegister
             }
             if ($value=='9')
             {
-                $chinese[]='右手小拇指';
+                $chinese[]='右手拇指';
             }
         }
 

@@ -16,10 +16,10 @@ function is_fv_user()
 
     if ($data=='fv')
     {
-        return true;
+        return false;
     }else
     {
-        return false;
+        return true;
     }
 }
 

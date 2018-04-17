@@ -1,7 +1,7 @@
 <?php
 
 //测试
-Route::get('/test1','TestController@test_1');
+Route::get('/test1','TestController@test_2');
 
 //登陆
 Route::get('/', function () {
@@ -33,6 +33,7 @@ Route::group(['middleware'=>['LoginMiddleware','AddCustMiddleware']],function ()
 
     //添加指静脉
     Route::get('add/cust/vena','WebController@add_cust_vena');
+    Route::get('open/fv/page',function (){return view('zhijingmai1');});
 
     //添加第二年审人
     Route::get('add/second','WebController@add_second');
@@ -290,4 +291,5 @@ Route::get('/export7/{key}','ExcelController@export7');
 //导出天门专用已采集已注册未采集未注册数据
 Route::get('/export8/{key}','ExcelController@export8');
 
-
+//南陵导出每天采集结果
+Route::get('/nanling/{key}','ExcelController@nanling_export');

@@ -1,6 +1,7 @@
 @extends('layouts.dashboard')
 @section('page_heading','欢迎登陆社会养老保险领取资格认证平台')
-@section('page_heading_small','用户登记页')
+@section('page_heading_small','用户认证页')
+{{--@section('page_heading_small','用户登记页')--}}
 @section('section')
 
     <p id="cert_message" style="display: none;"></p>
@@ -10,7 +11,8 @@
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <div class="box">
             <div class="box-header with-border">
-                <h3 class="box-title">指静脉用户登记</h3>
+                <h3 class="box-title">指静脉用户认证</h3>
+                {{--<h3 class="box-title">指静脉用户登记</h3>--}}
                 <button type="button" class="btn btn-box-tool" data-widget="collapse" style="float: right">
                     <i class="fa fa-minus"></i>
                 </button>
@@ -100,7 +102,8 @@
 
     <div class="box">
         <div class="box-header with-border">
-            <h3 class="box-title">采集指静脉信息</h3>
+            <h3 class="box-title">认证指静脉信息</h3>
+            {{--<h3 class="box-title">采集指静脉信息</h3>--}}
             <button type="button" class="btn btn-box-tool" data-widget="collapse" style="float: right">
                 <i class="fa fa-minus"></i>
             </button>
@@ -133,7 +136,8 @@
                     <tbody>
                     <tr>
                         <td width="15%" style="text-align: center">
-                            已经采集：
+                            认证：
+                            {{--已经采集：--}}
                         </td>
                         <td id="coldata">
 

@@ -917,3 +917,249 @@ function clearData()
 {
 	$("#fpVerify").val("");
 }
+
+var ZKIDROnlineUrl = "http://127.0.0.1:22001/ZKBIOOnline/zkfvapi2";
+
+function getZKBIOOnlineRandomNum()
+{
+    var random = parseInt(Math.random() * 10000);
+    return random;
+}
+
+//链接设备
+function openDevice()
+{
+    $.ajax( {
+        type : "GET",
+        url : ZKIDROnlineUrl+"/open?randnumber=" + getZKBIOOnlineRandomNum(),
+        dataType : "json",
+        async: false,
+        //timeout:1000,
+        success : function(result)
+        {
+            var ret = result.ret;
+            if(ret == 0)
+            {
+            }
+            else
+            {
+                alert("连接设备失败！错误码="+ret);
+            }
+        },
+        error : function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert("操作失败！");
+        }
+    });
+}
+
+//采集数据
+function capture(id)
+{
+    openDevice();
+
+    $.ajax( {
+        type : "GET",
+        url : ZKIDROnlineUrl+"/capture?nfiq=3&randnumber=" + getZKBIOOnlineRandomNum(),
+        dataType : "json",
+        async: false,
+        //timeout:1000,
+        success : function(result)
+        {
+            var ret = result.ret;
+            if(ret == 0)
+            {
+                //var jpgFPBase64 = result.data.fingerprint.image;
+                //var jpgVeinBase64 = result.data.fingervein[0].image;
+                //$("#featureFP").html(result.data.fingerprint.template);
+                //$("#featureVein").html(result.data.fingervein[0].template);
+                //document.getElementById("jpgFPBase64").src="data:image/png;base64,"+jpgFPBase64;
+                // document.getElementById("jpgVeinBase64").src="data:image/png;base64,"+jpgVeinBase64;
+
+                //采集完以后，生成指静脉对象
+                var zhiwenT=result.data.fingerprint.template;
+                var zhijingmaiT=result.data.fingervein[0].template;
+
+                if (zhijingmaiT=='')
+                {
+                	layer.msg('未获得指静脉数据，请调整手指');
+                	return;
+                }
+
+                //计算采集次数
+                var num=$("#"+id+" span").html();
+                if (Number(num)+1>=4)
+                {
+                    $("#"+id).children().remove();
+                    $("#"+id).append("<a href='#' onclick=yanzheng($(this).parent().attr('id'));>验证</a>&nbsp;&nbsp;&nbsp;&nbsp;" +
+                        "<a href='#' onclick=chongzhi($('#ThisCustIdcard').val(),$(this).parent().attr('id'));>重置</a>");
+                    layer.msg('该手指采集次数已满');
+                    return;
+                }
+                $("#"+id+" span").html(Number(num)+1);
+
+                //模板区域
+                var fv_t=parent.$("#myFV_"+id).html();
+                var fp_t=parent.$("#myFP_"+id).html();
+
+                parent.$("#myFV_"+id).html(fv_t+","+zhijingmaiT);
+                parent.$("#myFP_"+id).html(fp_t+","+zhiwenT);
+            }
+            else
+            {
+                alert("采集失败！错误码="+ret);
+            }
+        },
+        error : function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert("操作失败！");
+        }
+    });
+}
+
+//验证数据
+function yanzheng(id)
+{
+    openDevice();
+
+    $.ajax( {
+        type : "GET",
+        url : ZKIDROnlineUrl+"/capture?nfiq=3&randnumber=" + getZKBIOOnlineRandomNum(),
+        dataType : "json",
+        async: false,
+        //timeout:1000,
+        success : function(result)
+        {
+            var ret = result.ret;
+            if(ret == 0)
+            {
+                var zhiwenT=result.data.fingerprint.template;
+                var zhijingmaiT=result.data.fingervein[0].template;
+                var FVsocre=10;
+                var FPsocre=10;
+
+                if (zhijingmaiT=='')
+                {
+                    layer.msg('未获得指静脉数据，请调整手指');
+                    return;
+                }
+
+                //得到模板
+                var fv_t=parent.$("#myFV_"+id).html();
+                var fp_t=parent.$("#myFP_"+id).html();
+
+                //对比指纹
+                var old_fp=fp_t.split(',');
+                var new_fp=zhiwenT;
+
+                for (var i=0;i<old_fp.length;i++)
+				{
+                    FPsocre=doVerifyFinger(new_fp,old_fp[i]);
+                    if (parseInt(FPsocre)>70)
+					{
+						break;
+					}
+				}
+
+				//对比静脉
+                var old_fv=fv_t.split(',');
+                var new_fv=zhijingmaiT;
+
+                for (var i=0;i<old_fv.length;i++)
+                {
+                    FVsocre=doVerifyVein(new_fv,old_fv[i]);
+                    if (parseInt(FVsocre)>70)
+                    {
+                        break;
+                    }
+                }
+
+                if (parseInt(FVsocre)>70 || parseInt(FPsocre)>70)
+				{
+					layer.msg('验证成功');
+				}else
+				{
+                    layer.msg('验证失败');
+				}
+            }
+            else
+            {
+                alert("采集失败！错误码="+ret);
+            }
+        },
+        error : function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert("操作失败！");
+        }
+    });
+}
+
+//静脉对比
+function doVerifyVein(regTemplate,fpTemplate)
+{
+    $.ajax( {
+        type : "POST",
+        url : ZKIDROnlineUrl+"/verifyvein?threshold=72",
+        dataType : "json",
+        data:JSON.stringify({'reg':regTemplate,
+            'ver':fpTemplate}),
+        async: false,
+        success : function(data)
+        {
+            //返回码
+            var ret = null;
+            ret = data.ret;
+            //接口调用成功返回时
+            if(ret == 0)
+            {
+                myscore=data.score;
+            }
+            else
+            {
+                //alert("ret:" + data.ret);
+                myscore=10;
+            }
+        },
+        error : function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert("请安装指纹驱动或启动该服务!");
+        }
+    });
+
+    return myscore;
+}
+
+//指纹对比
+function doVerifyFinger(regTemplate,fpTemplate)
+{
+    $.ajax( {
+        type : "POST",
+        url : ZKIDROnlineUrl+"/verifyfinger?threshold=35",
+        dataType : "json",
+        data:JSON.stringify({'reg':regTemplate,
+            'ver':fpTemplate}),
+        async: false,
+        success : function(data)
+        {
+            //返回码
+            var ret = null;
+            ret = data.ret;
+            //接口调用成功返回时
+            if(ret == 0)
+            {
+                myscore=data.score;
+            }
+            else
+            {
+                //alert("ret:" + data.ret);
+	            myscore=10;
+            }
+        },
+        error : function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert("请安装指纹驱动或启动该服务!");
+        }
+    });
+
+    return myscore;
+}

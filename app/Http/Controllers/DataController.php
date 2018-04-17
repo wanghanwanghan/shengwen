@@ -14,7 +14,6 @@ use App\Http\Model\CustModel_tianmen_ready;
 use App\Http\Model\FvBaseDataRelationModel;
 use App\Http\Model\LevelModel;
 use App\Http\Model\LogModel;
-use App\Http\Model\OnlyTianMenModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SendMailModel;
 use App\Http\Model\SiTypeModel;
@@ -35,8 +34,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
-use Mockery\Exception;
 
 class DataController extends Controller
 {
@@ -2424,7 +2421,19 @@ class DataController extends Controller
                                 $time=time();
                                 $this->redis_set('fv_yes_pass'.$time,json_encode($redis_content),100);
 
-                                return ['error'=>'0','msg'=>'查询成功','data'=>$res3,'pages'=>intval(ceil(count($res)/$limit)),'count_data'=>$cnt,'redis_key'=>'fv_yes_pass'.$time];
+                                //自制分页
+                                $data1=[];
+                                for ($i=$offset;$i<=$limit*Input::get('page')-1;$i++)
+                                {
+                                    if (!isset($res3[$i]))
+                                    {
+                                        break;
+                                    }
+
+                                    $data1[]=$res3[$i];
+                                }
+
+                                return ['error'=>'0','msg'=>'查询成功','data'=>$data1,'pages'=>intval(ceil(count($res)/$limit)),'count_data'=>$cnt,'redis_key'=>'fv_yes_pass'.$time];
                             }
                         }
                     }
@@ -3174,6 +3183,7 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }
 
                 //取出哪些数据
+                //姓名,身份证号码,电话号码,备用电话,采集/认证时间,社保编号,操作员,操作时间,退休时间,退休单位,住址,所属社区
                 $get=[
                     'cust_name','cust_id','cust_si_id'
                 ];
@@ -3334,11 +3344,73 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 //如果要导出的是指静脉数据
                 if (strpos(Input::get('key'),'fv_yes_pass')!==false)
                 {
-                    //strpos($a, $b) !== false 如果$a 中存在 $b，则为 true ，否则为 false。
+                    $get=
+                        [
+                            'cust_name','cust_id','cust_phone_num','cust_phone_bku',
+                            'created_at','cust_last_confirm_date','cust_si_id','cust_num',
+                            'cust_address','cust_project'
+                        ];
+
                     $res=CustFVModel::whereIn('cust_id',$in_data)->get($get)->toArray();
 
+                    //补齐数据
+                    foreach ($res as &$row)
+                    {
+                        //客户属于哪个基础表
+                        if (Redis::get('projk_'.$row['cust_project'])=='')
+                        {
+                            $baseTableName=BaseDataRelationModel::where(['project'=>$row['cust_project']])->first()->tablename;
+                            $this->redis_set('projk_'.$row['cust_project'],$baseTableName,30);
+                        }else
+                        {
+                            $baseTableName=Redis::get('projk_'.$row['cust_project']);
+                        }
+
+                        $row['cust_project']=$this->get_project_name($row['cust_project']);
+                        $row['cust_id']='\''.$row['cust_id'];
+
+                        //取得操作员数据
+                        $staffDataModel=DB::table('staff_info')
+                            ->leftJoin('staff_add_customer','staff_add_customer.sac_staff_pid','=','staff_info.staff_num')
+                            ->where([
+                                'staff_add_customer.sac_table_name'=>'customer_fv_info',
+                                'staff_add_customer.sac_customer_pid'=>$row['cust_num'],
+                            ])
+                            ->select(
+                                'staff_info.*'
+                            )
+                            ->first();
+
+                        //取得基础表部分数据
+                        $baseDataModel=DB::table('base_data_and_cust_fv_data_relation')
+                            ->where('tablename',$baseTableName)
+                            ->where('cust_data_pid',$row['cust_num'])
+                            ->first();
+
+                        unset($row['cust_num']);
+
+                        if ($baseDataModel==null)
+                        {
+                            $row['c_name']='';
+                            $row['c_day']='';
+                            $row['r_day']='';
+                            $row['staff']=$staffDataModel->staff_name;
+                            continue;
+                        }
+
+                        $baseDataModel=DB::table($baseTableName)
+                            ->where('id',$baseDataModel->base_data_pid)
+                            ->first();
+
+                        $row['c_name']=$baseDataModel->c_name;
+                        $row['c_day']=$baseDataModel->c_day;
+                        $row['r_day']=$baseDataModel->r_day;
+                        $row['staff']=$staffDataModel->staff_name;
+                    }
+
                     //给res的第一行
-                    array_unshift($res,['客户姓名','身份证号','社保编号']);
+                    array_unshift($res,['客户姓名','身份证号','电话号码','备用号码','采集时间','最后认证通过时间','社保编号',
+                        '地址','所属地区','退位单位','参工日期','退休日期','操作员']);
 
                     //因为ajax触发不了Excel::里的export方法，所以用redis传过去
                     $time=time();
@@ -4153,10 +4225,12 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $data['唯一主键']='<a id=modify_pid value='.$res[0]['cust_num'].'>'.$res[0]['cust_num'].'</a>';
                     if ($res[0]['cust_death_flag']=='1')
                     {
-                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-info" id=cust_restore_btn>恢复认证状态</a>';
+                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-info" id=cust_restore_btn>恢复认证状态</a>'.$nbsp.
+                            '<a class="btn btn-info" id=chongzhi_fv>授权10分钟重置指静脉</a>';
                     }else
                     {
-                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-warning" id=cust_death_btn>设成去世状态</a>';
+                        $data['更多操作']='<a class="btn btn-danger" id=cust_delete_btn>删除该客户</a>'.$nbsp.'<a class="btn btn-warning" id=cust_death_btn>设成去世状态</a>'.$nbsp.
+                            '<a class="btn btn-info" id=chongzhi_fv>授权10分钟重置指静脉</a>';
                     }
 
                     return ['error'=>'0','msg'=>'查询成功','data'=>$data,'idcard_picture'=>$this->check_idcard_photo(file_get_contents(storage_path('app/IDcard_picture/'.$res[0]['cust_id'])))];
@@ -4840,6 +4914,20 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     return ['error'=>'0','msg'=>'修改成功'];
                 }
+
+                break;
+
+            case 'modify_cust_phone_bku':
+
+                $phone=Input::get('key');
+                $pid=Input::get('pid');
+
+                $model=CustFVModel::find($pid);
+
+                $model->cust_phone_bku=trim($phone);
+                $model->save();
+
+                return ['error'=>'0','msg'=>'修改成功'];
 
                 break;
 
@@ -7224,7 +7312,8 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 if (empty($res->toArray()))
                 {
-                    return ['error'=>'0','msg'=>'新的客户，请开始采集'];
+                    return ['error'=>'0'];
+                    //return ['error'=>'0','msg'=>'新的客户，请开始采集'];
                 }else
                 {
                     //说明这个客户已经采集过了
@@ -7309,63 +7398,76 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 break;
 
+            case 'chongzhi_fv_in_10_min':
+
+                $pid=Input::get('pid');
+
+                $idcard=CustFVModel::find($pid)->cust_id;
+
+                $this->redis_set('chongzhi'.$idcard,$idcard,600);
+
+                return ['error'=>'0','msg'=>'授权成功，10分钟后过期'];
+
+                break;
+
+            case 'chongzhi_fv':
+
+                $idcard=Input::get('key');
+
+                if (Redis::get('chongzhi'.$idcard)==null)
+                {
+                    return ['error'=>'1','msg'=>'重置失败，未授权'];
+                }
+
+                return ['error'=>'0','msg'=>'重置成功'];
+
+                break;
+
             case 'add_fv_cust':
 
                 $info=Input::get('key');
                 $cust_photo=Input::get('cust_photo');
 
+                $obj=FingerRegister::getSingleton();
+
                 //取出指静脉信息
                 foreach ($info['fv_info'] as $row)
                 {
-                    if ($row['name']=='my_fvID')
-                    {
-                        $id=$row['value'];
-                    }
+                    //得到手指编号和静脉标识或指纹标识
+                    $Fid=explode('_',$row['name']);
 
-                    if ($row['name']=='my_fvTemplate')
+                    if ($Fid[0]=='myFV')
                     {
-                        $template=$row['value'];
-                    }
-                    //上面是指静脉信息，下面是指纹信息
-                    if ($row['name']=='my_fpID')
-                    {
-                        $fp_id=$row['value'];
-                    }
+                        //静脉注册
+                        $obj->Register($Fid[1],array_filter(explode(',',$row['value'])));
 
-                    if ($row['name']=='my_fpTemplate')
+                    }elseif ($Fid[0]=='myFP')
                     {
-                        $fp_template=$row['value'];
-                    }
+                        //指纹注册
+                        $obj->RegisterFP($Fid[1],array_filter(explode(',',$row['value'])));
+
+                    }else{}
                 }
 
                 //如果数据是空
-                if (trim($id)=='' || trim($template)=='' || trim($fp_id)=='' || trim($fp_template)=='')
+                if ($obj->whichAttrHasData()==null)
                 {
                     return ['error'=>'1','msg'=>'未取得指静脉数据'];
                 }
 
-                $template=trim($template);
-                $template=str_replace(["\r\n","\n"],'',$template);
-
-                //注册指静脉
-                $myfv=FingerRegister::getSingleton();
-                $myfv->Register(explode(',',$id),explode(',',$template));
-
-                //注册指纹
-                $fp_id=str_replace(['[',']'],'',$fp_id);
-                $fp_template=str_replace(['[',']'],'',$fp_template);
-                $myfv->RegisterFP(explode(',',$fp_id),explode(',',$fp_template));
-
                 //创建变量，储存指静脉模板
-                foreach ($myfv->whichAttrHasData() as $key=>$value)
+                foreach ($obj->whichAttrHasData() as $key=>$value)
                 {
                     //指静脉
                     $attr='Finger_'.$value;
-                    $$attr=implode(',',$myfv->$attr);
+                    $$attr=implode(',',$obj->$attr);
 
                     //指纹
                     $attr1='FingerPrint_'.$value;
-                    $$attr1=$myfv->$attr1;
+                    if ($obj->$attr1!=null)
+                    {
+                        $$attr1=implode(',',$obj->$attr1);
+                    }
                 }
 
                 //取出要添加的用户信息
@@ -7417,7 +7519,43 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         //验证一下数据库中是否有相同的项
                         if (count(CustFVModel::where(['cust_id'=>$row['value']])->get()->toArray())!='0')
                         {
-                            return ['error'=>'1','msg'=>'此身份证号已经存在，不能添加了'];
+                            //如果客户在授权重置指静脉时间区间内，则修改指静脉信息
+                            if (Redis::get('chongzhi'.$row['value'])==null)
+                            {
+                                return ['error'=>'1','msg'=>'此身份证号已经存在，不能添加了'];
+                            }
+
+                            $model=CustFVModel::where('cust_id',$row['value'])->first();
+
+                            $obj=$this->mymongo();
+                            $obj->Finger->CustTemplate->remove(['_id'=>$model->cust_num]);
+
+                            $obj->Finger->CustTemplate->insert([
+                                '_id'=>$model->cust_num,
+                                'Finger_0'=>isset($Finger_0)?$Finger_0:null,
+                                'Finger_1'=>isset($Finger_1)?$Finger_1:null,
+                                'Finger_2'=>isset($Finger_2)?$Finger_2:null,
+                                'Finger_3'=>isset($Finger_3)?$Finger_3:null,
+                                'Finger_4'=>isset($Finger_4)?$Finger_4:null,
+                                'Finger_5'=>isset($Finger_5)?$Finger_5:null,
+                                'Finger_6'=>isset($Finger_6)?$Finger_6:null,
+                                'Finger_7'=>isset($Finger_7)?$Finger_7:null,
+                                'Finger_8'=>isset($Finger_8)?$Finger_8:null,
+                                'Finger_9'=>isset($Finger_9)?$Finger_9:null,
+                                'FingerPrint_0'=>isset($FingerPrint_0)?$FingerPrint_0:null,
+                                'FingerPrint_1'=>isset($FingerPrint_1)?$FingerPrint_1:null,
+                                'FingerPrint_2'=>isset($FingerPrint_2)?$FingerPrint_2:null,
+                                'FingerPrint_3'=>isset($FingerPrint_3)?$FingerPrint_3:null,
+                                'FingerPrint_4'=>isset($FingerPrint_4)?$FingerPrint_4:null,
+                                'FingerPrint_5'=>isset($FingerPrint_5)?$FingerPrint_5:null,
+                                'FingerPrint_6'=>isset($FingerPrint_6)?$FingerPrint_6:null,
+                                'FingerPrint_7'=>isset($FingerPrint_7)?$FingerPrint_7:null,
+                                'FingerPrint_8'=>isset($FingerPrint_8)?$FingerPrint_8:null,
+                                'FingerPrint_9'=>isset($FingerPrint_9)?$FingerPrint_9:null,
+                                'time'=>time()
+                            ]);
+
+                            return ['error'=>'0','msg'=>'成功'];
                         }
 
                         $cust_info['cust_id']=$row['value'];
@@ -7504,26 +7642,26 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 $obj=$this->mymongo();
                 $obj->Finger->CustTemplate->insert([
                     '_id'=>$model->cust_num,
-                    'Finger_0'=>isset($Finger_0)?$Finger_0:'',
-                    'Finger_1'=>isset($Finger_1)?$Finger_1:'',
-                    'Finger_2'=>isset($Finger_2)?$Finger_2:'',
-                    'Finger_3'=>isset($Finger_3)?$Finger_3:'',
-                    'Finger_4'=>isset($Finger_4)?$Finger_4:'',
-                    'Finger_5'=>isset($Finger_5)?$Finger_5:'',
-                    'Finger_6'=>isset($Finger_6)?$Finger_6:'',
-                    'Finger_7'=>isset($Finger_7)?$Finger_7:'',
-                    'Finger_8'=>isset($Finger_8)?$Finger_8:'',
-                    'Finger_9'=>isset($Finger_9)?$Finger_9:'',
-                    'FingerPrint_0'=>isset($FingerPrint_0)?$FingerPrint_0:'',
-                    'FingerPrint_1'=>isset($FingerPrint_1)?$FingerPrint_1:'',
-                    'FingerPrint_2'=>isset($FingerPrint_2)?$FingerPrint_2:'',
-                    'FingerPrint_3'=>isset($FingerPrint_3)?$FingerPrint_3:'',
-                    'FingerPrint_4'=>isset($FingerPrint_4)?$FingerPrint_4:'',
-                    'FingerPrint_5'=>isset($FingerPrint_5)?$FingerPrint_5:'',
-                    'FingerPrint_6'=>isset($FingerPrint_6)?$FingerPrint_6:'',
-                    'FingerPrint_7'=>isset($FingerPrint_7)?$FingerPrint_7:'',
-                    'FingerPrint_8'=>isset($FingerPrint_8)?$FingerPrint_8:'',
-                    'FingerPrint_9'=>isset($FingerPrint_9)?$FingerPrint_9:'',
+                    'Finger_0'=>isset($Finger_0)?$Finger_0:null,
+                    'Finger_1'=>isset($Finger_1)?$Finger_1:null,
+                    'Finger_2'=>isset($Finger_2)?$Finger_2:null,
+                    'Finger_3'=>isset($Finger_3)?$Finger_3:null,
+                    'Finger_4'=>isset($Finger_4)?$Finger_4:null,
+                    'Finger_5'=>isset($Finger_5)?$Finger_5:null,
+                    'Finger_6'=>isset($Finger_6)?$Finger_6:null,
+                    'Finger_7'=>isset($Finger_7)?$Finger_7:null,
+                    'Finger_8'=>isset($Finger_8)?$Finger_8:null,
+                    'Finger_9'=>isset($Finger_9)?$Finger_9:null,
+                    'FingerPrint_0'=>isset($FingerPrint_0)?$FingerPrint_0:null,
+                    'FingerPrint_1'=>isset($FingerPrint_1)?$FingerPrint_1:null,
+                    'FingerPrint_2'=>isset($FingerPrint_2)?$FingerPrint_2:null,
+                    'FingerPrint_3'=>isset($FingerPrint_3)?$FingerPrint_3:null,
+                    'FingerPrint_4'=>isset($FingerPrint_4)?$FingerPrint_4:null,
+                    'FingerPrint_5'=>isset($FingerPrint_5)?$FingerPrint_5:null,
+                    'FingerPrint_6'=>isset($FingerPrint_6)?$FingerPrint_6:null,
+                    'FingerPrint_7'=>isset($FingerPrint_7)?$FingerPrint_7:null,
+                    'FingerPrint_8'=>isset($FingerPrint_8)?$FingerPrint_8:null,
+                    'FingerPrint_9'=>isset($FingerPrint_9)?$FingerPrint_9:null,
                     'time'=>time()
                 ]);
 
@@ -7542,7 +7680,10 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     FvBaseDataRelationModel::updateOrCreate($arr1,$arr2);
                 }
 
-                return ['error'=>'0','msg'=>'登记成功'];
+                $this->redis_set('chongzhi'.$model->cust_id,$model->cust_id,600);
+
+                return ['error'=>'0','msg'=>'认证成功'];
+                //return ['error'=>'0','msg'=>'登记成功'];
 
                 break;
 
@@ -7714,6 +7855,57 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                 return ['error'=>'0','msg'=>'未知的错误'];
+
+                break;
+
+            case 'select_fv_cust_info':
+
+                $idcard=trim(Input::get('key'));
+
+                //接收一个身份证号码，展示客户指静脉信息
+
+                if (!$this->is_idcard($idcard))
+                {
+                    return ['error'=>'1','msg'=>'身份证输入不正确'];
+                }
+
+                $model=CustFVModel::where('cust_id',$idcard)->first();
+
+                if ($model!=null)
+                {
+                    $obj=$this->mymongo();
+                    $mongoModel=$obj->Finger->CustTemplate->find(['_id'=>$model->cust_num]);
+
+                    foreach ($mongoModel as $row)
+                    {
+                        foreach ($row as $k=>$v)
+                        {
+                            $cond=explode('_',$k);
+                            if (@is_numeric($cond[1]))
+                            {
+                                if ($cond[0]=='Finger')
+                                {
+                                    //静脉模板
+                                    $fv[$cond[1]]=$v;
+
+                                }elseif ($cond[0]=='FingerPrint')
+                                {
+                                    //指纹模板
+                                    $fp[$cond[1]]=$v;
+
+                                }else
+                                {}
+                            }
+                        }
+                    }
+
+                    $fv=array_filter($fv);
+                    $fp=array_filter($fp);
+
+                    return ['error'=>'1','msg'=>'已采集的客户','fvdata'=>$fv,'fpdata'=>$fp];
+                }
+
+                return ['error'=>'0','msg'=>'未采集的客户'];
 
                 break;
 

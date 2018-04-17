@@ -411,6 +411,41 @@
                 }
             });
 
+            $('#modify_cust_phone_bku').editable({
+                type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
+                title: "",                   //编辑框的标题
+                disabled: false,             //是否禁用编辑
+                emptytext: "空",             //空值的默认文本
+                mode: "inline",              //编辑框的模式：支持popup和inline两种模式，默认是popup
+                validate: function (value) { //字段验证
+                    //判断是不是空**********************************
+                    if (!$.trim(value)) {
+                        return '不能为空';
+                    }
+                    //*********************************************
+                    //判断手机号码正确性*****************************
+                    //var pattern=/^(((1[0-9]{2})|159|153)+\d{8})$/;
+                    //var res=pattern.test(value);
+                    //if (res==false) {
+                    //    return '号码错误';
+                    //}
+                    //*********************************************
+                    //修改数据*************************************
+                    var url ='/data/ajax';
+                    var data={
+                        _token:$("input[name=_token]").val(),
+                        type  :'modify_cust_phone_bku',
+                        key   :value,
+                        pid   :$("#modify_pid").html()};
+                    $.post(url,data,function (response) {
+                        if(response.error=='0')
+                        {layer.msg(response.msg);}
+                        else {layer.msg(response.msg);}
+                    },'json');
+                    //*********************************************
+                }
+            });
+
             $('#modify_cust_phone_num').editable({
                 type: "text",                //编辑框的类型。支持text|textarea|select|date|checklist等
                 title: "",                   //编辑框的标题
@@ -531,6 +566,27 @@
                     },'json');
                     //*********************************************
                 }
+            });
+
+            $('#chongzhi_fv').click(function () {
+
+                var url ='/data/ajax';
+                var data={
+                    _token:$("input[name=_token]").val(),
+                    type  :'chongzhi_fv_in_10_min',
+                    pid   :$("#modify_pid").html()
+                };
+                $.post(url,data,function (response) {
+                    if(response.error=='0')
+                    {
+                        layer.msg(response.msg);
+                    }
+                    else
+                        {
+                            layer.msg(response.msg);
+                        }
+                },'json');
+
             });
 
         }

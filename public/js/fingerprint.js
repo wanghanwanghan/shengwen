@@ -34,6 +34,7 @@ var serverPort = null;
 //var issOnlineUrl_zhijingmai = "http://127.0.0.1:24008/ISSOnline";
 var httpsServerPort = null;
 //ISSOnline_server的url的公共部分:http://localhost:24008/ISSOnline
+var ZKIDROnlineUrl = "http://127.0.0.1:22001/ZKBIOOnline/zkfvapi2";
 var issOnlineUrl_zhijingmai = "http://127.0.0.1:22001/zkbioonline";
 //是否是访客
 var isVisPager = false;
@@ -532,25 +533,14 @@ function submitFVRegister(title, fpCount, saveText, downloadText, isDriverInstal
 	 	bg.style.height=document.documentElement.scrollHeight+"px"; 
 	 	isComp=false;
 	 	dataFVInitReg();
-	    //关闭页面时，提示保存数据
-		//storeBeforeClose(fpCount, saveText);
 	} 
 	else if(typeof(Worker) == "undefined" && isDriverInstall)
-	{  
-	    //createWindow('base_baseFPRegisterSimple.action?random=' + getRandomNum() + '^0^0^465^460^' + title);//public/html/applet.html
+	{
 	    showModalDialog('webapp/html/baseFPRegisterSimple.html',title,'dialogWidth:465px;dialogHeight:460px;dialogLeft:600px;dialogTop:150px;center:yes;resizable:no;status:yes');
-	    //关闭页面时，提示保存数据
-		//storeBeforeClose(fpCount, saveText);
 	}  
 	else if(!isDriverInstall)
 	{
 		alert("请安装指静脉驱动或启动该服务!");
-		//messageBox({messageType: "alert", title: "提示", text: "请安装指静脉驱动或启动该服务!"});
-		//if(typeof($("#downloadDriver").val()) == "undefined")
-		//{
-		//	var hrefStr = "<a id='downloadDriver' href='webapp/middleware/zkbioonline.exe' title='" + downloadText + "'>"+downloadText+"</a>";
-		//	$("#fvDriverDownload").append(hrefStr);
-		//}
 	}
 }
 

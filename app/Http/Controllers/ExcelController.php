@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Model\ChinaAllPositionModel;
+use App\Http\Model\CustFVModel;
 use App\Http\Model\LogModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SiTypeModel;
@@ -731,7 +732,102 @@ class ExcelController extends Controller
         return;
     }
 
+    //南陵导出每天采集结果
+    public function nanling_export($key)
+    {
+        // 头部标题
+        $csv_header=[
+            '客户姓名',
+            '身份证',
+            '社保编号',
+            '电话',
+            '所属地区',
+            '采集时间'
+        ];
 
+        //地区
+        $proj_pid=[
+            '3342',
+            '3343',
+            '3344',
+            '3345',
+            '3346',
+            '3347',
+            '3348',
+            '3349',
+            '3350',
+            '3351',
+            '3352',
+            '3354',
+            '3355',
+            '3356',
+            '3358',
+            '3359',
+            '3360',
+            '3362',
+            '3364',
+            '3365',
+            '3367',
+            '3370',
+            '3371',
+            '3372',
+            '3373'];
+
+        //查询几天的
+        if ($key=='0')
+        {
+            //当天的
+            $t=date('Y-m-d',time()).' 00:00:00';
+        }elseif (is_numeric($key))
+        {
+            //最近几天
+            $t=date('Y-m-d',strtotime(date('Y-m-d',time())."- $key day")).' 00:00:00';
+        }else
+        {
+            return '参数错误';
+        }
+
+        //南陵的所有数据
+        $res=CustFVModel::whereIn('cust_project',$proj_pid)->where('created_at','>',$t)->orderBy('cust_project')->get([
+            'cust_name','cust_id','cust_si_id','cust_phone_num','cust_project','created_at'
+        ])->toArray();
+
+        //整理数据
+        $data=null;
+        foreach ($res as $row)
+        {
+            $data[$row['cust_project']][]=$row;
+        }
+
+        $csv_first_row='';
+        //$data是以地区为key的数组
+        foreach ($data as $k=>$v1)
+        {
+            $csv_first_row.=ProjectModel::find($k)->project_name.count($v1);
+        }
+
+        dd($csv_first_row);
+
+
+        //打开文件资源，不存在则创建
+        $fp=fopen(storage_path('exports/'.$t.'.csv'),'a');
+        //处理头部标题
+        $header=implode(',', $csv_header).PHP_EOL;
+        //处理内容
+        $content='';
+        foreach ($csv_body as $k => $v)
+        {
+            $content.=implode(',',$v).PHP_EOL;
+        }
+
+        //拼接
+        $csv=$header.$content;
+        //写入并关闭资源
+        fwrite($fp,$csv);
+        fclose($fp);
+
+        return;
+    }
 
 
 
