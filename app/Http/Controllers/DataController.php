@@ -7680,7 +7680,12 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     FvBaseDataRelationModel::updateOrCreate($arr1,$arr2);
                 }
 
-                $this->redis_set('chongzhi'.$model->cust_id,$model->cust_id,600);
+                $this->redis_set('chongzhi'.$model->cust_id,$model->cust_id,1200);
+
+                //储存照片
+                $obj=FingerRegister::getSingleton();
+                $obj->SavePicture();
+                //Storage::disk('IDcard')->put($model->cust_id,Input::get('cust_photo'));
 
                 return ['error'=>'0','msg'=>'认证成功'];
                 //return ['error'=>'0','msg'=>'登记成功'];

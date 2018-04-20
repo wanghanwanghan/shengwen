@@ -1,6 +1,8 @@
 <html>
 <head>
+	<link rel="stylesheet" href="{{asset('public/bower_components/AdminLTE/bootstrap/css/bootstrap.min.css')}}">
 	<script src="{{asset('public/bower_components/AdminLTE/plugins/jQuery/jquery-2.2.3.min.js')}}"></script>
+	<script src="{{asset('public/bower_components/AdminLTE/bootstrap/js/bootstrap.min.js')}}"></script>
 	<script src="{{asset('public/layer/layer.js')}}"></script>
 	<script type="text/javascript" src="{{asset('public/js/main.js')}}"></script>
 </head>
@@ -12,9 +14,9 @@
 	<input type="hidden" id="ThisCustIdcard" value="<?php echo $_GET['idcard'] ?>">
 
 	<div class="box-body">
-		<table>
+		<table style="height: 100%;">
 			<tr>
-				<td style="width: 400px;height: 400px;" id="myimg">
+				<td style="width: 400px;height: 100%;" id="myimg">
 					<div style="position:relative">
 						<img id="myimg2" usemap="#planetmap" style="height: 400px;width: 400px" src="{{asset('public/img/zhijingmai.png')}}">
 						<map name="planetmap" id="planetmap">
@@ -35,58 +37,78 @@
 					</div>
 					<div style="display: none" id="fingerNUM"></div>
 				</td>
-				<td style="width: 600px;height: 400px;">
+				<td style="width: 600px;height: 100%;">
 					<table>
 						<tr>
-							<td width="400px" height="400px">
-								<table width="400px" border="1">
+							<td width="400px" height="100%">
+								<table style="width: 400px;" class="table table-bordered">
 									<tr>
 										<td colspan="2" align="center">左手信息</td>
 									</tr>
 
 									<tr>
-										<td align="center">左手拇指</td>
-										<td align="center" id="4" count="0"></td>
+										<td align="center">拇指</td>
+										<td align="center" id="4"></td>
 									</tr>
 									<tr>
-										<td align="center">左手食指</td>
-										<td align="center" id="3" count="0"></td>
+										<td align="center">食指</td>
+										<td align="center" id="3"></td>
 									</tr>
 									<tr>
-										<td align="center">左手中指</td>
-										<td align="center" id="2" count="0"></td>
+										<td align="center">中指</td>
+										<td align="center" id="2"></td>
 									</tr>
 									<tr>
-										<td align="center">左手无名指</td>
-										<td align="center" id="1" count="0"></td>
+										<td align="center">无名指</td>
+										<td align="center" id="1"></td>
 									</tr>
 									<tr>
-										<td align="center">左手小指</td>
-										<td align="center" id="0" count="0"></td>
+										<td align="center">小指</td>
+										<td align="center" id="0"></td>
 									</tr>
 									<tr>
 										<td colspan="2" align="center">右手信息</td>
 									</tr>
 
 									<tr>
-										<td align="center">右手拇指</td>
+										<td align="center">拇指</td>
 										<td align="center" id="5"></td>
 									</tr>
 									<tr>
-										<td align="center">右手食指</td>
+										<td align="center">食指</td>
 										<td align="center" id="6"></td>
 									</tr>
 									<tr>
-										<td align="center">右手中指</td>
+										<td align="center">中指</td>
 										<td align="center" id="7"></td>
 									</tr>
 									<tr>
-										<td align="center">右手无名指</td>
+										<td align="center">无名指</td>
 										<td align="center" id="8"></td>
 									</tr>
 									<tr>
-										<td align="center">右手小指</td>
+										<td align="center">小指</td>
 										<td align="center" id="9"></td>
+									</tr>
+								</table>
+							</td>
+							<td width="200px" height="100%">
+								<table style="position: absolute;top: 0;width: 200px;" class="table table-bordered">
+									<tr style="height: 39.5px">
+										<td style="height: 39.5px" align="center">指纹图像区</td>
+									</tr>
+									<tr>
+										<td height="235px">
+											<img width="185px" height="215px" id="jpgFPBase64">
+										</td>
+									</tr>
+									<tr style="height: 39.5px">
+										<td style="height: 39.5px" align="center">指静脉图像区</td>
+									</tr>
+									<tr>
+										<td height="235px">
+											<img width="185px" height="215px" id="jpgVeinBase64">
+										</td>
 									</tr>
 								</table>
 							</td>
@@ -118,16 +140,16 @@
 
             if(response.error=='0')
             {
-                $("#0").append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
-                $("#1").append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
-                $("#2").append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
-                $("#3").append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
-                $("#4").append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
-                $("#5").append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
-                $("#6").append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
-                $("#7").append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
-                $("#8").append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
-                $("#9").append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                $("#0").append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                $("#1").append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                $("#2").append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                $("#3").append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                $("#4").append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                $("#5").append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                $("#6").append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                $("#7").append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                $("#8").append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                $("#9").append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
 
                 $("#little_span").html(response.msg);
 
@@ -141,11 +163,11 @@
                     if (typeof fvdata[i]!=="undefined")
                     {
                         parent.$("#myFV_"+i).html(fvdata[i]);
-                        $("#"+i).append("<a href='#' onclick=yanzheng($(this).parent().attr('id'));>验证</a>&nbsp;&nbsp;&nbsp;&nbsp;" +
-							"<a href='#' onclick=chongzhi($('#ThisCustIdcard').val(),$(this).parent().attr('id'));>重置</a>");
+                        $("#"+i).append("<a href='#' class='btn btn-success btn-sm' onclick=yanzheng($(this).parent().attr('id'));>验证</a>&nbsp;&nbsp;&nbsp;&nbsp;" +
+							"<a href='#' class='btn btn-danger btn-sm' onclick=chongzhi($('#ThisCustIdcard').val(),$(this).parent().attr('id'));>重置</a>");
                     }else
                         {
-                            $("#"+i).append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                            $("#"+i).append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
                         }
 
                     if (typeof fpdata[i]!=="undefined")
@@ -179,8 +201,8 @@
             {
                 parent.$("#myFV_"+markNUM).html('');
                 parent.$("#myFP_"+markNUM).html('');
-                $("#"+markNUM).children().remove();
-                $("#"+markNUM).append("<a href='#' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
+                $("#"+markNUM).html('');
+                $("#"+markNUM).append("<a href='#' class='btn btn-primary btn-sm' onclick=capture($(this).parent().attr('id'));>采集</a>&nbsp;&nbsp;&nbsp;&nbsp;<span>0</span>");
 
             }else
             {

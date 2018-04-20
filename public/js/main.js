@@ -974,7 +974,7 @@ function capture(id)
                 //$("#featureFP").html(result.data.fingerprint.template);
                 //$("#featureVein").html(result.data.fingervein[0].template);
                 //document.getElementById("jpgFPBase64").src="data:image/png;base64,"+jpgFPBase64;
-                // document.getElementById("jpgVeinBase64").src="data:image/png;base64,"+jpgVeinBase64;
+                //document.getElementById("jpgVeinBase64").src="data:image/png;base64,"+jpgVeinBase64;
 
                 //采集完以后，生成指静脉对象
                 var zhiwenT=result.data.fingerprint.template;
@@ -990,9 +990,9 @@ function capture(id)
                 var num=$("#"+id+" span").html();
                 if (Number(num)+1>=4)
                 {
-                    $("#"+id).children().remove();
-                    $("#"+id).append("<a href='#' onclick=yanzheng($(this).parent().attr('id'));>验证</a>&nbsp;&nbsp;&nbsp;&nbsp;" +
-                        "<a href='#' onclick=chongzhi($('#ThisCustIdcard').val(),$(this).parent().attr('id'));>重置</a>");
+                    $("#"+id).html('');
+                    $("#"+id).append("<a href='#' class='btn btn-success btn-sm' onclick=yanzheng($(this).parent().attr('id'));>验证</a>&nbsp;&nbsp;&nbsp;&nbsp;" +
+                        "<a href='#' class='btn btn-danger btn-sm' onclick=chongzhi($('#ThisCustIdcard').val(),$(this).parent().attr('id'));>重置</a>");
                     layer.msg('该手指采集次数已满');
                     return;
                 }
@@ -1004,6 +1004,11 @@ function capture(id)
 
                 parent.$("#myFV_"+id).html(fv_t+","+zhijingmaiT);
                 parent.$("#myFP_"+id).html(fp_t+","+zhiwenT);
+
+                var jpgFPBase64=result.data.fingerprint.image;
+                var jpgVeinBase64=result.data.fingervein[0].image;
+                document.getElementById("jpgFPBase64").src="data:image/png;base64,"+jpgFPBase64;
+                document.getElementById("jpgVeinBase64").src="data:image/png;base64,"+jpgVeinBase64;
             }
             else
             {
@@ -1024,7 +1029,7 @@ function yanzheng(id)
 
     $.ajax( {
         type : "GET",
-        url : ZKIDROnlineUrl+"/capture?nfiq=3&randnumber=" + getZKBIOOnlineRandomNum(),
+        url : ZKIDROnlineUrl+"/capture?nfiq=1&randnumber=" + getZKBIOOnlineRandomNum(),
         dataType : "json",
         async: false,
         //timeout:1000,
@@ -1076,15 +1081,20 @@ function yanzheng(id)
 
                 if (parseInt(FVsocre)>70 || parseInt(FPsocre)>70)
 				{
-					layer.msg('验证成功');
+				   layer.msg('验证成功');
 				}else
 				{
                     layer.msg('验证失败');
 				}
+
+                var jpgFPBase64=result.data.fingerprint.image;
+                var jpgVeinBase64=result.data.fingervein[0].image;
+                document.getElementById("jpgFPBase64").src="data:image/png;base64,"+jpgFPBase64;
+                document.getElementById("jpgVeinBase64").src="data:image/png;base64,"+jpgVeinBase64;
             }
             else
             {
-                alert("采集失败！错误码="+ret);
+                alert("验证失败！错误码="+ret);
             }
         },
         error : function(XMLHttpRequest, textStatus, errorThrown)

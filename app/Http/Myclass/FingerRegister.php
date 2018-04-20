@@ -79,6 +79,12 @@ class FingerRegister
         }
     }
 
+    //储存指纹指静脉照片
+    public function SavePicture()
+    {
+
+    }
+
     public function whichAttrHasData()
     {
         //显示所有指静脉属性，哪些有数据，给前台显示

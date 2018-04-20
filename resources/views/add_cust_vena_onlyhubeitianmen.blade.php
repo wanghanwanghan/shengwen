@@ -502,7 +502,7 @@
                 shadeClose: true, //点击遮罩关闭层
                 scrollbar:false,//是否允许显示滚动条
                 fixed:true,
-                area:['1000px','450px'],
+                area:['1020px','570px'],
                 content: '/open/fv/page?idcard='+$("#certNumber").val()
 //                cancel: function(index, layero)
 //                {
