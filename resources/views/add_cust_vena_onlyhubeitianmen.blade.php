@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
-@section('page_heading','欢迎登陆社会养老保险领取资格认证平台')
-@section('page_heading_small','用户认证页')
+@section('page_heading','用户认证')
+@section('page_heading_small','指静脉认证页')
 {{--@section('page_heading_small','用户登记页')--}}
 @section('section')
 
@@ -344,7 +344,7 @@
 
                                     if (k2=='cust_phone_bku')
                                     {
-                                        $("input[name=cust_phone_bku]").val(v2);
+                                        $("input[name=cust_phone_num]").val(v2);
                                     }
 
                                 }

@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
-@section('page_heading','欢迎登陆社会养老保险领取资格认证平台')
-@section('page_heading_small','用户登记页')
+@section('page_heading','用户登记')
+@section('page_heading_small','声纹登记页')
 @section('section')
 
     <p id="cert_message" style="display: none;"></p>
