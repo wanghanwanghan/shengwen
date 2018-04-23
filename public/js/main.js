@@ -960,7 +960,7 @@ function capture(id)
 
     $.ajax( {
         type : "GET",
-        url : ZKIDROnlineUrl+"/capture?nfiq=3&randnumber=" + getZKBIOOnlineRandomNum(),
+        url : ZKIDROnlineUrl+"/capture?nfiq=1&randnumber=" + getZKBIOOnlineRandomNum(),
         dataType : "json",
         async: false,
         //timeout:1000,

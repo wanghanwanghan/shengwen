@@ -337,6 +337,16 @@
                                         $("#personName").append("<option value="+$("#add_second_ready").attr('other')+">"+v2+"</option>");
                                     }
 
+                                    if (k2=='cust_phone_num')
+                                    {
+                                        $("input[name=cust_phone_num]").val(v2);
+                                    }
+
+                                    if (k2=='cust_phone_bku')
+                                    {
+                                        $("input[name=cust_phone_bku]").val(v2);
+                                    }
+
                                 }
 
                             });
@@ -461,8 +471,6 @@
                     }else
                     {
                     }
-
-                    layer.msg(response.msg);
 
                 },'json');
                 //***事件二结束*****************************************************************************************

@@ -7012,6 +7012,17 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                 return ['error'=>'1','msg'=>'未找到数据'];
                             }
 
+                            foreach ($res->toArray() as &$row)
+                            {
+                                $data_in_sw=CustModel::where('cust_id',$row->idcard)->first();
+
+                                if ($data_in_sw!=null)
+                                {
+                                    $row->cust_phone_num=$data_in_sw->cust_review_num;
+                                    $row->cust_phone_bku=$data_in_sw->cust_phone_num;
+                                }
+                            }
+
                             return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
 
                         }else
@@ -7043,6 +7054,16 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     if (!empty($res->toArray()))
                     {
+                        foreach ($res->toArray() as &$row)
+                        {
+                            $data_in_fv=CustFVModel::where('cust_id',$row->idcard)->first();
+
+                            if ($data_in_fv!=null)
+                            {
+                                $row->cust_phone_num=$data_in_fv->cust_phone_num;
+                            }
+                        }
+
                         return ['error'=>'0','data'=>$res->toArray(),'msg'=>'已找到数据'];
                     }else
                     {

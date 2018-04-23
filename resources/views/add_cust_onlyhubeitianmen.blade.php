@@ -353,6 +353,11 @@
                                         $("#personName").append("<option value="+$("#add_second_ready").attr('other')+">"+v2+"</option>");
                                     }
 
+                                    if (k2=='cust_phone_num')
+                                    {
+                                        $("input[name=cust_phone_num]").val(v2);
+                                    }
+
                                 }
 
                             });
