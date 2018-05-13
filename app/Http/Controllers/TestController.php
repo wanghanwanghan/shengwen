@@ -10,6 +10,7 @@ use App\Http\Model\OnlyTianMenModel;
 use App\Http\Model\OnlyZhaoXianModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Myclass\FingerRegister;
+use function Couchbase\defaultDecoder;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -21,20 +22,87 @@ class TestController extends Controller
 {
     public function test_1()
     {
-        $wfile=fopen(public_path('wanghan_new.txt'),"w") or die("Unable to open file!");
+//        set_time_limit(0);
+//
+//        $myfile=fopen(public_path('zzzz.txt'),"r") or die("Unable to open file!");
+//
+//        while(!feof($myfile))
+//        {
+//            $template=fgets($myfile);
+//            $template=str_replace(["\r\n","\n"],'',$template);
+//            $data[]=$template;
+//        }
+//
+//        dd(CustModel::whereIn('cust_id',$data)->get()->toArray());
 
-        $res=CustFVModel::get(['cust_name','cust_id','cust_phone_num','cust_project'])->toArray();
-
-        foreach ($res as &$row)
+        if (!$this->check_something(trim($_GET['phonenum']),'phonenumber',null))
         {
-            $row['cust_project']=implode('-',array_reverse($this->select_allproject_parent(ProjectModel::find($row['cust_project'])->project_id)));
-
-            $txt=implode(',',$row)."\r\n";
-
-            fwrite($wfile,$txt);
+            return ['error'=>'1','msg'=>'手机号码输入不正确'];
         }
 
-        fclose($wfile);
+        $phonenum=trim($_GET['phonenum']);
+
+        $res=CustModel::where('cust_review_num',$phonenum)->get();
+
+        //dd($res->toArray());
+
+        //查询是空，表示未办卡的客户
+        if (empty($res->toArray()))
+        {
+            return ['cust_type'=>null,'confirm_type'=>null,'authorization'=>'unreg','primary'=>[],'secondary'=>[]];
+        }
+
+        //查询不是空，说明是已经办卡的客户
+        switch (count($res))
+        {
+            case '1':
+
+                //一个年审人
+                $res=$res->toArray();
+
+                if ($res[0]['cust_register_flag']=='1')
+                {
+                    //已经录音的，返回未授权
+                    return ['cust_type'=>$res[0]['cust_type'],'confirm_type'=>(string)$res[0]['cust_confirm_type'],'authorization'=>'unauthorized'];
+
+                }else
+                {
+                    //未录音的客户
+                    $authorization=Redis::get('authorization_'.$res[0]['cust_id']);
+
+                    if ($authorization==null)
+                    {
+                        //授权过期
+                        return ['cust_type'=>$res[0]['cust_type'],'confirm_type'=>(string)$res[0]['cust_confirm_type'],'authorization'=>'unauthorized'];
+
+                    }else
+                    {
+                        //授权未过期
+
+
+                    }
+
+                }
+
+                break;
+
+            case '2':
+
+                //两个年审人
+
+
+
+
+
+                break;
+
+            default:
+
+                return ['error'=>'1','msg'=>'未知错误'];
+
+                break;
+        }
+
 
 
 
@@ -45,11 +113,12 @@ class TestController extends Controller
 
 
     }
+
     public function test_2()
     {
         set_time_limit(0);
 
-        $myfile=fopen(public_path('zhaoxian.txt'),"r") or die("Unable to open file!");
+        $myfile=fopen(public_path('nanling.txt'),"r") or die("Unable to open file!");
 
         $wfile=fopen(public_path('wanghan_new.txt'),"w") or die("Unable to open file!");
 
@@ -61,27 +130,33 @@ class TestController extends Controller
 
             $template=explode(',',$template);
 
-            //$arrayKey=['c_name','si_num','p_name','idcard','sex','birthday','c_day','r_day','bank'];
+            $arrayKey=['c_name','si_num','p_name','idcard','sex','birthday','c_day','r_day','bank'];
 
             //城乡
-            $arrayKey=['p_name','idcard','birthday','sex'];
+            //$arrayKey=['p_name','idcard','birthday','sex'];
 
             $template=array_combine($arrayKey,$template);
 
             //城乡
-            $template['c_name']='城乡';
-            $template['c_day']='';
-            $template['r_day']='';
+            //$template['c_name']='城乡';
+            //$template['c_day']='';
+            //$template['r_day']='';
 
             $mybankRES='123';
             while ($mybankRES!=null)
             {
-                $mybank='zhaoxian_'.substr(md5(time().$template['idcard']),0,11);
-                $mybankRES=OnlyZhaoXianModel::where('bank',$mybank)->first();
+                $mybank='nanling_'.substr(md5(time().$template['idcard']),0,11);
+                $mybankRES=OnlyNanLingModel::where('bank',$mybank)->first();
             }
 
-            $template['bank']=$mybank;
-            $template['si_num']=$mybank;
+            if($template['bank']=='')
+            {
+                $template['bank']=$mybank;
+            }
+            if($template['si_num']=='')
+            {
+                $template['si_num']=$mybank;
+            }
 
             //$template['bank']='0';
             $template['id_in_mysql']='0';
@@ -93,9 +168,9 @@ class TestController extends Controller
             $template['phone']=null;
             $template['btw']=null;
 
-            $this->insert_something($template['birthday'],[4,6]);
+            //$this->insert_something($template['birthday'],[4,6]);
 
-            OnlyZhaoXianModel::create($template);
+            OnlyNanLingModel::create($template);
         }
 
         fclose($wfile);

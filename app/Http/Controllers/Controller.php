@@ -432,6 +432,36 @@ class Controller extends BaseController
         return array_merge($left_arr,[$key],$right_arr);
     }
 
+    //返回一个数组中，不重复的数字
+    public function buchongfu($array)
+    {
+        if(empty($array) || !is_array($array)) {
+            return [];
+        }
+
+        $data = [];
+
+        foreach ($array as $key=>$value) {
+
+            if(isset($data[$value])) {
+                $data[$value]++;
+            }else{
+                $data[$value] = 1;
+            }
+        }
+        $result = [];
+        foreach ($data as $k=>$v) {
+            if($v != 1) {
+                unset($data[$k]);
+            }else{
+                $result[] = $k;
+            }
+
+        }
+
+        return $result;
+    }
+
     //为字符串的指定位置添加指定字符中的调用函数
     public function mb_substr_replace($string, $replacement,$start,$length=NULL)
     {

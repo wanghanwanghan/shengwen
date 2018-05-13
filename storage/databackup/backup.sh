@@ -20,6 +20,7 @@
 ###################################
 #####本shell执行说明###############
 ###################################
+#不能用windows编辑后直接上传到服务器执行，特别注意
 #安装sshpass，scp，rsh和rsh-server，/etc/securetty里添加rexec，rsh，rlogin。手动scp一次建立服务器间关系后
 #放到linux任意文件夹下，修改好参数和crontab，直接执行
 #wget http://sourceforge.net/projects/sshpass/files/latest/download -O sshpass.tar.gz
@@ -33,15 +34,15 @@
 start_time=`date +%Y-%m-%d_%H:%M:%S`
 
 #备份文件夹，文件都放在这里，并且进行世代管理
-basedir='/root/mysql_and_voicemodel_backup/'
+basedir='/home/wwwroot/default/shengwen/storage/databackup/'
 
 #日志文件
 log=${basedir}'backup.log'
 
 #mysql
-user=root
-passwd=root
-database=shengwen
+user='root'
+passwd='root'
+database='shengwen'
 basedir_for_mysql=${basedir}
 
 #mongo
@@ -51,8 +52,8 @@ mongo_bin_dir='/usr/local/MongoDB/bin/'
 basedir_for_app='/home/wwwroot/default/shengwen/VoiceAndModel/'
 
 #laravel.log
-laravel_log_file=''
-gzip ${laravel_log_file}
+#laravel_log_file=''
+#gzip ${laravel_log_file}
 
 #数据文件不但要在本地存储，还要放到另一个服务器上
 need_send_data='1'

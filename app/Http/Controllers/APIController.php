@@ -168,81 +168,17 @@ class APIController extends Controller
 
             case 'vpr_initiative_process':
 
+                if (!$this->check_something(trim($_GET['phonenum']),'phonenumber',null))
+                {
+                    return ['error'=>'1','msg'=>'手机号码输入不正确'];
+                }
 
-
-
-                [
-                    'primary'=>
-                        [
-                            'authorization'=>'1',
-                            'pid'=>'9008',
-                            'name'=>'吴老大',
-                            'idcard'=>'123123123',
-                            'is_register'=>'0',
-                            'confirm_type'=>'1',
-                            'confirm_text'=>
-                                [
-                                    '吴老大没有小鸡鸡',
-                                    '吴老大是个老玻璃'
-                                ]
-                        ],
-
-                    'secondary'=>
-                        [
-                            'authorization'=>'0',
-                            'pid'=>'9009',
-                            'name'=>'吴老二',
-                            'idcard'=>'123123123',
-                            'is_register'=>'0',
-                            'confirm_type'=>'1',
-                            'confirm_text'=>
-                                [
-                                    '吴老二没有小鸡鸡',
-                                    '吴老二是个老玻璃'
-                                ]
-                        ]
-                ];
+                $phonenum=trim($_GET['phonenum']);
 
 
 
 
 
-
-
-
-
-
-
-                [
-                    'cust_type'=>'A',
-                    'confirm_type'=>'1',
-                    'authorization'=>'unreg/authorized/unauthorized',
-                    'primary'=>
-                        [
-                            'pid'=>'9008',
-                            'name'=>'吴老大',
-                            'idcard'=>'123123123',
-                            'status'=>'registered',
-                            'confirm_text'=>
-                                [
-                                    '吴老大没有小鸡鸡',
-                                    '吴老大是个老玻璃'
-                                ]
-                        ],
-
-                    'secondary'=>
-                        [
-                            'pid'=>'9009',
-                            'name'=>'吴老二',
-                            'idcard'=>'123123123',
-                            'status'=>'registered',
-                            'confirm_text'=>
-                                [
-                                    '吴老二没有小鸡鸡',
-                                    '吴老二是个老玻璃'
-                                ]
-                        ]
-                ];
 
 
 

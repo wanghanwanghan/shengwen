@@ -1,7 +1,7 @@
 <?php
 
 //测试
-Route::get('/test1','TestController@test_2');
+Route::get('/test1','TestController@test_1');
 
 //登陆
 Route::get('/', function () {
@@ -48,6 +48,7 @@ Route::group(['middleware'=>['LoginMiddleware','ServiceCareMiddleware']],functio
 
     //指静脉认证
     Route::get('fv/match','WebController@fv_match');
+    Route::get('open/fv/page/renzheng',function (){return view('zhijingmai2');});
 
     //轮播认证
     Route::get('loop/call','WebController@loop_call');

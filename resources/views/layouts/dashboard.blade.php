@@ -201,7 +201,7 @@
                             <li><a href="{{url('add/cust')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹登记（A类）</a></li>
                             <li><a href="{{url('add/cust/b')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹登记（B类）</a></li>
                             @endif
-                            {{--<li><a href="{{url('add/cust/vena')}}"><i class="fa fa-fw fa-hand-o-right"></i>指静脉登记</a></li>--}}
+                            <li><a href="{{url('add/cust/vena')}}"><i class="fa fa-fw fa-hand-o-right"></i>指静脉登记</a></li>
                         </ul>
                     </li>
 
@@ -212,8 +212,7 @@
                             </span>
                         </a>
                         <ul class="treeview-menu" id="yong_hu_ren_zheng_content">
-                            <li><a href="{{url('add/cust/vena')}}"><i class="fa fa-fw fa-hand-o-right"></i>指静脉认证</a></li>
-                            {{--<li><a href="{{url('fv/match')}}"><i class="fa fa-fw fa-hand-o-right"></i>指静脉认证</a></li>--}}
+                            <li><a href="{{url('fv/match')}}"><i class="fa fa-fw fa-hand-o-right"></i>指静脉认证</a></li>
                             @if (is_fv_user())
                             <li><a href="{{url('loop/call')}}"><i class="fa fa-fw fa-hand-o-right"></i>声纹轮播认证</a></li>
                             @endif

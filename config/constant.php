@@ -34,8 +34,8 @@ return [
     'app_edition'=>'1',
 
     //对比指纹指静脉的分值
-    'fingerprintscore'=>'80',
-    'fingervenascore'=>'80'
+    'fingerprintscore'=>'70',
+    'fingervenascore'=>'70'
 
 
 

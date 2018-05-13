@@ -1,7 +1,6 @@
 @extends('layouts.dashboard')
-@section('page_heading','用户认证')
-@section('page_heading_small','指静脉认证页')
-{{--@section('page_heading_small','用户登记页')--}}
+@section('page_heading','用户登记')
+@section('page_heading_small','指静脉登记页')
 @section('section')
 
     <p id="cert_message" style="display: none;"></p>
@@ -11,7 +10,7 @@
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <div class="box">
             <div class="box-header with-border">
-                <h3 class="box-title">指静脉用户认证</h3>
+                <h3 class="box-title">指静脉用户登记</h3>
                 {{--<h3 class="box-title">指静脉用户登记</h3>--}}
                 <button type="button" class="btn btn-box-tool" data-widget="collapse" style="float: right">
                     <i class="fa fa-minus"></i>
@@ -130,8 +129,7 @@
                         </td>
                         <td style="width: 190px;" align="center">
                             <div class="checkbox">
-                                <a style="width: 100px;" onclick="open_fv_page();" class="btn btn-block btn-primary btn-sm">认证指静脉</a>
-                                {{--<a style="width: 100px;" onclick='$("#fvRegister").click();' class="btn btn-block btn-primary btn-sm">采集指静脉</a>--}}
+                                <a style="width: 100px;" onclick="open_fv_page();" class="btn btn-block btn-primary btn-sm">采集指静脉</a>
                             </div>
                         </td>
                         <td style="width: 190px;" align="center">

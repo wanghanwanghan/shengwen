@@ -926,6 +926,23 @@ function getZKBIOOnlineRandomNum()
     return random;
 }
 
+//储存照片
+function SavePicture(fp,fv,action) {
+
+    var url ='/data/ajax';
+    var data={
+        _token :$("input[name=_token]").val(),
+        type   :'save_fv_picture',
+        cust_id:$("#ThisCustIdcard").val(),
+        fp     :fp,
+        fv     :fv,
+        action :action
+    };
+
+    $.post(url,data,function (response) {},'json');
+
+}
+
 //链接设备
 function openDevice()
 {
@@ -944,6 +961,34 @@ function openDevice()
             else
             {
                 alert("连接设备失败！错误码="+ret);
+            }
+        },
+        error : function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert("操作失败！");
+        }
+    });
+}
+
+//断开链接
+function closeDevice()
+{
+    $.ajax( {
+        type : "GET",
+        url : ZKIDROnlineUrl+"/close?randnumber=" + getZKBIOOnlineRandomNum(),
+        dataType : "json",
+        async: false,
+        //timeout:1000,
+        success : function(result)
+        {
+            var ret = result.ret;
+            if(ret == 0)
+            {
+
+            }
+            else
+            {
+                alert("断开设备失败！错误码="+ret);
             }
         },
         error : function(XMLHttpRequest, textStatus, errorThrown)
@@ -1009,10 +1054,20 @@ function capture(id)
                 var jpgVeinBase64=result.data.fingervein[0].image;
                 document.getElementById("jpgFPBase64").src="data:image/png;base64,"+jpgFPBase64;
                 document.getElementById("jpgVeinBase64").src="data:image/png;base64,"+jpgVeinBase64;
+
+                SavePicture(jpgFPBase64,jpgVeinBase64,'caiji');
+
             }
             else
             {
-                alert("采集失败！错误码="+ret);
+                if (Number(ret)==-8)
+                {
+                    closeDevice();
+                    alert("采集失败，请重试");
+                }else
+                {
+                    alert("采集失败！错误码="+ret);
+                }
             }
         },
         error : function(XMLHttpRequest, textStatus, errorThrown)
@@ -1091,10 +1146,91 @@ function yanzheng(id)
                 var jpgVeinBase64=result.data.fingervein[0].image;
                 document.getElementById("jpgFPBase64").src="data:image/png;base64,"+jpgFPBase64;
                 document.getElementById("jpgVeinBase64").src="data:image/png;base64,"+jpgVeinBase64;
+
+                SavePicture(jpgFPBase64,jpgVeinBase64,'yanzheng');
             }
             else
             {
-                alert("验证失败！错误码="+ret);
+                if (Number(ret)==-8)
+                {
+                    closeDevice();
+                    alert("验证失败，请重试");
+                }else
+                {
+                    alert("验证失败！错误码="+ret);
+                }
+            }
+        },
+        error : function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert("操作失败！");
+        }
+    });
+}
+
+//认证数据
+function renzheng(id)
+{
+    openDevice();
+
+    $.ajax( {
+        type : "GET",
+        url : ZKIDROnlineUrl+"/capture?nfiq=1&randnumber=" + getZKBIOOnlineRandomNum(),
+        dataType : "json",
+        async: false,
+        //timeout:1000,
+        success : function(result)
+        {
+            var ret = result.ret;
+            if(ret == 0)
+            {
+                var zhiwenT=result.data.fingerprint.template;
+                var zhijingmaiT=result.data.fingervein[0].template;
+
+                if (zhijingmaiT=='')
+                {
+                    layer.msg('未获得指静脉数据，请调整手指');
+                    return;
+                }
+
+                var url ='/data/ajax';
+                var data={
+                    _token :$("input[name=_token]").val(),
+                    type   :'fv_match',
+                    key    :{'zhiwen':zhiwenT,'zhijingmai':zhijingmaiT},
+                    cust_id:$("#ThisCustIdcard").val()
+                };
+                $.post(url,data,function (response) {
+
+                    if (response.error=='0' || response.error=='1')
+                    {
+
+
+
+                    }else
+                    {
+
+                    }
+
+                },'json');
+
+                var jpgFPBase64=result.data.fingerprint.image;
+                var jpgVeinBase64=result.data.fingervein[0].image;
+                document.getElementById("jpgFPBase64").src="data:image/png;base64,"+jpgFPBase64;
+                document.getElementById("jpgVeinBase64").src="data:image/png;base64,"+jpgVeinBase64;
+
+                SavePicture(jpgFPBase64,jpgVeinBase64,'renzheng');
+            }
+            else
+            {
+                if (Number(ret)==-8)
+                {
+                    closeDevice();
+                    alert("认证失败，请重试");
+                }else
+                {
+                    alert("认证失败！错误码="+ret);
+                }
             }
         },
         error : function(XMLHttpRequest, textStatus, errorThrown)

@@ -6538,6 +6538,15 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     {
                         $cust_project=trim($row['value']);
                         $info['cust_project']=$cust_project;
+
+                        $nowProj=GetBaseDataInMysqlTable::getSingleton($cust_project)->getTablename();
+                        if ($nowProj!=null)
+                        {
+                            $tablename=$nowProj->tablename;
+                        }else
+                        {
+                            return ['error'=>'1','msg'=>'地区未关联，或表名不存在'];
+                        }
                     }
 
                     if ($row['name']=='cust_si_type')
@@ -6564,25 +6573,51 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 if ($export_type=='0')
                 {
                     //已经注册
+//                    $cust_data=DB::table('customer_info_ready_tianmen')
+//                        ->leftJoin('onlytianmen','onlytianmen.id_in_ready','=','customer_info_ready_tianmen.cust_num')
+//                        ->leftJoin('customer_bank_num','customer_bank_num.cust_id','=','customer_info_ready_tianmen.cust_id')
+//                        ->whereBetween('customer_info_ready_tianmen.created_at',[$start_time,$stop_time])
+//                        ->where(['onlytianmen.id_in_mysql'=>'0','customer_info_ready_tianmen.cust_si_type'=>$cust_si_type])
+//                        ->whereIn('customer_info_ready_tianmen.cust_project',$proj)
+//                        ->select(
+//                            'customer_info_ready_tianmen.cust_num',
+//                            'customer_info_ready_tianmen.cust_name',
+//                            'onlytianmen.idcard',
+//                            'customer_info_ready_tianmen.cust_id',
+//                            'customer_info_ready_tianmen.cust_si_id',
+//                            'customer_info_ready_tianmen.cust_review_num',
+//                            'customer_info_ready_tianmen.cust_phone_num',
+//                            'onlytianmen.bank',
+//                            'customer_bank_num.cust_bank_num',
+//                            'onlytianmen.birthday',
+//                            'onlytianmen.c_day',
+//                            'onlytianmen.r_day',
+//                            'customer_info_ready_tianmen.cust_si_type',
+//                            'customer_info_ready_tianmen.cust_project'
+//                        )
+//                        ->orderBy('customer_info_ready_tianmen.cust_num','desc')
+//                        ->get();
                     $cust_data=DB::table('customer_info_ready_tianmen')
-                        ->leftJoin('onlytianmen','onlytianmen.id_in_ready','=','customer_info_ready_tianmen.cust_num')
+                        ->leftJoin($tablename,$tablename.'.id_in_ready','=','customer_info_ready_tianmen.cust_num')
                         ->leftJoin('customer_bank_num','customer_bank_num.cust_id','=','customer_info_ready_tianmen.cust_id')
                         ->whereBetween('customer_info_ready_tianmen.created_at',[$start_time,$stop_time])
-                        ->where(['onlytianmen.id_in_mysql'=>'0','customer_info_ready_tianmen.cust_si_type'=>$cust_si_type])
+                        //->where([$tablename.'.id_in_mysql'=>'0','customer_info_ready_tianmen.cust_si_type'=>$cust_si_type])
+                        ->where(['customer_info_ready_tianmen.cust_si_type'=>$cust_si_type])
+                        ->whereNotNull($tablename.'.c_name')
                         ->whereIn('customer_info_ready_tianmen.cust_project',$proj)
                         ->select(
                             'customer_info_ready_tianmen.cust_num',
                             'customer_info_ready_tianmen.cust_name',
-                            'onlytianmen.idcard',
+                            $tablename.'.idcard',
                             'customer_info_ready_tianmen.cust_id',
                             'customer_info_ready_tianmen.cust_si_id',
                             'customer_info_ready_tianmen.cust_review_num',
                             'customer_info_ready_tianmen.cust_phone_num',
-                            'onlytianmen.bank',
+                            $tablename.'.bank',
                             'customer_bank_num.cust_bank_num',
-                            'onlytianmen.birthday',
-                            'onlytianmen.c_day',
-                            'onlytianmen.r_day',
+                            $tablename.'.birthday',
+                            $tablename.'.c_day',
+                            $tablename.'.r_day',
                             'customer_info_ready_tianmen.cust_si_type',
                             'customer_info_ready_tianmen.cust_project'
                         )
@@ -6646,8 +6681,11 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $i=0;
                     while (1)
                     {
-                        $cust_data=DB::table('onlytianmen')
-                            ->where(['id_in_ready'=>null])
+                        $cust_data=DB::table($tablename)
+                            ->where(['id_in_ready'=>null,'id_in_mysql'=>'0'])
+                            ->whereNotIN('idcard',function ($query){
+                                $query->select('cust_id')->from('customer_info');
+                            })
                             ->select(
                                 'id',
                                 'p_name',
@@ -6664,6 +6702,8 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                             ->limit(5000)
                             ->offset($i)
                             ->get();
+
+                        //dd($cust_data);
 
                         if (empty($cust_data->toArray()))
                         {
@@ -6707,6 +6747,17 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                     $cust_data=$tmp;
 
+                    //得到所有声纹未注册客户的信息，剔除其中已经注册了指静脉的客户
+                    $res=FvBaseDataRelationModel::where(['tablename'=>$tablename])->pluck('base_data_pid')->toArray();
+
+                    foreach ($cust_data as $mykey=>$myvalue)
+                    {
+                        if (in_array($myvalue['id'],$res))
+                        {
+                            unset($cust_data[$mykey]);
+                        }
+                    }
+
                     //自制分页
                     for ($i=$offset;$i<=$limit*Input::get('page')-1;$i++)
                     {
@@ -6735,25 +6786,50 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 }elseif ($export_type=='2')
                 {
                     //已经登记
+//                    $cust_data=DB::table('customer_info')
+//                        ->leftJoin('onlytianmen','onlytianmen.id_in_mysql','=','customer_info.cust_num')
+//                        ->leftJoin('customer_bank_num','customer_bank_num.cust_id','=','customer_info.cust_id')
+//                        ->whereBetween('customer_info.created_at',[$start_time,$stop_time])
+//                        ->where(['customer_info.cust_si_type'=>$cust_si_type])
+//                        ->whereIn('customer_info.cust_project',$proj)
+//                        ->select(
+//                            'customer_info.cust_num',
+//                            'customer_info.cust_name',
+//                            'onlytianmen.idcard',
+//                            'customer_info.cust_id',
+//                            'customer_info.cust_si_id',
+//                            'customer_info.cust_review_num',
+//                            'customer_info.cust_phone_num',
+//                            'onlytianmen.bank',
+//                            'customer_bank_num.cust_bank_num',
+//                            'onlytianmen.birthday',
+//                            'onlytianmen.c_day',
+//                            'onlytianmen.r_day',
+//                            'customer_info.cust_si_type',
+//                            'customer_info.cust_project'
+//                        )
+//                        ->orderBy('customer_info.cust_num','desc')
+//                        ->toSql();
+
                     $cust_data=DB::table('customer_info')
-                        ->leftJoin('onlytianmen','onlytianmen.id_in_mysql','=','customer_info.cust_num')
+                        ->leftJoin($tablename,$tablename.'.id_in_mysql','=','customer_info.cust_num')
                         ->leftJoin('customer_bank_num','customer_bank_num.cust_id','=','customer_info.cust_id')
+                        ->where('customer_info.cust_si_type',$cust_si_type)
                         ->whereBetween('customer_info.created_at',[$start_time,$stop_time])
-                        ->where(['customer_info.cust_si_type'=>$cust_si_type])
                         ->whereIn('customer_info.cust_project',$proj)
                         ->select(
                             'customer_info.cust_num',
                             'customer_info.cust_name',
-                            'onlytianmen.idcard',
+                            $tablename.'.idcard',
                             'customer_info.cust_id',
                             'customer_info.cust_si_id',
                             'customer_info.cust_review_num',
                             'customer_info.cust_phone_num',
-                            'onlytianmen.bank',
+                            $tablename.'.bank',
                             'customer_bank_num.cust_bank_num',
-                            'onlytianmen.birthday',
-                            'onlytianmen.c_day',
-                            'onlytianmen.r_day',
+                            $tablename.'.birthday',
+                            $tablename.'.c_day',
+                            $tablename.'.r_day',
                             'customer_info.cust_si_type',
                             'customer_info.cust_project'
                         )
@@ -6823,8 +6899,11 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     $i=0;
                     while (1)
                     {
-                        $cust_data=DB::table('onlytianmen')
+                        $cust_data=DB::table($tablename)
                             ->where(['id_in_mysql'=>'0'])
+                            ->whereNotIN('idcard',function ($query){
+                                $query->select('cust_id')->from('customer_info');
+                            })
                             ->select(
                                 'id',
                                 'p_name',
@@ -7002,7 +7081,6 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         $nowProj=GetBaseDataInMysqlTable::getSingleton(Input::get('project'))->getTablename();
                         if ($nowProj!=null)
                         {
-                            //找到基础数据的pid
                             $res=DB::table($nowProj->tablename)
                                 ->where(['idcard'=>trim(Input::get('key'))])
                                 ->get();
@@ -7701,15 +7779,23 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     FvBaseDataRelationModel::updateOrCreate($arr1,$arr2);
                 }
 
-                $this->redis_set('chongzhi'.$model->cust_id,$model->cust_id,1200);
+                $this->redis_set('chongzhi'.$model->cust_id,$model->cust_id,3600);
+
+                return ['error'=>'0','msg'=>'登记成功'];
+
+                break;
+
+            case 'save_fv_picture':
+
+                $cust_id=Input::get('cust_id');
+                $fp=Input::get('fp');
+                $fv=Input::get('fv');
+                $action=Input::get('action');
+                $time=time();
 
                 //储存照片
-                $obj=FingerRegister::getSingleton();
-                $obj->SavePicture();
-                //Storage::disk('IDcard')->put($model->cust_id,Input::get('cust_photo'));
-
-                return ['error'=>'0','msg'=>'认证成功'];
-                //return ['error'=>'0','msg'=>'登记成功'];
+                Storage::disk($action)->put($cust_id.'_fp_'.$time,$fp);
+                Storage::disk($action)->put($cust_id.'_fv_'.$time,$fv);
 
                 break;
 
@@ -7762,37 +7848,22 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
             case 'fv_match':
 
-                //为了提高ajax轮询效率，在redis里记录一个值，当值是1的时候退出，值是0的时候往下运行
-                if (Redis::get('fv_match_time_'.$this->get_data_in_session('staff_num'))=='1')
-                {
-                    return ['error'=>'3','msg'=>'别的数据正在认证'];
-                }
+                $info=Input::get('key');
 
-                foreach (Input::get('key') as $row)
-                {
-                    if ($row['name']=='my_fvTemplate')
-                    {
-                        $fv_template=trim($row['value']);
-                    }
-                    if ($row['name']=='my_fpTemplate')
-                    {
-                        $fp_template=trim($row['value']);
-                    }
-                }
+                $fv_template=$info['zhijingmai'];
+                $fp_template=$info['zhiwen'];
 
                 //如果数据是空
-                if (trim($fv_template)=='' || trim($fp_template)=='' || trim(Input::get('cust_id'))=='')
+                if (trim($fp_template) && trim($fv_template)=='' || trim(Input::get('cust_id'))=='')
                 {
-                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
-                    return ['error'=>'3','msg'=>'等待数据'];
+                    return ['error'=>'3','msg'=>'未得到指静脉指纹数据或身份证为空'];
                 }else
                 {
-                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'1',10);
+
                 }
 
                 if (!$this->is_idcard(trim(Input::get('cust_id'))))
                 {
-                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                     return ['error'=>'3','msg'=>'身份证输入不正确'];
                 }
 
@@ -7811,7 +7882,6 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                 //判断返回值
                 if ($curl_res['error']!='0')
                 {
-                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                     return ['error'=>'1','msg'=>'指静脉SDK故障，请求被拒绝'];
                 }
 
@@ -7848,7 +7918,6 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         'sort'=>time()//用来排序的时间
                     ]);
 
-                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                     return ['error'=>'0','msg'=>'认证成功'];
 
                 }elseif ($curl_res['fv']['result']=='false' || $curl_res['fp']['result']=='false')
@@ -7867,19 +7936,16 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                         'sort'=>time()//用来排序的时间
                     ]);
 
-                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                     return ['error'=>'0','msg'=>'认证失败'];
 
                 }elseif ($curl_res['fv']['result']=='error' || $curl_res['fp']['result']=='error')
                 {
-                    $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                     return ['error'=>'1','msg'=>'指静脉SDK故障，接口调用失败'];
                 }else
                 {
 
                 }
 
-                $this->redis_set('fv_match_time_'.$this->get_data_in_session('staff_num'),'0',10);
                 return ['error'=>'0','msg'=>'未知的错误'];
 
                 break;
@@ -8516,6 +8582,8 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                     return ['tablename'=>trim($input['TBN']),'project'=>$row['project_id']];
 
                 },$arr);
+
+                array_unshift($res,['tablename'=>trim($input['TBN']),'project'=>(int)$input['Node']]);
 
                 //$collection=collect([1,2,3,4,5]);
                 //$diff=$collection->diff([2,4,6,8]);

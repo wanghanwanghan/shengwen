@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
-@section('page_heading','欢迎登陆社会养老保险领取资格认证平台')
-@section('page_heading_small','用户认证页')
+@section('page_heading','用户认证')
+@section('page_heading_small','指静脉认证页')
 @section('section')
 
     <p id="cert_message" style="display: none;"></p>
@@ -79,7 +79,7 @@
                             <a style="width: 100px;" id="button_readID" onclick="new Device().startFun();" class="btn btn-block btn-primary btn-sm">读取身份证</a>
                         </td>
                         <td align="center">
-                            <a id="OPENfv" style="width: 100px;display: none" onclick='fpVerification("指静脉比对","请安装指静脉驱动或启动服务",true,globalContext)' class="btn btn-block btn-primary btn-sm">指静脉认证</a>
+                            <a id="OPENfv" style="width: 100px;display: none" onclick="confirm_fv();" class="btn btn-block btn-primary btn-sm">指静脉认证</a>
                             <a id="CLOSEfv" style="width: 150px;display: block" class="btn btn-block btn-warning btn-sm">请先输入身份证号码</a>
                         </td>
                         <td align="center">
@@ -122,6 +122,31 @@
                 <input type="hidden" id="verifyTemplate_myfp" name="my_fpTemplate" />
             </form>
 
+            <div style="display: none">
+                <form id="fvId_or_fvTemplate">
+                    <textarea id="myFV_0" name="myFV_0"></textarea>
+                    <textarea id="myFP_0" name="myFP_0"></textarea>
+                    <textarea id="myFV_1" name="myFV_1"></textarea>
+                    <textarea id="myFP_1" name="myFP_1"></textarea>
+                    <textarea id="myFV_2" name="myFV_2"></textarea>
+                    <textarea id="myFP_2" name="myFP_2"></textarea>
+                    <textarea id="myFV_3" name="myFV_3"></textarea>
+                    <textarea id="myFP_3" name="myFP_3"></textarea>
+                    <textarea id="myFV_4" name="myFV_4"></textarea>
+                    <textarea id="myFP_4" name="myFP_4"></textarea>
+                    <textarea id="myFV_5" name="myFV_5"></textarea>
+                    <textarea id="myFP_5" name="myFP_5"></textarea>
+                    <textarea id="myFV_6" name="myFV_6"></textarea>
+                    <textarea id="myFP_6" name="myFP_6"></textarea>
+                    <textarea id="myFV_7" name="myFV_7"></textarea>
+                    <textarea id="myFP_7" name="myFP_7"></textarea>
+                    <textarea id="myFV_8" name="myFV_8"></textarea>
+                    <textarea id="myFP_8" name="myFP_8"></textarea>
+                    <textarea id="myFV_9" name="myFV_9"></textarea>
+                    <textarea id="myFP_9" name="myFP_9"></textarea>
+                </form>
+            </div>
+
             <div>
                 <table class="table table-bordered" id="fv_match_table">
                     <thead>
@@ -155,36 +180,35 @@
 
         $(function () {
 
-            myfunction();
             fv_match_refresh();
 
-            var mytimer=setInterval(function () {
-
-                //修改指静脉登记类中的属性
-                var url ='/data/ajax';
-                var data={
-                    _token :$("input[name=_token]").val(),
-                    type   :'fv_match',
-                    key    :$("#fvId_and_fvTemplate").serializeArray(),
-                    cust_id:$("#certNumber").val()
-                };
-                $.post(url,data,function (response) {
-
-                    if (response.error=='0' || response.error=='1')
-                    {
-                        clearInterval(mytimer);
-                        layer.msg(response.msg,{time:1000});
-                        setTimeout(function () {
-                            location.reload();
-                        },1500);
-                    }else
-                    {
-
-                    }
-
-                },'json');
-
-            },500);
+//            var mytimer=setInterval(function () {
+//
+//                //修改指静脉登记类中的属性
+//                var url ='/data/ajax';
+//                var data={
+//                    _token :$("input[name=_token]").val(),
+//                    type   :'fv_match',
+//                    key    :$("#fvId_and_fvTemplate").serializeArray(),
+//                    cust_id:$("#certNumber").val()
+//                };
+//                $.post(url,data,function (response) {
+//
+//                    if (response.error=='0' || response.error=='1')
+//                    {
+//                        clearInterval(mytimer);
+//                        layer.msg(response.msg,{time:1000});
+//                        setTimeout(function () {
+//                            location.reload();
+//                        },1500);
+//                    }else
+//                    {
+//
+//                    }
+//
+//                },'json');
+//
+//            },500);
 
             //给身份证输入框绑定事件
             $("#certNumber").on('change',function () {
@@ -256,6 +280,22 @@
             })
 
         });
+
+        function confirm_fv() {
+
+            layer.open({
+                type: 2,
+                title: '',
+                maxmin:false,//是否显示最大化最小化按钮
+                resize:false,//窗口是否可以拉伸
+                shadeClose: true, //点击遮罩关闭层
+                scrollbar:false,//是否允许显示滚动条
+                fixed:true,
+                area:['1020px','570px'],
+                content: '/open/fv/page/renzheng?idcard='+$("#certNumber").val()
+            });
+
+        }
 
     </script>
 

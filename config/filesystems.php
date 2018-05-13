@@ -53,6 +53,21 @@ return [
             'root' => storage_path('app/IDcard_picture'),
         ],
 
+        'caiji' => [
+            'driver' => 'local',
+            'root' => storage_path('app/ZKTeco_picture/caiji'),
+        ],
+
+        'yanzheng' => [
+            'driver' => 'local',
+            'root' => storage_path('app/ZKTeco_picture/yanzheng'),
+        ],
+
+        'renzheng' => [
+            'driver' => 'local',
+            'root' => storage_path('app/ZKTeco_picture/renzheng'),
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
