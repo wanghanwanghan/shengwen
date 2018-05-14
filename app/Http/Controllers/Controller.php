@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Model\ConfirmTypeModel;
+use App\Http\Model\CustBankNumModel;
 use App\Http\Model\CustConfirmModel;
 use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
@@ -25,6 +26,24 @@ use Illuminate\Support\Facades\Session;
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    public function getBankNum()
+    {
+        $res='123';
+        
+        while ($res!=null)
+        {
+            $arr=['red','orange','yellow','green','blue'];
+
+            $bankNUm=substr(md5(time().$arr[array_rand($arr)]),0,25);
+
+            //判断数据库里有没有该银行卡号
+            $res=CustBankNumModel::where('cust_bank_num',$bankNUm)->first();
+        }
+
+        return $bankNUm;
+
+    }
 
     public function object2array(&$object)
     {

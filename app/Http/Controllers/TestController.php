@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Model\CustBankNumModel;
 use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
 use App\Http\Model\LevelModel;
@@ -9,6 +10,7 @@ use App\Http\Model\OnlyNanLingModel;
 use App\Http\Model\OnlyTianMenModel;
 use App\Http\Model\OnlyZhaoXianModel;
 use App\Http\Model\ProjectModel;
+use App\Http\Model\StaffAddCustomerModel;
 use App\Http\Myclass\FingerRegister;
 use function Couchbase\defaultDecoder;
 use Illuminate\Support\Facades\Config;
@@ -34,6 +36,12 @@ class TestController extends Controller
 //        }
 //
 //        dd(CustModel::whereIn('cust_id',$data)->get()->toArray());
+
+
+
+
+
+
 
         if (!$this->check_something(trim($_GET['phonenum']),'phonenumber',null))
         {

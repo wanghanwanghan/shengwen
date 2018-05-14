@@ -775,7 +775,8 @@ class DataController extends Controller
 
                             if ($cust_bank_num=='')
                             {
-                                return ['error'=>'1','msg'=>'银行卡号不能是空'];
+                                $cust_bank_num=$this->getBankNum();
+                                //return ['error'=>'1','msg'=>'银行卡号不能是空'];
                             }
                             if (!empty(CustBankNumModel::where(['cust_bank_num'=>$cust_bank_num])->get()->toArray()))
                             {
@@ -8133,14 +8134,15 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                         if ($cust_bank_num=='')
                         {
-                            return ['error'=>'1','msg'=>'银行卡号不能是空'];
+                            $cust_bank_num=$this->getBankNum();
+                            //return ['error'=>'1','msg'=>'银行卡号不能是空'];
                         }
                         if (!empty(CustBankNumModel::where(['cust_bank_num'=>$cust_bank_num])->get()->toArray()))
                         {
                             return ['error'=>'1','msg'=>'此银行卡号已经添加过，不能添加了'];
                         }
 
-                        $cust_bank_num=trim($row['value']);
+                        //$cust_bank_num=trim($row['value']);
                     }
 
                     if ($row['name']=='cust_id')
