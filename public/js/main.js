@@ -1198,7 +1198,8 @@ function renzheng(id)
                     _token :$("input[name=_token]").val(),
                     type   :'fv_match',
                     key    :{'zhiwen':zhiwenT,'zhijingmai':zhijingmaiT},
-                    cust_id:$("#ThisCustIdcard").val()
+                    cust_id:$("#ThisCustIdcard").val(),
+				   fno    :id
                 };
                 $.post(url,data,function (response) {
 
@@ -1211,6 +1212,8 @@ function renzheng(id)
                     {
 
                     }
+
+                    layer.msg(response.msg);
 
                 },'json');
 

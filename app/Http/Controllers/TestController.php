@@ -2,23 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Model\CustBankNumModel;
-use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
-use App\Http\Model\LevelModel;
+use App\Http\Model\OnlyHuangShiModel;
 use App\Http\Model\OnlyNanLingModel;
-use App\Http\Model\OnlyTianMenModel;
-use App\Http\Model\OnlyZhaoXianModel;
-use App\Http\Model\ProjectModel;
-use App\Http\Model\StaffAddCustomerModel;
-use App\Http\Myclass\FingerRegister;
-use function Couchbase\defaultDecoder;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
-use Mockery\Exception;
 
 class TestController extends Controller
 {
@@ -36,6 +23,9 @@ class TestController extends Controller
 //        }
 //
 //        dd(CustModel::whereIn('cust_id',$data)->get()->toArray());
+
+        dd('123123');
+
 
 
 
@@ -126,7 +116,7 @@ class TestController extends Controller
     {
         set_time_limit(0);
 
-        $myfile=fopen(public_path('nanling.txt'),"r") or die("Unable to open file!");
+        $myfile=fopen(public_path('step1.txt'),"r") or die("Unable to open file!");
 
         $wfile=fopen(public_path('wanghan_new.txt'),"w") or die("Unable to open file!");
 
@@ -137,6 +127,15 @@ class TestController extends Controller
             $template=str_replace(["\r\n","\n"],'',$template);
 
             $template=explode(',',$template);
+
+            $mybankRES='123';
+            while ($mybankRES!=null)
+            {
+                $mybank='yangxin_'.substr(md5(time().$template[3]),0,11);
+                $mybankRES=OnlyHuangShiModel::where('bank',$mybank)->first();
+            }
+
+            array_push($template,$mybank);
 
             $arrayKey=['c_name','si_num','p_name','idcard','sex','birthday','c_day','r_day','bank'];
 
@@ -150,12 +149,12 @@ class TestController extends Controller
             //$template['c_day']='';
             //$template['r_day']='';
 
-            $mybankRES='123';
-            while ($mybankRES!=null)
-            {
-                $mybank='nanling_'.substr(md5(time().$template['idcard']),0,11);
-                $mybankRES=OnlyNanLingModel::where('bank',$mybank)->first();
-            }
+//            $mybankRES='123';
+//            while ($mybankRES!=null)
+//            {
+//                $mybank='nanling_'.substr(md5(time().$template['idcard']),0,11);
+//                $mybankRES=OnlyNanLingModel::where('bank',$mybank)->first();
+//            }
 
             if($template['bank']=='')
             {
@@ -178,7 +177,7 @@ class TestController extends Controller
 
             //$this->insert_something($template['birthday'],[4,6]);
 
-            OnlyNanLingModel::create($template);
+            OnlyHuangShiModel::create($template);
         }
 
         fclose($wfile);

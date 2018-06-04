@@ -7870,8 +7870,17 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
 
                 $cust_pid=CustFVModel::where('cust_id',trim(Input::get('cust_id')))->first();
 
+                if (!is_numeric($cust_pid->cust_num))
+                {
+                    return ['error'=>'1','msg'=>'客户主键错误'];
+                }
+                if (!is_numeric(Input::get('fno')))
+                {
+                    return ['error'=>'1','msg'=>'手指编号错误'];
+                }
+
                 $data=[
-                    'pid'=>(string)$cust_pid->cust_num,//用户的主键号
+                    'pid'=>$cust_pid->cust_num.'_'.Input::get('fno'),//用户的主键号
                     'fv'=>$fv_template,//当前采集的客户指静脉
                     'fp'=>$fp_template,//当前采集的客户指纹
                     'fvs'=>(string)Config::get('constant.fingervenascore'),//指静脉阈值
