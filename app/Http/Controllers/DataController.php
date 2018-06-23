@@ -2809,7 +2809,12 @@ GROUP BY confirm_pid HAVING (num<? AND confirm_res=?)";
                                     $data2['confirm_btw']    = $finger_res[$i]['cust_btw'];
 
                                     $data1[]=$data2;
-                                    $cust_id[]=$finger_res[$i]['cust_id'];
+                                }
+
+                                //拿出所有cust_id
+                                foreach ($finger_res as $wanghan)
+                                {
+                                    $cust_id[]=$wanghan['cust_id'];
                                 }
 
                                 $time=time();

@@ -29,9 +29,15 @@ class AppServiceProvider extends ServiceProvider
                 {
                     for ($i=0;$i<count($bind);$i++)
                     {
-                        $v='\''.$bind[$i].'\'';
-                        $sql=$this->str_replace_once('?',$v,$sql);
+                        if ($bind[$i]=='')
+                        {
+                            $v='null';
+                        }else
+                        {
+                            $v='\''.$bind[$i].'\'';
+                        }
 
+                        $sql=$this->str_replace_once('?',$v,$sql);
 
                     }
 
@@ -43,12 +49,19 @@ class AppServiceProvider extends ServiceProvider
 //                oci_close($con);
 
 
-
-                    dd($sql,$bind,'insert');
+                    $sql=$this->str_replace_once('`','"',$sql);
+                    $sql=$this->str_replace_once('`','"',$sql);
+                    dd($sql,$bind,'insert',explode('"',$sql));
                 }
 
                 if ($cut_string=='update')
                 {
+                    $con=oci_connect('C##wanghan','wanghan','orcl','ZHS16GBK') or die('数据库连接失败');
+                    $query='truncate table ZBXL_CUSTOMER_INFO';
+                    $stid=oci_parse($con,$query);
+                    oci_execute($stid);
+                    oci_free_statement($stid);
+                    oci_close($con);
                     dd($sql,'update');
                 }
 
@@ -118,5 +131,72 @@ class AppServiceProvider extends ServiceProvider
         }
 
         return substr_replace($haystack, $replace, $pos, strlen($needle));
+    }
+
+    public function return_primary_name($tablename)
+    {
+        //主键叫id的
+        $arr1=
+            [
+                'zbxl_basedata_tablename_relation','zbxl_base_data_and_cust_fv_data_relation',
+                'zbxl_china_all_position','zbxl_customer_bank_num','zbxl_mobile_location'
+            ];
+
+
+
+        if (in_array($tablename,$arr1))
+        {
+            return 'id';
+        }
+
+        if ($tablename=='zbxl_confirm_type')
+        {
+            return 'confirm_id';
+        }
+
+        if ($tablename=='zbxl_customer_confirm')
+        {
+            return 'confirm_num';
+        }
+
+        if ($tablename=='zbxl_customer_fv_info' || $tablename=='zbxl_customer_info' || $tablename=='zbxl_customer_info_ready_tianmen')
+        {
+            return 'cust_num';
+        }
+
+        if ($tablename=='zbxl_customer_info_delete_use')
+        {
+            return 'pid';
+        }
+
+        if ($tablename=='zbxl_level')
+        {
+            return 'level_id';
+        }
+
+        if ($tablename=='zbxl_log')
+        {
+            return 'log_id';
+        }
+
+        if ($tablename=='zbxl_log')
+        {
+            return 'log_id';
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }

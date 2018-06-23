@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Model\CustModel;
 use App\Http\Model\OnlyHuangShiModel;
 use App\Http\Model\OnlyNanLingModel;
+use App\Http\Model\OnlyTianMenModel;
 use Illuminate\Support\Facades\Redis;
 
 class TestController extends Controller
@@ -25,6 +26,7 @@ class TestController extends Controller
 //        dd(CustModel::whereIn('cust_id',$data)->get()->toArray());
 
         dd('123123');
+
 
 
 
@@ -131,8 +133,8 @@ class TestController extends Controller
             $mybankRES='123';
             while ($mybankRES!=null)
             {
-                $mybank='yangxin_'.substr(md5(time().$template[3]),0,11);
-                $mybankRES=OnlyHuangShiModel::where('bank',$mybank)->first();
+                $mybank='tianmen_'.substr(md5(time().$template[3]),0,11);
+                $mybankRES=OnlyTianMenModel::where('bank',$mybank)->first();
             }
 
             array_push($template,$mybank);
@@ -177,7 +179,7 @@ class TestController extends Controller
 
             //$this->insert_something($template['birthday'],[4,6]);
 
-            OnlyHuangShiModel::create($template);
+            OnlyTianMenModel::create($template);
         }
 
         fclose($wfile);
