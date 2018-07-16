@@ -217,6 +217,10 @@ Route::group(['middleware'=>['APIMiddleware']],function (){
     //客户主动认证的结果
     Route::get('api/initiative/return','APIController@ivr_return_4');
 
+    //内蒙版本用
+    Route::get('api/setRelation','APIController@setRelation');
+    Route::get('api/getRelation','APIController@getRelation');
+
 });//*******************************************************
 
 //所有ajax数据处理

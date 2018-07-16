@@ -4,7 +4,8 @@
 @section('section')
 
     <link rel="stylesheet" href="{{asset('public/bower_components/AdminLTE/plugins/morris/morris.css')}}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
+    {{--<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>--}}
+    <script src="{{asset('public/raphael210/raphael-min.js')}}"></script>
     <script src="{{asset('public/bower_components/AdminLTE/plugins/morris/morris.js')}}"></script>
 
     {{--//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////--}}

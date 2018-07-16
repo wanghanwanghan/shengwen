@@ -185,6 +185,20 @@ class APIController extends Controller
 
 
                 break;
+
+            case 'getRelation':
+
+                $cond=trim($_GET['cond']);
+
+                if (empty($cond))
+                {
+                    return ['msg'=>'error'];
+                }else
+                {
+                    return Redis::get($cond);
+                }
+
+                break;
         }
     }
 
@@ -212,6 +226,44 @@ class APIController extends Controller
         }
 
         return ['error'=>'0','msg'=>'对比成功，完全一致'];
+    }
+
+    //setRelation
+    public function setRelation()
+    {
+        //客户用协办员的手机号打电话，需要建立一个由：客户手机号，客户身份证号，协办员账号组成的关系
+        $phone=isset($_GET['phone']) ? $_GET['phone'] : '';
+        $idcard=isset($_GET['idcard']) ? $_GET['idcard'] : '';
+        $staff=isset($_GET['staff']) ? $_GET['staff'] : '';
+
+        if (trim($phone)=='')
+        {
+            return ['state'=>'error','msg'=>'phone can not be empty'];
+        }
+        $res=CustModel::where('cust_review_num',trim($phone))->first()->toArray();
+        if (!empty($res))
+        {
+            return ['state'=>'error','msg'=>'phone has already existed'];
+        }
+
+        if (trim($idcard)=='')
+        {
+            return ['state'=>'error','msg'=>'idcard can not be empty'];
+        }
+        $res=CustModel::where('cust_id',trim($idcard))->first()->toArray();
+        if (!empty($res))
+        {
+            return ['state'=>'error','msg'=>'idcard has already existed'];
+        }
+
+        if (trim($staff)=='')
+        {
+            return ['state'=>'error','msg'=>'staff can not be empty'];
+        }
+
+        $this->redis_set(trim($staff),trim($phone).'_'.trim($idcard),20);
+
+        return ['state'=>'pass','msg'=>'complete'];
     }
 
     //ajax处理
