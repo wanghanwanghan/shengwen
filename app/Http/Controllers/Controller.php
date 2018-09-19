@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Model\ConfirmTypeModel;
 use App\Http\Model\CustBankNumModel;
+use App\Http\Model\CustBelongTI;
 use App\Http\Model\CustConfirmModel;
 use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
@@ -13,6 +14,7 @@ use App\Http\Model\PhoneBelongModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SiTypeModel;
 use App\Http\Model\StaffModel;
+use App\Http\Model\TextIndependentModel;
 use App\Http\Model\VocalPrintModel;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
@@ -25,6 +27,318 @@ use Illuminate\Support\Facades\Session;
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    //客户主动登记，组建数组返回给ivr
+    public function custReg($getCollectionObj)
+    {
+        if (count($getCollectionObj)=='0')
+        {
+            return false;
+
+        }elseif (count($getCollectionObj)=='1')
+        {
+            $info=$getCollectionObj[0];
+
+            if ($info->cust_register_flag=='1')
+            {
+                $confirm_text=CustBelongTI::where('cust_id',$info->cust_num)->get();
+                $confirm_text=$confirm_text[0]->ti_pid;
+                $confirm_text=explode(',',$confirm_text);
+                $confirm_text=TextIndependentModel::whereIn('ti_pid',$confirm_text)->get();
+
+                foreach ($confirm_text as $row)
+                {
+                    //登记时候说的三组
+                    $confirm_text1[]=$row->ti_text;
+                }
+
+                //随机产生的三组
+                $confirm_text2=$this->myrand();
+
+                //
+                $index=rand(0,2);
+                $confirm_text2[0]=$confirm_text1[$index];
+
+                $data=[
+                    'cust_type'=>$info->cust_type,
+                    'confirm_type'=>(string)$info->cust_confirm_type,
+                    'authorization'=>'authorized',
+                    'primary'=>[
+                        'pid'=>(string)$info->cust_num,
+                        'name'=>$info->cust_name,
+                        'idcard'=>$info->cust_id,
+                        'status'=>$info->cust_register_flag=='1' ? 'registered' : 'unregistered',
+                        'confirm_text'=>$confirm_text2
+                    ]
+                ];
+
+                return $data;
+            }
+
+            //查询客户的认证类型
+            switch (ConfirmTypeModel::find($info->cust_confirm_type)->confirm_name)
+            {
+                case '文本无关':
+
+                    $totle=TextIndependentModel::count();
+
+                    $arr=[];
+                    for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
+                    {
+                        $new=rand(1,$totle);
+
+                        if (in_array($new,$arr))
+                        {
+                            $i--;
+                        }else
+                        {
+                            //这里存的是mysql表中，文本无关数字的pid
+                            $arr[]=$new;
+                        }
+                    }
+
+                    CustBelongTI::updateOrCreate(['cust_id'=>$info->cust_num],['ti_pid'=>implode(',',$arr)]);
+
+                    $res1=TextIndependentModel::whereIn('ti_pid',$arr)->get();
+
+                    foreach ($res1 as $row)
+                    {
+                        $confirm_text[]=$row->ti_text;
+                    }
+
+                    break;
+
+                case '文本相关':
+
+                    $confirm_text=Config::get('confirm_type.text');
+
+                    break;
+
+                case '动态口令':
+
+                    $confirm_text=$this->myrand();
+
+                    break;
+            }
+
+            $data=[
+                'cust_type'=>$info->cust_type,
+                'confirm_type'=>(string)$info->cust_confirm_type,
+                'authorization'=>'authorized',
+                'primary'=>[
+                    'pid'=>(string)$info->cust_num,
+                    'name'=>$info->cust_name,
+                    'idcard'=>$info->cust_id,
+                    'status'=>$info->cust_register_flag=='1' ? 'registered' : 'unregistered',
+                    'confirm_text'=>$confirm_text
+                ]
+            ];
+
+            return $data;
+
+        }elseif (count($getCollectionObj)=='2')
+        {
+            $info=$getCollectionObj[0];
+            $inft=$getCollectionObj[1];
+
+            //第一年审人登记了
+            if ($info->cust_register_flag=='1')
+            {
+                $confirm_text=CustBelongTI::where('cust_id',$info->cust_num)->get();
+                $confirm_text=$confirm_text[0]->ti_pid;
+                $confirm_text=explode(',',$confirm_text);
+                $confirm_text=TextIndependentModel::whereIn('ti_pid',$confirm_text)->get();
+
+                foreach ($confirm_text as $row)
+                {
+                    //登记时候说的三组
+                    $confirm_text1[]=$row->ti_text;
+                }
+
+                //随机产生的三组
+                $confirm_text2=$this->myrand();
+
+                //
+                $index=rand(0,2);
+                $confirm_text2[0]=$confirm_text1[$index];
+
+                $data1=[
+                    'cust_type'=>$info->cust_type,
+                    'confirm_type'=>(string)$info->cust_confirm_type,
+                    'authorization'=>'authorized',
+                    'primary'=>[
+                        'pid'=>(string)$info->cust_num,
+                        'name'=>$info->cust_name,
+                        'idcard'=>$info->cust_id,
+                        'status'=>$info->cust_register_flag=='1' ? 'registered' : 'unregistered',
+                        'confirm_text'=>$confirm_text2
+                    ]
+                ];
+            }else
+            {
+                //第一年审人没登记
+                //查询客户的认证类型
+                switch (ConfirmTypeModel::find($info->cust_confirm_type)->confirm_name)
+                {
+                    case '文本无关':
+
+                        $totle=TextIndependentModel::count();
+
+                        $arr=[];
+                        for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
+                        {
+                            $new=rand(1,$totle);
+
+                            if (in_array($new,$arr))
+                            {
+                                $i--;
+                            }else
+                            {
+                                //这里存的是mysql表中，文本无关数字的pid
+                                $arr[]=$new;
+                            }
+                        }
+
+                        CustBelongTI::updateOrCreate(['cust_id'=>$info->cust_num],['ti_pid'=>implode(',',$arr)]);
+
+                        $res1=TextIndependentModel::whereIn('ti_pid',$arr)->get();
+
+                        $confirm_text=[];
+                        foreach ($res1 as $row)
+                        {
+                            $confirm_text[]=$row->ti_text;
+                        }
+
+                        break;
+
+                    case '文本相关':
+
+                        $confirm_text=Config::get('confirm_type.text');
+
+                        break;
+
+                    case '动态口令':
+
+                        $confirm_text=$this->myrand();
+
+                        break;
+                }
+
+                $data1_1=[
+                    'cust_type'=>$info->cust_type,
+                    'confirm_type'=>(string)$info->cust_confirm_type,
+                    'authorization'=>'authorized',
+                    'primary'=>[
+                        'pid'=>(string)$info->cust_num,
+                        'name'=>$info->cust_name,
+                        'idcard'=>$info->cust_id,
+                        'status'=>$info->cust_register_flag=='1' ? 'registered' : 'unregistered',
+                        'confirm_text'=>$confirm_text
+                    ]
+                ];
+            }
+
+            //第二年审人登记了
+            if ($inft->cust_register_flag=='1')
+            {
+                $confirm_text=CustBelongTI::where('cust_id',$inft->cust_num)->get();
+                $confirm_text=$confirm_text[0]->ti_pid;
+                $confirm_text=explode(',',$confirm_text);
+                $confirm_text=TextIndependentModel::whereIn('ti_pid',$confirm_text)->get();
+
+                foreach ($confirm_text as $row)
+                {
+                    //登记时候说的三组
+                    $confirm_text3[]=$row->ti_text;
+                }
+
+                //随机产生的三组
+                $confirm_text4=$this->myrand();
+
+                //
+                $index=rand(0,2);
+                $confirm_text4[0]=$confirm_text3[$index];
+
+                $data2=['secondary'=>[
+                    'pid'=>(string)$inft->cust_num,
+                    'name'=>$inft->cust_name,
+                    'idcard'=>$inft->cust_id,
+                    'status'=>$inft->cust_register_flag=='1' ? 'registered' : 'unregistered',
+                    'confirm_text'=>$confirm_text4
+                ]];
+
+            }else
+            {
+                //第二年审人没登记
+                //查询客户的认证类型
+                switch (ConfirmTypeModel::find($inft->cust_confirm_type)->confirm_name)
+                {
+                    case '文本无关':
+
+                        $totle=TextIndependentModel::count();
+
+                        $arr=[];
+                        for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
+                        {
+                            $new=rand(1,$totle);
+
+                            if (in_array($new,$arr))
+                            {
+                                $i--;
+                            }else
+                            {
+                                //这里存的是mysql表中，文本无关数字的pid
+                                $arr[]=$new;
+                            }
+                        }
+
+                        CustBelongTI::updateOrCreate(['cust_id'=>$inft->cust_num],['ti_pid'=>implode(',',$arr)]);
+
+                        $res1=TextIndependentModel::whereIn('ti_pid',$arr)->get();
+
+                        $confirm_text=[];
+                        foreach ($res1 as $row)
+                        {
+                            $confirm_text[]=$row->ti_text;
+                        }
+
+                        break;
+
+                    case '文本相关':
+
+                        $confirm_text=Config::get('confirm_type.text');
+
+                        break;
+
+                    case '动态口令':
+
+                        $confirm_text=$this->myrand();
+
+                        break;
+                }
+
+                $data2_1=['secondary'=>[
+                    'pid'=>(string)$inft->cust_num,
+                    'name'=>$inft->cust_name,
+                    'idcard'=>$inft->cust_id,
+                    'status'=>$inft->cust_register_flag=='1' ? 'registered' : 'unregistered',
+                    'confirm_text'=>$confirm_text
+                ]];
+            }
+
+            //$data1 $data2 $data1_1 $data2_1
+            isset($data1) ? $primary=$data1 : $primary=$data1_1;
+            isset($data2) ? $secondary=$data2 : $secondary=$data2_1;
+
+            $primary['secondary']=array_get($secondary,'secondary');
+
+            return $primary;
+
+        }else
+        {
+            return false;
+        }
+    }
 
     public function getBankNum()
     {

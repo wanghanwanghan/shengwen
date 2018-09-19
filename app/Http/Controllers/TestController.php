@@ -6,6 +6,9 @@ use App\Http\Model\CustModel;
 use App\Http\Model\OnlyHuangShiModel;
 use App\Http\Model\OnlyNanLingModel;
 use App\Http\Model\OnlyTianMenModel;
+use App\Http\Model\TextIndependentModel;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
 class TestController extends Controller
@@ -25,7 +28,11 @@ class TestController extends Controller
 //
 //        dd(CustModel::whereIn('cust_id',$data)->get()->toArray());
 
-        dd('123123');
+
+
+        dd($this->myrand());
+        $res=CustModel::where('cust_review_num','123456')->get();
+        dd(count($res));
 
 
 
@@ -40,68 +47,6 @@ class TestController extends Controller
             return ['error'=>'1','msg'=>'手机号码输入不正确'];
         }
 
-        $phonenum=trim($_GET['phonenum']);
-
-        $res=CustModel::where('cust_review_num',$phonenum)->get();
-
-        //dd($res->toArray());
-
-        //查询是空，表示未办卡的客户
-        if (empty($res->toArray()))
-        {
-            return ['cust_type'=>null,'confirm_type'=>null,'authorization'=>'unreg','primary'=>[],'secondary'=>[]];
-        }
-
-        //查询不是空，说明是已经办卡的客户
-        switch (count($res))
-        {
-            case '1':
-
-                //一个年审人
-                $res=$res->toArray();
-
-                if ($res[0]['cust_register_flag']=='1')
-                {
-                    //已经录音的，返回未授权
-                    return ['cust_type'=>$res[0]['cust_type'],'confirm_type'=>(string)$res[0]['cust_confirm_type'],'authorization'=>'unauthorized'];
-
-                }else
-                {
-                    //未录音的客户
-                    $authorization=Redis::get('authorization_'.$res[0]['cust_id']);
-
-                    if ($authorization==null)
-                    {
-                        //授权过期
-                        return ['cust_type'=>$res[0]['cust_type'],'confirm_type'=>(string)$res[0]['cust_confirm_type'],'authorization'=>'unauthorized'];
-
-                    }else
-                    {
-                        //授权未过期
-
-
-                    }
-
-                }
-
-                break;
-
-            case '2':
-
-                //两个年审人
-
-
-
-
-
-                break;
-
-            default:
-
-                return ['error'=>'1','msg'=>'未知错误'];
-
-                break;
-        }
 
 
 
@@ -231,7 +176,7 @@ class TestController extends Controller
         {
             for ($j=$i;$j<=count($array)-1;$j++)
             {
-                if ($array[$i]>$array{$j})
+                if ($array[$i]>$array[$j])
                 {
                     $tmp=$array[$i];
                     $array[$i]=$array[$j];

@@ -22,6 +22,56 @@ Route::get('select_project', function () {
     return view('select_project');
 });
 
+
+//中服社区publish_info
+Route::group(['middleware'=>['LoginMiddleware']],function (){
+
+    //ajax
+    Route::post('publishinfo/ajax','PublishInfoController@ajax');
+
+    //查询
+    Route::get('zfsq/select',function (){return view('zhongfushequ.select_info');});
+
+    //基础信息详细
+    Route::get('show/jichu/{id}','PublishInfoController@show_jichu');
+
+    //婚介
+    Route::get('add/hunjie','PublishInfoController@hunjie');
+
+    //婚介详细
+    Route::get('show/hunjie/{id}','PublishInfoController@show_hunjie');
+
+    //务工
+    Route::get('add/wugong','PublishInfoController@wugong');
+
+    //务工详细
+    Route::get('show/wugong/{id}','PublishInfoController@show_wugong');
+
+    //生意
+    Route::get('add/shengyi','PublishInfoController@shengyi');
+
+    //生意详细
+    Route::get('show/shengyi/{id}','PublishInfoController@show_shengyi');
+
+    //保险
+    Route::get('add/baoxian','PublishInfoController@baoxian');
+
+    //保险详细
+    Route::get('show/baoxian/{id}','PublishInfoController@show_baoxian');
+
+    //产品
+    Route::get('add/chanpin','PublishInfoController@chanpin');
+
+    //产品详细
+    Route::get('show/chanpin/{id}','PublishInfoController@show_chanpin');
+
+    //家庭装修
+    Route::get('add/jiatingzhuangxiu','PublishInfoController@jiatingzhuangxiu');
+
+    //家庭装修详细
+    Route::get('show/jiatingzhuangxiu/{id}','PublishInfoController@show_jiatingzhuangxiu');
+});
+
 //用户登记
 Route::group(['middleware'=>['LoginMiddleware','AddCustMiddleware']],function (){
 
@@ -40,6 +90,9 @@ Route::group(['middleware'=>['LoginMiddleware','AddCustMiddleware']],function ()
 
     //添加无号码客户信息
     Route::get('add/cust/ready','WebController@add_cust_ready');
+
+    //中服社区登记
+    Route::get('add/zfsq','WebController@add_zfsq');
 
 });
 

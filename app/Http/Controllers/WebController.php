@@ -210,6 +210,22 @@ class WebController extends Controller
         }
     }
 
+    public function add_zfsq()
+    {
+
+
+
+
+
+
+
+
+
+
+
+        return view('zhongfushequ.add_zfsq');
+    }
+
     public function fv_match()
     {
         foreach (Session::get('user') as $row)

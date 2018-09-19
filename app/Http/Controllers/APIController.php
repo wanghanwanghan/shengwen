@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Model\ConfirmTypeModel;
+use App\Http\Model\CustBelongTI;
 use App\Http\Model\CustConfirmModel;
 use App\Http\Model\CustFVModel;
 use App\Http\Model\CustModel;
@@ -10,6 +11,7 @@ use App\Http\Model\LogModel;
 use App\Http\Model\ProjectModel;
 use App\Http\Model\SiTypeModel;
 use App\Http\Model\StaffModel;
+use App\Http\Model\TextIndependentModel;
 use App\Http\Model\VocalPrintModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -168,6 +170,7 @@ class APIController extends Controller
 
             case 'vpr_initiative_process':
 
+                //主动登记
                 if (!$this->check_something(trim($_GET['phonenum']),'phonenumber',null))
                 {
                     return ['error'=>'1','msg'=>'手机号码输入不正确'];
@@ -175,14 +178,23 @@ class APIController extends Controller
 
                 $phonenum=trim($_GET['phonenum']);
 
+                //电话在不在系统里
+                $res=CustModel::where('cust_review_num',$phonenum)->get();
 
+                if (count($res)=='0')
+                {
+                    return ['error'=>'1','msg'=>'没客户'];
 
+                }elseif (count($res)=='1' || count($res)=='2')
+                {
+                    $data=$this->custReg($res);
 
+                    return $data;
 
-
-
-
-
+                }else
+                {
+                    return ['error'=>'1','msg'=>'一大堆客户？'];
+                }
 
                 break;
 
@@ -610,12 +622,45 @@ class APIController extends Controller
                 $cust_review_num=$info->cust_review_num;
                 $cust_confirm_type=$info->cust_confirm_type;
 
+                //几秒内连续点击，不进行登记
+                if (Redis::get($cust_review_num.'_register')!='')
+                {
+                    return ['error'=>'1','msg'=>'正在处理，请稍后'];
+                }else
+                {
+                    $this->redis_set($cust_review_num.'_register','123',9);
+                }
+
                 //查询客户的认证类型
                 switch (ConfirmTypeModel::find($cust_confirm_type)->confirm_name)
                 {
                     case '文本无关':
 
-                        $confirm_text='';
+                        $totle=TextIndependentModel::count();
+
+                        $arr=[];
+                        for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
+                        {
+                            $new=rand(1,$totle);
+
+                            if (in_array($new,$arr))
+                            {
+                                $i--;
+                            }else
+                            {
+                                //这里存的是mysql表中，文本无关数字的pid
+                                $arr[]=$new;
+                            }
+                        }
+
+                        CustBelongTI::updateOrCreate(['cust_id'=>Input::get('key')],['ti_pid'=>implode(',',$arr)]);
+
+                        $res=TextIndependentModel::whereIn('ti_pid',$arr)->get();
+
+                        foreach ($res as $row)
+                        {
+                            $confirm_text[]=$row->ti_text;
+                        }
 
                         break;
 
@@ -632,13 +677,149 @@ class APIController extends Controller
                         break;
                 }
 
-                $data=[
-                    'pid'=>Input::get('key'),//用户的主键号
-                    'name'=>$cust_name,//用户的姓名
-                    'phone'=>$cust_review_num,//年审手机号
-                    'confirm_type'=>(string)$cust_confirm_type,//认证类型，文本无关，文本相关，动态口令
-                    'confirm_text'=>$confirm_text//用户要说的话
-                ];
+//                $data=[
+//                    'pid'=>Input::get('key'),//用户的主键号
+//                    'name'=>$cust_name,//用户的姓名
+//                    'phone'=>$cust_review_num,//年审手机号
+//                    'confirm_type'=>(string)$cust_confirm_type,//认证类型，文本无关，文本相关，动态口令
+//                    'confirm_text'=>$confirm_text//用户要说的话
+//                ];
+
+                $res=CustModel::where('cust_review_num',$cust_review_num)->get();
+
+                switch (count($res))
+                {
+                    case '0':
+
+                        //没查到客户
+
+                        return ['error'=>'1','msg'=>'未知客户'];
+
+                        break;
+
+                    case '1':
+
+                        //一个年审人
+
+                        $data=[
+                            'cust_type'=>$res[0]->cust_type,
+                            'confirm_type'=>$res[0]->cust_confirm_type,
+                            'authorization'=>'authorized',
+                            'phone_number'=>$cust_review_num,
+                            'primary'=>[
+                                'pid'=>$res[0]->cust_num,
+                                'name'=>$res[0]->cust_name,
+                                'idcard'=>$res[0]->cust_id,
+                                'status'=>$res[0]->cust_register_flag=='1' ? 'registered' : 'unregistered',
+                                'confirm_text'=>$confirm_text
+                            ]
+                        ];
+
+                        break;
+
+                    case '2':
+
+                        //两个年审人
+
+                        $data=[
+                            'cust_type'=>$res[0]->cust_type,
+                            'confirm_type'=>$res[0]->cust_confirm_type,
+                            'authorization'=>'authorized',
+                            'phone_number'=>$cust_review_num,
+                            'primary'=>[
+                                'pid'=>$res[0]->cust_num,
+                                'name'=>$res[0]->cust_name,
+                                'idcard'=>$res[0]->cust_id,
+                                'status'=>$res[0]->cust_register_flag=='1' ? 'registered' : 'unregistered',
+                                'confirm_text'=>$confirm_text
+                            ],
+                            'secondary'=>[
+                                'pid'=>$res[1]->cust_num,
+                                'name'=>$res[1]->cust_name,
+                                'idcard'=>$res[1]->cust_id,
+                                'status'=>$res[1]->cust_register_flag=='1' ? 'registered' : 'unregistered',
+                                'confirm_text'=>$confirm_text
+                            ]
+                        ];
+
+                        //获取点击的是哪个年审人
+                        $whitch=Input::get('key');
+
+                        if (data_get($data,'primary.pid')==Input::get('key'))
+                        {
+                            //点击的是第一年审人
+                            //如果第二年审人是已注册，那么不用管
+                            //如果是未注册，那么需要得到一个三组数字，并且存入mysql
+                            if (data_get($data,'secondary.status')=='unregistered')
+                            {
+                                $totle=TextIndependentModel::count();
+
+                                $arr=[];
+                                for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
+                                {
+                                    $new=rand(1,$totle);
+
+                                    if (in_array($new,$arr))
+                                    {
+                                        $i--;
+                                    }else
+                                    {
+                                        //这里存的是mysql表中，文本无关数字的pid
+                                        $arr[]=$new;
+                                    }
+                                }
+
+                                CustBelongTI::updateOrCreate(['cust_id'=>data_get($data,'secondary.pid')],['ti_pid'=>implode(',',$arr)]);
+
+                                $res=TextIndependentModel::whereIn('ti_pid',$arr)->get();
+
+                                foreach ($res as $row)
+                                {
+                                    $confirm_text1[]=$row->ti_text;
+                                }
+
+                                array_set($data,'secondary.confirm_text',$confirm_text1);
+                            }
+
+                        }else
+                        {
+                            //点击的是第二年审人
+                            //如果第一年审人是已注册，那么不用管
+                            //如果是未注册，那么需要得到一个三组数字，并且存入mysql
+                            if (data_get($data,'primary.status')=='unregistered')
+                            {
+                                $totle=TextIndependentModel::count();
+
+                                $arr=[];
+                                for ($i=1;$i<=Config::get('confirm_type.repeat');$i++)
+                                {
+                                    $new=rand(1,$totle);
+
+                                    if (in_array($new,$arr))
+                                    {
+                                        $i--;
+                                    }else
+                                    {
+                                        //这里存的是mysql表中，文本无关数字的pid
+                                        $arr[]=$new;
+                                    }
+                                }
+
+                                CustBelongTI::updateOrCreate(['cust_id'=>data_get($data,'primary.pid')],['ti_pid'=>implode(',',$arr)]);
+
+                                $res=TextIndependentModel::whereIn('ti_pid',$arr)->get();
+
+                                foreach ($res as $row)
+                                {
+                                    $confirm_text1[]=$row->ti_text;
+                                }
+
+                                array_set($data,'primary.confirm_text',$confirm_text1);
+                            }
+                        }
+
+                        break;
+                }
 
                 $res=$this->mycurl('http://127.0.0.1:7510/register',$data);
 
@@ -678,7 +859,7 @@ class APIController extends Controller
                 break;
 
             //web给ivr发送用户验证请求
-            case 'verify'://web给ivr发送用户验证请求，系统主动验证
+            case 'verify':
 
                 //通过客户编号查询年审号码
                 $info=CustModel::find(Input::get('key'));
@@ -691,7 +872,7 @@ class APIController extends Controller
                 {
                     case '文本无关':
 
-                        $confirm_text='';
+                        $confirm_text=$this->myrand();
 
                         break;
 
@@ -708,13 +889,40 @@ class APIController extends Controller
                         break;
                 }
 
+//                $data=[
+//                    'pid'=>Input::get('key'),//用户的主键号
+//                    'name'=>$cust_name,//用户的姓名
+//                    'phone'=>$cust_review_num,//年审手机号
+//                    'confirm_type'=>(string)$cust_confirm_type,//认证类型，文本无关，文本相关，动态口令
+//                    'confirm_text'=>$confirm_text//用户要说的话
+//                ];
+
                 $data=[
-                    'pid'=>Input::get('key'),//用户的主键号
-                    'name'=>$cust_name,//用户的姓名
-                    'phone'=>$cust_review_num,//年审手机号
-                    'confirm_type'=>(string)$cust_confirm_type,//认证类型，文本无关，文本相关，动态口令
-                    'confirm_text'=>$confirm_text//用户要说的话
+                    'cust_type'=>$info->cust_type,
+                    'confirm_type'=>$info->cust_confirm_type,
+                    'authorization'=>'authorized',
+                    'phone_number'=>$cust_review_num,
+                    'primary'=>[
+                        'pid'=>$info->cust_num,
+                        'name'=>$info->cust_name,
+                        'idcard'=>$info->cust_id,
+                        'status'=>$info->cust_register_flag=='1' ? 'registered' : 'unregistered',
+                        'confirm_text'=>$confirm_text
+                    ]
                 ];
+
+                $res=CustBelongTI::where('cust_id',$info->cust_num)->get();
+
+                //$confirm_text替换第0个为曾经登记过的
+                $key=explode(',',$res[0]->ti_pid);
+
+                $num=rand(0,count($key)-1);
+
+                $res=TextIndependentModel::find($key[$num]);
+
+                $confirm_text[0]=$res->ti_text;
+
+                array_set($data,'primary.confirm_text',$confirm_text);
 
                 $res=$this->mycurl('http://127.0.0.1:7510/verify',$data);
 
