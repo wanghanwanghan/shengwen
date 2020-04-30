@@ -55,15 +55,15 @@ class DataController extends Controller
 
             case 'get_my_si_type':
 
-            //添加新的参保类型页面用的
+                //添加新的参保类型页面用的
 
-            $model=SiTypeModel::get(['si_name'])->toArray();
+                $model=SiTypeModel::get(['si_name'])->toArray();
 
-            $model=array_flatten($model);
+                $model=array_flatten($model);
 
-            return ['error'=>'0','msg'=>'成功','data'=>$model];
+                return ['error'=>'0','msg'=>'成功','data'=>$model];
 
-            break;
+                break;
 
             case 'get_my_confirm_type':
 
